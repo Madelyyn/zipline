@@ -14,6 +14,7 @@ import { ReadableStream } from 'stream/web';
 import { NodeHttpHandler } from '@smithy/node-http-handler';
 import { Agent as HttpAgent } from 'http';
 import { Agent as HttpsAgent } from 'https';
+import { randomCharacters } from '../random';
 
 function isOk(code: number) {
   return code >= 200 && code < 300;
@@ -58,30 +59,65 @@ export class S3Datasource extends Datasource {
       }),
     });
 
-    this.ensureBucketExists();
+    this.ensureReadWriteAccess();
   }
 
-  private async ensureBucketExists() {
+  private async ensureReadWriteAccess() {
     try {
-      const res = await this.client.send(new ListBucketsCommand());
-      if (!isOk(res.$metadata.httpStatusCode || 0)) {
+      const putObject = new PutObjectCommand({
+        Bucket: this.options.bucket,
+        Key: `${randomCharacters(10)}-zipline`,
+        Body: randomCharacters(10),
+      });
+
+      const readObject = new GetObjectCommand({
+        Bucket: this.options.bucket,
+        Key: putObject.input.Key,
+      });
+
+      const deleteObject = new DeleteObjectCommand({
+        Bucket: this.options.bucket,
+        Key: putObject.input.Key,
+      });
+
+      const writeRes = await this.client.send(putObject);
+      if (!isOk(writeRes.$metadata.httpStatusCode || 0)) {
         this.logger
-          .error('there was an error while listing buckets', res.$metadata as Record<string, unknown>)
+          .error(
+            'there was an error while testing write access',
+            writeRes.$metadata as Record<string, unknown>,
+          )
           .error('zipline will now exit');
         process.exit(1);
       }
 
-      if (!res.Buckets?.find((bucket) => bucket.Name === this.options.bucket)) {
-        this.logger.error(`bucket ${this.options.bucket} does not exist`).error('zipline will now exit');
+      const readRes = await this.client.send(readObject);
+      if (!isOk(readRes.$metadata.httpStatusCode || 0)) {
+        this.logger
+          .error('there was an error while testing read access', readRes.$metadata as Record<string, unknown>)
+          .error('zipline will now exit');
         process.exit(1);
       }
+
+      const deleteRes = await this.client.send(deleteObject);
+      if (!isOk(deleteRes.$metadata.httpStatusCode || 0)) {
+        this.logger
+          .error(
+            'there was an error while testing write access',
+            deleteRes.$metadata as Record<string, unknown>,
+          )
+          .error('zipline will now exit');
+        process.exit(1);
+      }
+
+      this.logger.debug('access test successful');
     } catch (e) {
       this.logger
-        .error('there was an error while listing buckets', e as Record<string, unknown>)
+        .error('there was an error while testing access', e as Record<string, unknown>)
         .error('zipline will now exit');
       process.exit(1);
     } finally {
-      this.logger.debug(`bucket ${this.options.bucket} exists`);
+      this.logger.debug(`able to read/write bucket ${this.options.bucket}`);
     }
   }
 
