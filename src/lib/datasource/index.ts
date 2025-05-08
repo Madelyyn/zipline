@@ -28,6 +28,7 @@ function getDatasource(conf?: typeof config): void {
         bucket: config.datasource.s3!.bucket,
         endpoint: config.datasource.s3?.endpoint,
         forcePathStyle: config.datasource.s3?.forcePathStyle,
+        subdirectory: config.datasource.s3?.subdirectory,
       });
       break;
     default:

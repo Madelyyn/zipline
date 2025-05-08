@@ -32,6 +32,7 @@ export class S3Datasource extends Datasource {
       bucket: string;
       endpoint?: string | null;
       forcePathStyle?: boolean;
+      subdirectory?: string | null;
     },
   ) {
     super();
@@ -61,11 +62,21 @@ export class S3Datasource extends Datasource {
     this.ensureReadWriteAccess();
   }
 
+  private key(path: string): string {
+    if (this.options.subdirectory) {
+      return this.options.subdirectory.endsWith('/')
+        ? this.options.subdirectory + path
+        : this.options.subdirectory + '/' + path;
+    }
+
+    return path;
+  }
+
   private async ensureReadWriteAccess() {
     try {
       const putObject = new PutObjectCommand({
         Bucket: this.options.bucket,
-        Key: `${randomCharacters(10)}-zipline`,
+        Key: this.key(`${randomCharacters(10)}-zipline`),
         Body: randomCharacters(10),
       });
 
@@ -123,7 +134,7 @@ export class S3Datasource extends Datasource {
   public async get(file: string): Promise<Readable | null> {
     const command = new GetObjectCommand({
       Bucket: this.options.bucket,
-      Key: file,
+      Key: this.key(file),
     });
 
     try {
@@ -155,7 +166,7 @@ export class S3Datasource extends Datasource {
   ): Promise<void> {
     const command = new PutObjectCommand({
       Bucket: this.options.bucket,
-      Key: file,
+      Key: this.key(file),
       Body: data,
       ...(options.mimetype ? { ContentType: options.mimetype } : {}),
     });
@@ -177,7 +188,7 @@ export class S3Datasource extends Datasource {
   public async delete(file: string): Promise<void> {
     const command = new DeleteObjectCommand({
       Bucket: this.options.bucket,
-      Key: file,
+      Key: this.key(file),
     });
 
     try {
@@ -196,7 +207,7 @@ export class S3Datasource extends Datasource {
   public async size(file: string): Promise<number> {
     const command = new GetObjectCommand({
       Bucket: this.options.bucket,
-      Key: file,
+      Key: this.key(file),
     });
 
     try {
@@ -221,6 +232,8 @@ export class S3Datasource extends Datasource {
   public async totalSize(): Promise<number> {
     const command = new ListObjectsCommand({
       Bucket: this.options.bucket,
+      Prefix: this.options.subdirectory ?? undefined,
+      Delimiter: this.options.subdirectory ? undefined : '/',
     });
 
     try {
@@ -266,7 +279,7 @@ export class S3Datasource extends Datasource {
   public async range(file: string, start: number, end: number): Promise<Readable> {
     const command = new GetObjectCommand({
       Bucket: this.options.bucket,
-      Key: file,
+      Key: this.key(file),
       Range: `bytes=${start}-${end}`,
     });
 

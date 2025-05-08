@@ -112,6 +112,7 @@ export const schema = z.object({
           bucket: z.string(),
           endpoint: z.string().nullable().default(null),
           forcePathStyle: z.boolean().default(false),
+          subdirectory: z.string().nullable().default(null),
         })
         .optional(),
       local: z
