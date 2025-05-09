@@ -8,15 +8,15 @@ export type ApiVersionResponse = {
 };
 
 interface VersionAPI {
-  isUpstream?: boolean;
-  isRelease?: boolean;
-  isLatest?: boolean;
-  version?: {
+  isUpstream: boolean;
+  isRelease: boolean;
+  isLatest: boolean;
+  version: {
     tag: string;
     sha: string;
     url: string;
   };
-  latest?: {
+  latest: {
     tag: string;
     url: string;
     commit?: {
@@ -37,7 +37,7 @@ export default fastifyPlugin(
       const resp = await fetch(`https://zipline-version.diced.sh/?${params.toString()}`);
 
       if (!resp.ok) {
-        return res.internalServerError('failed to fetch version details: ' + await resp.text());
+        return res.internalServerError('failed to fetch version details: ' + (await resp.text()));
       }
 
       const data: VersionAPI = await resp.json();

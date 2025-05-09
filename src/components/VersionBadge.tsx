@@ -80,7 +80,7 @@ export default function VersionBadge() {
         {!version.isLatest && !version.isUpstream && version.isRelease && (
           <Text>
             You are running an <b>outdated</b> version of Zipline. It is recommended to update to the{' '}
-            <Anchor href={version.latest?.url!}>latest version</Anchor>.
+            <Anchor href={version.latest.url}>latest version</Anchor>.
           </Text>
         )}
 
@@ -100,19 +100,19 @@ export default function VersionBadge() {
           items={[
             {
               label: 'Version',
-              value: version.version?.tag!,
-              href: `https://github.com/diced/zipline/releases/${version.version?.tag}`,
+              value: version.version.tag!,
+              href: `https://github.com/diced/zipline/releases/${version.version.tag}`,
             },
             {
               label: 'Commit',
-              value: version.version?.sha!,
-              href: `https://github.com/diced/zipline/commit/${version.version?.sha}`,
+              value: version.version.sha!,
+              href: `https://github.com/diced/zipline/commit/${version.version.sha}`,
             },
             { label: 'Upstream?', value: version.isUpstream ? 'Yes' : 'No' },
           ]}
         />
 
-        {!version.isLatest && version.isUpstream && (
+        {!version.isLatest && version.isUpstream && version.latest.commit && (
           <>
             <Title order={3} mt='sm'>
               Latest Commit Available
@@ -125,12 +125,12 @@ export default function VersionBadge() {
               items={[
                 {
                   label: 'Commit',
-                  value: version.latest?.commit?.sha!.slice(0, 7)!,
-                  href: `https://github.com/diced/zipline/commit/${version.latest?.commit?.sha}`,
+                  value: version.latest.commit.sha!.slice(0, 7)!,
+                  href: `https://github.com/diced/zipline/commit/${version.latest.commit.sha}`,
                 },
                 {
                   label: 'Available to update',
-                  value: version.latest?.commit?.pull ? 'Yes' : 'No',
+                  value: version.latest.commit.pull ? 'Yes' : 'No',
                 },
               ]}
             />
@@ -140,15 +140,15 @@ export default function VersionBadge() {
         {!version.isLatest && version.isRelease && (
           <>
             <Title order={3} mt='sm'>
-              {version.latest?.tag} is available
+              {version.latest.tag} is available
             </Title>
 
-            <VersionButton text='Changelogs' href={version.latest?.url!}>
-              {version.latest?.tag}
+            <VersionButton text='Changelogs' href={version.latest.url}>
+              {version.latest.tag}
             </VersionButton>
 
             <VersionButton text='Update' href='https://zipline.diced.sh/docs/get-started/docker#updating'>
-              {version.latest?.tag}
+              {version.latest.tag}
             </VersionButton>
           </>
         )}
