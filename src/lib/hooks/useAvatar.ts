@@ -10,7 +10,8 @@ const f = async () => {
 
 export default function useAvatar() {
   const { data, mutate } = useSWR('/api/user/avatar', f, {
-    refreshInterval: 300000,
+    refreshInterval: undefined,
+    revalidateOnFocus: true,
   });
   return { avatar: data, mutate };
 }
