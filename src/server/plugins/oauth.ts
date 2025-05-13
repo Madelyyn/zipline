@@ -46,7 +46,8 @@ async function oauthPlugin(fastify: FastifyInstance) {
       logger.warn('invalid oauth request', {
         error: response.error,
       });
-      return reply.internalServerError(response.error_code + ' ' + response.error);
+
+      return reply.internalServerError(response.error);
     }
 
     if (response.redirect) {

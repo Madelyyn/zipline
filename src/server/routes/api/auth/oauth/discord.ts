@@ -58,10 +58,17 @@ async function discordOauth({ code, host, state }: OAuthQuery, logger: Logger): 
     },
   });
 
-  if (!res.ok)
+  if (!res.ok) {
+    const text = await res.text();
+    logger.debug('discord oauth failed with a non 200 status code', {
+      status: res.status,
+      text,
+    });
+
     return {
       error: 'Failed to fetch access token',
     };
+  }
 
   const json = await res.json();
 

@@ -59,10 +59,14 @@ async function oidcOauth({ code, host, state }: OAuthQuery, logger: Logger): Pro
     },
   });
 
-  if (!res.ok)
+  if (!res.ok) {
+    const text = await res.text();
+    logger.debug('oidc oauth failed with a non 200 status code', { status: res.status, text });
+
     return {
       error: 'Failed to fetch access token',
     };
+  }
 
   const json = await res.json();
   if (!json.access_token) return { error: 'No access token in response' };
