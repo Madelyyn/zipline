@@ -139,6 +139,14 @@ export default function DashboardFileType({
     }
   }, []);
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+  }, [open]);
+
   if (disableMediaPreview && !show)
     return <Placeholder text={`Click to view file ${file.name}`} Icon={fileIcon(file.type)} />;
 
