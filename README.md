@@ -77,11 +77,17 @@ services:
     environment:
       - DATABASE_URL=postgres://${POSTGRESQL_USER:-zipline}:${POSTGRESQL_PASSWORD}@postgresql:5432/${POSTGRESQL_DB:-zipline}
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
     volumes:
       - './uploads:/zipline/uploads'
       - './public:/zipline/public'
       - './themes:/zipline/themes'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/healthcheck']
+      interval: 15s
+      timeout: 2s
+      retries: 2
 
 volumes:
   pgdata:
