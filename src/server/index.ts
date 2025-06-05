@@ -183,7 +183,7 @@ async function main() {
         // setting the inner request.body so that next.js can access it.
         req.raw.body = parsedBody;
         done(null, parsedBody);
-      } catch (err) {
+      } catch {
         done(null, {});
       }
     },

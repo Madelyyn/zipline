@@ -1,7 +1,6 @@
 import { config } from '@/lib/config';
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { fetchApi } from '@/lib/fetchApi';
 import { Anchor, Button, Modal, PasswordInput } from '@mantine/core';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { useRouter } from 'next/router';
