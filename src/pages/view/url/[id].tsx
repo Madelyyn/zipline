@@ -13,43 +13,48 @@ export default function ViewUrlId({ url, password }: InferGetServerSidePropsType
   const [passwordValue, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
 
-  const verifyPassword = async () => {
-    const { error } = await fetchApi(`/api/user/urls/${url.id}/password`, 'POST', {
-      password: passwordValue.trim(),
-    });
-
-    if (error) {
-      setPasswordError('Invalid password');
-    } else {
-      setPasswordError('');
-      router.replace(`/view/url/${url.id}?pw=${encodeURI(passwordValue.trim())}`);
-    }
-  };
-
   useEffect(() => {
     if (!password) router.replace(url.destination!);
   }, []);
 
   return password ? (
     <Modal onClose={() => {}} opened={true} withCloseButton={false} centered title='Password required'>
-      <PasswordInput
-        description='This link is password protected, enter password to view it'
-        required
-        mb='sm'
-        value={passwordValue}
-        onChange={(event) => setPassword(event.currentTarget.value)}
-        error={passwordError}
-      />
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
 
-      <Button
-        fullWidth
-        variant='outline'
-        my='sm'
-        onClick={() => verifyPassword()}
-        disabled={passwordValue.trim().length === 0}
+          const res = await fetch(`/api/user/urls/${url.id}/password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: passwordValue.trim() }),
+          });
+
+          if (res.ok) {
+            router.reload();
+          } else {
+            setPasswordError('Invalid password');
+          }
+        }}
       >
-        Verify
-      </Button>
+        <PasswordInput
+          description='This link is password protected, enter password to view it'
+          required
+          mb='sm'
+          value={passwordValue}
+          onChange={(event) => setPassword(event.currentTarget.value)}
+          error={passwordError}
+        />
+
+        <Button
+          fullWidth
+          variant='outline'
+          my='sm'
+          type='submit'
+          disabled={passwordValue.trim().length === 0}
+        >
+          Verify
+        </Button>
+      </form>
     </Modal>
   ) : (
     <p>
@@ -62,7 +67,7 @@ export const getServerSideProps: GetServerSideProps<{
   url: { id: string; destination?: string };
   password?: boolean;
 }> = async (context) => {
-  const { id, pw } = context.query as { id: string; pw: string };
+  const { id } = context.query as { id: string; pw: string };
   if (!id) return { notFound: true };
 
   const url = await prisma.url.findFirst({
@@ -94,7 +99,11 @@ export const getServerSideProps: GetServerSideProps<{
     };
   }
 
-  if (pw) {
+  const configSend = { website: { theme: config.website.theme } };
+
+  const pw = context.req.cookies[`url_pw_${url.id}`];
+
+  if (pw && url.password) {
     const verified = await verifyPassword(pw, url.password!);
     // @ts-ignore
     delete url.password;
@@ -115,6 +124,7 @@ export const getServerSideProps: GetServerSideProps<{
       redirect: {
         destination: url.destination,
         permanent: true,
+        config: configSend,
       },
     };
   }
@@ -138,11 +148,7 @@ export const getServerSideProps: GetServerSideProps<{
     props: {
       url,
       password,
-      config: {
-        website: {
-          theme: config.website.theme,
-        },
-      },
+      config: configSend,
     },
   };
 };

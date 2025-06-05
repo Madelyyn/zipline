@@ -21,14 +21,15 @@ import { fastifyStatic } from '@fastify/static';
 import fastify from 'fastify';
 import { mkdir, readFile } from 'fs/promises';
 import ms, { StringValue } from 'ms';
+import querystring from 'querystring';
 import { parse } from 'url';
 import { version } from '../../package.json';
 import { checkRateLimit } from './plugins/checkRateLimit';
 import next, { ALL_METHODS } from './plugins/next';
+import oauthPlugin from './plugins/oauth';
 import loadRoutes from './routes';
 import { filesRoute } from './routes/files.dy';
 import { urlsRoute } from './routes/urls.dy';
-import oauthPlugin from './plugins/oauth';
 
 const MODE = process.env.NODE_ENV || 'production';
 const logger = log('server');
@@ -172,22 +173,21 @@ async function main() {
     server.next('/reload', ALL_METHODS);
   }
 
-  // // TODO: no longer need this when all the api routes are handled by fastify :)
-  // const routeKeys = Object.keys(routes); // holds "currently migrated routes" so we can parse json through fastify
-  // server.addContentTypeParser('application/json', (req, body, done) => {
-  //   if (routeKeys.includes(req.routeOptions.config.url)) {
-  //     let bodyString = '';
-  //     body.on('data', (chunk) => {
-  //       bodyString += chunk;
-  //     });
+  server.addContentTypeParser(
+    'application/x-www-form-urlencoded',
+    { parseAs: 'string' },
+    (req, body, done) => {
+      try {
+        const parsedBody = querystring.parse(body.toString());
 
-  //     body.on('end', () => {
-  //       if (bodyString === '' || bodyString === null) return done(null, {});
-
-  //       server.getDefaultJsonParser('error', 'ignore')(req, bodyString, done);
-  //     });
-  //   } else done(null, body);
-  // });
+        // setting the inner request.body so that next.js can access it.
+        req.raw.body = parsedBody;
+        done(null, parsedBody);
+      } catch (err) {
+        done(null, {});
+      }
+    },
+  );
 
   server.setErrorHandler((error, _, res) => {
     if (error.statusCode) {
@@ -242,5 +242,11 @@ main();
 declare module 'fastify' {
   interface FastifyInstance {
     tasks: Tasks;
+  }
+}
+
+declare module 'node:http' {
+  interface IncomingMessage {
+    body?: any;
   }
 }

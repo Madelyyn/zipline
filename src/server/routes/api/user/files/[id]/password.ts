@@ -34,6 +34,7 @@ export default fastifyPlugin(
           select: {
             name: true,
             password: true,
+            id: true,
           },
         });
         if (!file) return res.notFound();
@@ -50,6 +51,14 @@ export default fastifyPlugin(
           return res.forbidden('Incorrect password');
         }
         logger.info(`${file.name} was accessed with the correct password`, { ua: req.headers['user-agent'] });
+
+        res.cookie('file_pw_' + file.id, req.body.password, {
+          sameSite: 'lax',
+          maxAge: 60,
+          httpOnly: false,
+          secure: false,
+          path: '/',
+        });
 
         return res.send({ success: true });
       },

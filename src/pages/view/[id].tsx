@@ -6,7 +6,6 @@ import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { fileSelect, type File } from '@/lib/db/models/file';
 import { User, userSelect } from '@/lib/db/models/user';
-import { fetchApi } from '@/lib/fetchApi';
 import { parseString } from '@/lib/parser';
 import { parserMetrics } from '@/lib/parser/metrics';
 import { ZiplineTheme } from '@/lib/theme';
@@ -38,12 +37,12 @@ import { useEffect, useState } from 'react';
 export default function ViewFileId({
   file,
   password,
-  pw,
   code,
   user,
   host,
   metrics,
   filesRoute,
+  pw,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   file.createdAt = new Date(file.createdAt!);
   file.updatedAt = new Date(file.updatedAt!);
@@ -59,19 +58,6 @@ export default function ViewFileId({
   const [passwordValue, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
-
-  const verifyPassword = async () => {
-    const { error } = await fetchApi(`/api/user/files/${file.id}/password`, 'POST', {
-      password: passwordValue.trim(),
-    });
-
-    if (error) {
-      setPasswordError('Invalid password');
-    } else {
-      setPasswordError('');
-      router.replace(`/view/${file.name}?pw=${encodeURI(passwordValue.trim())}`);
-    }
-  };
 
   const meta = (
     <Head>
@@ -177,24 +163,42 @@ export default function ViewFileId({
 
   return password && !pw ? (
     <Modal onClose={() => {}} opened={true} withCloseButton={false} centered title='Password required'>
-      <PasswordInput
-        description='This file is password protected, enter password to view it'
-        required
-        mb='sm'
-        value={passwordValue}
-        onChange={(event) => setPassword(event.currentTarget.value)}
-        error={passwordError}
-      />
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
 
-      <Button
-        fullWidth
-        variant='outline'
-        my='sm'
-        onClick={() => verifyPassword()}
-        disabled={passwordValue.trim().length === 0}
+          const res = await fetch(`/api/user/files/${file.id}/password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: passwordValue.trim() }),
+          });
+
+          if (res.ok) {
+            router.reload();
+          } else {
+            setPasswordError('Invalid password');
+          }
+        }}
       >
-        Verify
-      </Button>
+        <PasswordInput
+          description='This file is password protected, enter password to view it'
+          required
+          mb='sm'
+          value={passwordValue}
+          onChange={(event) => setPassword(event.currentTarget.value)}
+          error={passwordError}
+        />
+
+        <Button
+          fullWidth
+          variant='outline'
+          my='sm'
+          type='submit'
+          disabled={passwordValue.trim().length === 0}
+        >
+          Verify
+        </Button>
+      </form>
     </Modal>
   ) : code ? (
     <>
@@ -386,15 +390,15 @@ const getFile = async (id: string) =>
 export const getServerSideProps: GetServerSideProps<{
   file: Partial<NonNullable<Awaited<ReturnType<typeof getFile>>>>;
   password?: boolean;
-  pw?: string;
   code: boolean;
   user?: Partial<User>;
   host: string;
+  pw?: string | null;
   themes: ZiplineTheme[];
   metrics?: Awaited<ReturnType<typeof parserMetrics>>;
   filesRoute?: string;
 }> = async (context) => {
-  const { id, pw } = context.query;
+  const { id } = context.query;
   if (!id) return { notFound: true };
 
   const { config: libConfig, reloadSettings } = await import('@/lib/config');
@@ -449,83 +453,50 @@ export const getServerSideProps: GetServerSideProps<{
   const themes = await readThemes();
   const metrics = await parserMetrics(user.id);
 
-  if (pw && file.password) {
-    const verified = await verifyPassword(pw as string, file.password);
-    if (!verified) return { notFound: true };
+  const config = { website: { theme: zConfig.website.theme } };
 
-    delete (file as any).password;
+  const pw = context.req.cookies[`file_pw_${file.id}`];
+  const hasPassword = !!file.password;
 
-    return {
-      props: {
-        config: {
-          website: {
-            theme: zConfig.website.theme,
-          },
+  if (hasPassword) {
+    if (pw) {
+      const verified = await verifyPassword(pw as string, file.password!);
+      if (!verified) return { notFound: true };
+      delete (file as any).password;
+    } else {
+      delete (file as any).password;
+      return {
+        props: {
+          file: { id: file.id, name: file.name, type: file.type },
+          password: true,
+          code,
+          user,
+          host,
+          themes,
+          metrics,
+          config,
         },
-        file,
-        pw: pw as string,
-        user,
-        code,
-        host,
-        themes,
-        metrics,
-        filesRoute: zConfig.files.route,
-      },
-    };
-  } else if (file.password && !pw) {
-    delete (file as any).password;
-
-    return {
-      props: {
-        file: {
-          name: file.name,
-          type: file.type,
-          id: file.id,
-        },
-        password: true,
-        code,
-        user,
-        host,
-        themes,
-        metrics,
-        config: {
-          website: {
-            theme: zConfig.website.theme,
-          },
-        },
-      },
-    };
+      };
+    }
   }
 
-  const password = !!file.password;
-  delete (file as any).password;
-
   await prisma.file.update({
-    where: {
-      id: file.id,
-    },
-    data: {
-      views: {
-        increment: 1,
-      },
-    },
+    where: { id: file.id },
+    data: { views: { increment: 1 } },
   });
 
   return {
     props: {
       file,
-      password,
+      password: hasPassword,
+      pw: pw || null,
       code,
       user,
       host,
       themes,
       metrics,
       filesRoute: zConfig.files.route,
-      config: {
-        website: {
-          theme: zConfig.website.theme,
-        },
-      },
+      config,
     },
   };
 };

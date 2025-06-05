@@ -74,7 +74,7 @@ export default function DashboardFileType({
 }: {
   file: DbFile | File;
   show?: boolean;
-  password?: string;
+  password?: string | null;
   code?: boolean;
   allowZoom?: boolean;
 }) {

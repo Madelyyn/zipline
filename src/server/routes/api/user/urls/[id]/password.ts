@@ -45,6 +45,14 @@ export default fastifyPlugin(
 
       logger.info(`url ${url.id} was accessed with the correct password`, { ua: req.headers['user-agent'] });
 
+      res.cookie('url_pw_' + url.id, req.body.password, {
+        sameSite: 'lax',
+        maxAge: 60,
+        httpOnly: false,
+        secure: false,
+        path: '/',
+      });
+
       return res.send({ success: true });
     });
 
