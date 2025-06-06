@@ -1,21 +1,27 @@
-// @ts-ignore
-import * as gmr from '@xoi/gps-metadata-remover';
+import ExifTransformer from 'exif-be-gone';
+import { PassThrough } from 'stream';
 
-export const removeLocation = gmr.removeLocation as (
-  photoUri: string,
-  read: ReadFunction,
-  write: WriteFunction,
-) => Promise<boolean>;
+export async function removeGps(buffer: Buffer): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const input = new PassThrough();
+    input.end(buffer);
 
-export type ReadFunction = (size: number, offset: number) => Promise<Buffer>;
-export type WriteFunction = (writeValue: string, entryOffset: number, encoding: string) => Promise<void>;
+    const transformer = new ExifTransformer();
 
-export async function removeGps(buffer: Buffer): Promise<boolean> {
-  const read = (size: number, offset: number) => Promise.resolve(buffer.subarray(offset, offset + size));
-  const write = (writeValue: string, entryOffset: number, encoding: string) => {
-    buffer.write(writeValue, entryOffset, encoding as BufferEncoding);
-    return Promise.resolve();
-  };
+    const chunks: Buffer[] = [];
+    transformer.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
 
-  return removeLocation('', read, write);
+    transformer.once('error', (err: Error) => {
+      reject(err);
+    });
+
+    transformer.once('end', () => {
+      const stripped = Buffer.concat(chunks);
+      resolve(stripped);
+    });
+
+    input.pipe(transformer);
+  });
 }

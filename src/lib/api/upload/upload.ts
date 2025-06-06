@@ -110,11 +110,17 @@ export async function handleFile({
   }
 
   let removedGps = false;
-  if (mimetype.startsWith('image/') && config.files.removeGpsMetadata) {
-    removedGps = await removeGps(file.buffer);
 
-    if (removedGps) {
-      logger.c('gps').debug(`removed gps metadata from ${file.filename}`);
+  if (mimetype.startsWith('image/') && config.files.removeGpsMetadata) {
+    file.buffer = await removeGps(file.buffer);
+
+    if (file.buffer.length < file.file.bytesRead) {
+      logger.c('gps').debug(`removed gps metadata from ${file.filename}`, {
+        nsize: bytes(file.buffer.length),
+        osize: bytes(file.file.bytesRead),
+      });
+
+      removedGps = true;
     }
   }
 
