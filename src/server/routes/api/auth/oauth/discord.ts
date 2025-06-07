@@ -80,14 +80,12 @@ async function discordOauth({ code, host, state }: OAuthQuery, logger: Logger): 
 
   logger.debug('user', { '@me': userJson });
 
-  if (config.oauth.discord.whitelistIds?.length) {
-    if (!config.oauth.discord.whitelistIds.includes(userJson.id)) {
-      logger.warn('Discord user not whitelisted', { userId: userJson.id });
-      return {
-        error: 'You are not whitelisted to use Discord OAuth',
-        error_code: 403,
-      };
-    }
+  // handle config.oauth.discord.allowedIds and config.oauth.discord.deniedIds
+  if (config.oauth.discord.allowedIds && !config.oauth.discord.allowedIds.includes(userJson.id)) {
+    return { error: 'You are not allowed to log in with Discord.' };
+  }
+  if (config.oauth.discord.deniedIds && config.oauth.discord.deniedIds.includes(userJson.id)) {
+    return { error: 'You are not allowed to log in with Discord.' };
   }
 
   const avatar = userJson.avatar

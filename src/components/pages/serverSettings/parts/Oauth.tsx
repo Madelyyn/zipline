@@ -30,7 +30,8 @@ export default function Oauth({
       oauthDiscordClientId: '',
       oauthDiscordClientSecret: '',
       oauthDiscordRedirectUri: '',
-      oauthDiscordWhitelistIds: '',
+      oauthDiscordAllowedIds: '',
+      oauthDiscordDeniedIds: '',
 
       oauthGoogleClientId: '',
       oauthGoogleClientSecret: '',
@@ -54,7 +55,14 @@ export default function Oauth({
 
   const onSubmit = async (values: typeof form.values) => {
     for (const key in values) {
-      if (!['oauthBypassLocalLogin', 'oauthLoginOnly', 'oauthDiscordWhitelistIds'].includes(key)) {
+      if (
+        ![
+          'oauthBypassLocalLogin',
+          'oauthLoginOnly',
+          'oauthDiscordAllowedIds',
+          'oauthDiscordDeniedIds',
+        ].includes(key)
+      ) {
         if ((values[key as keyof typeof form.values] as string)?.trim() === '') {
           // @ts-ignore
           values[key as keyof typeof form.values] = null;
@@ -66,11 +74,11 @@ export default function Oauth({
         }
       }
 
-      if (key === 'oauthDiscordWhitelistIds') {
-        if (Array.isArray(values['oauthDiscordWhitelistIds'])) continue;
+      if (key === 'oauthDiscordAllowedIds' || key === 'oauthDiscordDeniedIds') {
+        if (Array.isArray(values[key])) continue;
 
         // @ts-ignore
-        values['oauthDiscordWhitelistIds'] = (values['oauthDiscordWhitelistIds'] as string)
+        values[key] = (values[key] as string)
           .split(',')
           .map((id) => id.trim())
           .filter((id) => id !== '');
@@ -90,8 +98,11 @@ export default function Oauth({
       oauthDiscordClientId: data.settings.oauthDiscordClientId ?? '',
       oauthDiscordClientSecret: data.settings.oauthDiscordClientSecret ?? '',
       oauthDiscordRedirectUri: data.settings.oauthDiscordRedirectUri ?? '',
-      oauthDiscordWhitelistIds: data.settings.oauthDiscordWhitelistIds
-        ? data.settings.oauthDiscordWhitelistIds.join(', ')
+      oauthDiscordAllowedIds: data.settings.oauthDiscordAllowedIds
+        ? data.settings.oauthDiscordAllowedIds.join(', ')
+        : '',
+      oauthDiscordDeniedIds: data.settings.oauthDiscordDeniedIds
+        ? data.settings.oauthDiscordDeniedIds.join(', ')
         : '',
 
       oauthGoogleClientId: data.settings.oauthGoogleClientId ?? '',
@@ -147,9 +158,14 @@ export default function Oauth({
             <TextInput label='Discord Client ID' {...form.getInputProps('oauthDiscordClientId')} />
             <TextInput label='Discord Client Secret' {...form.getInputProps('oauthDiscordClientSecret')} />
             <TextInput
-              label='Discord Whitelist IDs'
-              description='A comma-separated list of Discord user IDs that are allowed to log in. Leave empty to allow all users.'
-              {...form.getInputProps('oauthDiscordWhitelistIds')}
+              label='Discord Allowed IDs'
+              description='A comma-separated list of Discord user IDs that are allowed to log in. Leave empty to disable allow list.'
+              {...form.getInputProps('oauthDiscordAllowedIds')}
+            />
+            <TextInput
+              label='Discord Denied IDs'
+              description='A comma-separated list of Discord user IDs that are denied from logging in. Leave empty to disable deny list.'
+              {...form.getInputProps('oauthDiscordDeniedIds')}
             />
             <TextInput
               label='Discord Redirect URL'

@@ -222,7 +222,17 @@ export default fastifyPlugin(
             oauthDiscordClientId: z.string().nullable(),
             oauthDiscordClientSecret: z.string().nullable(),
             oauthDiscordRedirectUri: z.string().url().endsWith('/api/auth/oauth/discord').nullable(),
-            oauthDiscordWhitelistIds: z
+            oauthDiscordAllowedIds: z
+              .union([
+                z.array(z.string().refine((s) => /^\d+$/.test(s), 'Discord ID must be a number')),
+                z
+                  .string()
+                  .refine((s) => s === '' || /^\d+(,\d+)*$/.test(s), 'Discord IDs must be comma-separated'),
+              ])
+              .transform((value) =>
+                typeof value === 'string' ? value.split(',').map((id) => id.trim()) : value,
+              ),
+            oauthDiscordDeniedIds: z
               .union([
                 z.array(z.string().refine((s) => /^\d+$/.test(s), 'Discord ID must be a number')),
                 z

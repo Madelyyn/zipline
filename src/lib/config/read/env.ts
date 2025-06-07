@@ -95,7 +95,8 @@ export const ENVS = [
   env('oauth.discord.clientId', 'OAUTH_DISCORD_CLIENT_ID', 'string', true),
   env('oauth.discord.clientSecret', 'OAUTH_DISCORD_CLIENT_SECRET', 'string', true),
   env('oauth.discord.redirectUri', 'OAUTH_DISCORD_REDIRECT_URI', 'string', true),
-  env('oauth.discord.whitelistIds', 'OAUTH_DISCORD_WHITELIST_IDS', 'string[]', true),
+  env('oauth.discord.allowedIds', 'OAUTH_DISCORD_ALLOWED_IDS', 'string[]', true),
+  env('oauth.discord.deniedIds', 'OAUTH_DISCORD_DENIED_IDS', 'string[]', true),
 
   env('oauth.google.clientId', 'OAUTH_GOOGLE_CLIENT_ID', 'string', true),
   env('oauth.google.clientSecret', 'OAUTH_GOOGLE_CLIENT_SECRET', 'string', true),

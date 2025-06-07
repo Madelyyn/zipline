@@ -82,7 +82,8 @@ model Zipline {
   oauthDiscordClientId     String?
   oauthDiscordClientSecret String?
   oauthDiscordRedirectUri  String?
-  oauthDiscordWhitelistIds String[] @default([]) 
+  oauthDiscordAllowedIds   String[] @default([])
+  oauthDiscordDeniedIds    String[] @default([])
 
   oauthGoogleClientId     String?
   oauthGoogleClientSecret String?
