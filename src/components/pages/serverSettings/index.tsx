@@ -1,7 +1,8 @@
 import { Response } from '@/lib/api/response';
-import { Group, SimpleGrid, Skeleton, Stack, Title } from '@mantine/core';
+import { Alert, Anchor, Collapse, Group, SimpleGrid, Skeleton, Stack, Title } from '@mantine/core';
 import useSWR from 'swr';
 import dynamic from 'next/dynamic';
+import { useDisclosure } from '@mantine/hooks';
 
 function SettingsSkeleton() {
   return <Skeleton height={280} animate />;
@@ -52,12 +53,33 @@ const PWA = dynamic(() => import('./parts/PWA'), {
 
 export default function DashboardSettings() {
   const { data, isLoading, error } = useSWR<Response['/api/server/settings']>('/api/server/settings');
+  const [opened, { toggle }] = useDisclosure(false);
 
   return (
     <>
       <Group gap='sm'>
         <Title order={1}>Server Settings</Title>
       </Group>
+
+      {(data?.tampered?.length ?? 0) > 0 && (
+        <Alert color='red' title='Environment Variable Settings' mt='md'>
+          <strong>{data!.tampered.length}</strong> setting{data!.tampered.length > 1 ? 's' : ''} have been set
+          via environment variables, therefore any changes made to them on this page will not take effect
+          unless the environment variable corresponding to the setting is removed. If you prefer using
+          environment variables, you can ignore this message. Click{' '}
+          <Anchor onClick={toggle} size='sm'>
+            here
+          </Anchor>{' '}
+          to {opened ? 'close' : 'view'} the list of overridden settings.
+          <Collapse in={opened} transitionDuration={200}>
+            <ul>
+              {data!.tampered.map((setting) => (
+                <li key={setting}>{setting}</li>
+              ))}
+            </ul>
+          </Collapse>
+        </Alert>
+      )}
 
       <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
         {error ? (
