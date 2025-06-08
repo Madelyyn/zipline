@@ -28,6 +28,22 @@ export function setProperty(obj: any, path: string, value: any) {
   return root;
 }
 
+export function getProperty(obj: any, path: string) {
+  if (!isObject(obj)) return undefined;
+
+  const dot = path.split('.');
+
+  for (let i = 0; i !== dot.length; ++i) {
+    const key = dot[i];
+
+    if (!isObject(obj) || !(key in obj)) return undefined;
+
+    obj = obj[key];
+  }
+
+  return obj;
+}
+
 export function parse(this: { logger: Logger }, value: string, type: EnvType) {
   switch (type) {
     case 'string':

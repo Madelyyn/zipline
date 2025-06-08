@@ -4,6 +4,7 @@ import { listUsers } from './commands/list-users';
 import { readConfig } from './commands/read-config';
 import { setUser } from './commands/set-user';
 import { importDir } from './commands/import-dir';
+import { exportConfig } from './commands/export-config';
 
 const cli = new Command();
 
@@ -44,5 +45,12 @@ cli
   .option('-f, --folder [folder_id]', 'an optional folder to add the files to')
   .argument('<directory>', 'the directory to import into Zipline')
   .action(importDir);
+
+cli
+  .command('export-config')
+  .summary('export the current configuration as environment variables')
+  .option('-y, --yml', 'export the configuration in a yml format', false)
+  .option('-d, --show-defaults', 'ignore default values and only export changed values', false)
+  .action(exportConfig);
 
 cli.parse();
