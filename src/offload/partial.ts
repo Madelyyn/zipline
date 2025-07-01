@@ -199,7 +199,7 @@ async function runComplete(id: string) {
     data: {
       size: options.partial!.range[2],
       ...(options.maxViews && { maxViews: options.maxViews }),
-      ...(options.deletesAt && { deletesAt: options.deletesAt }),
+      ...(options.deletesAt && options.deletesAt !== 'never' && { deletesAt: options.deletesAt }),
     },
     select: fileSelect,
   });

@@ -1,4 +1,5 @@
 import { Response } from '@/lib/api/response';
+import { SafeConfig } from '@/lib/config/safe';
 import { ErrorBody } from '@/lib/response';
 import { UploadOptionsStore } from '@/lib/store/uploadOptions';
 import { ActionIcon, Anchor, Button, Group, Stack, Table, Tooltip } from '@mantine/core';
@@ -113,6 +114,7 @@ export function uploadFiles(
     options: UploadOptionsStore['options'];
     ephemeral: UploadOptionsStore['ephemeral'];
     folder?: string;
+    config: SafeConfig;
   },
 ) {
   setLoading(true);
@@ -185,7 +187,7 @@ export function uploadFiles(
 
   req.open('POST', '/api/upload');
 
-  options.deletesAt !== 'never' && req.setRequestHeader('x-zipline-deletes-at', options.deletesAt);
+  options.deletesAt !== 'default' && req.setRequestHeader('x-zipline-deletes-at', options.deletesAt);
   options.format !== 'default' && req.setRequestHeader('x-zipline-format', options.format);
   options.imageCompressionPercent &&
     req.setRequestHeader('x-zipline-image-compression-percent', options.imageCompressionPercent.toString());
