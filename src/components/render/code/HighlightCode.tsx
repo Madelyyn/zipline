@@ -37,7 +37,7 @@ export default function HighlightCode({ language, code }: { language: string; co
       </CopyButton>
 
       <ScrollArea type='auto' dir='ltr' offsetScrollbars={false}>
-        <pre style={{ margin: 0 }} className='theme'>
+        <pre style={{ margin: 0, whiteSpace: 'pre', overflowX: 'auto' }} className='theme'>
           <code className='theme'>
             {displayLines.map((line, i) => (
               <div key={i}>

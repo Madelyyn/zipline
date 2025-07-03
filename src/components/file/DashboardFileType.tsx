@@ -11,7 +11,7 @@ import {
   Text,
 } from '@mantine/core';
 import { Icon, IconFileUnknown, IconPlayerPlay, IconShieldLockFilled } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { renderMode } from '../pages/upload/renderMode';
 import Render from '../render/Render';
 import fileIcon from './fileIcon';
@@ -30,7 +30,7 @@ function PlaceholderContent({ text, Icon }: { text: string; Icon: Icon }) {
 
 function Placeholder({ text, Icon, ...props }: { text: string; Icon: Icon; onClick?: () => void }) {
   return (
-    <Center py='xs' style={{ height: '100%', width: '100%', cursor: 'pointed' }} {...props}>
+    <Center py='xs' style={{ height: '100%', width: '100%', cursor: 'pointer' }} {...props}>
       <PlaceholderContent text={text} Icon={Icon} />
     </Center>
   );
@@ -83,57 +83,60 @@ export default function DashboardFileType({
   const disableMediaPreview = useSettingsStore((state) => state.settings.disableMediaPreview);
 
   const dbFile = 'id' in file;
-  const renderIn = renderMode(file.name.split('.').pop() || '');
+  const renderIn = useMemo(() => renderMode(file.name.split('.').pop() || ''), [file.name]);
 
   const [fileContent, setFileContent] = useState('');
   const [type, setType] = useState<string>(file.type.split('/')[0]);
 
   const [open, setOpen] = useState(false);
 
-  const gettext = async () => {
-    if (!dbFile) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if ((reader.result! as string).length > 1 * 1024 * 1024) {
-          setFileContent(
-            reader.result!.slice(0, 1 * 1024 * 1024) +
-              '\n...\nThe file is too big to display click the download icon to view/download it.',
-          );
-        } else {
-          setFileContent(reader.result as string);
-        }
-      };
-      reader.readAsText(file);
+  const getText = useCallback(async () => {
+    try {
+      if (!dbFile) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if ((reader.result! as string).length > 1 * 1024 * 1024) {
+            setFileContent(
+              reader.result!.slice(0, 1 * 1024 * 1024) +
+                '\n...\nThe file is too big to display click the download icon to view/download it.',
+            );
+          } else {
+            setFileContent(reader.result as string);
+          }
+        };
+        reader.readAsText(file);
+        return;
+      }
 
-      return;
-    }
+      if (file.size > 1 * 1024 * 1024) {
+        const res = await fetch(`/raw/${file.name}${password ? `?pw=${password}` : ''}`, {
+          headers: {
+            Range: 'bytes=0-' + 1 * 1024 * 1024, // 0 mb to 1 mb
+          },
+        });
+        if (!res.ok) throw new Error('Failed to fetch file');
+        const text = await res.text();
+        setFileContent(
+          text + '\n...\nThe file is too big to display click the download icon to view/download it.',
+        );
+        return;
+      }
 
-    if (file.size > 1 * 1024 * 1024) {
-      const res = await fetch(`/raw/${file.name}${password ? `?pw=${password}` : ''}`, {
-        headers: {
-          Range: 'bytes=0-' + 1 * 1024 * 1024, // 0 mb to 1 mb
-        },
-      });
-
+      const res = await fetch(`/raw/${file.name}${password ? `?pw=${password}` : ''}`);
+      if (!res.ok) throw new Error('Failed to fetch file');
       const text = await res.text();
-      setFileContent(
-        text + '\n...\nThe file is too big to display click the download icon to view/download it.',
-      );
-      return;
+      setFileContent(text);
+    } catch {
+      setFileContent('Error loading file.');
     }
-
-    const res = await fetch(`/raw/${file.name}${password ? `?pw=${password}` : ''}`);
-    const text = await res.text();
-
-    setFileContent(text);
-  };
+  }, [dbFile, file, password]);
 
   useEffect(() => {
     if (code) {
       setType('text');
-      gettext();
+      getText();
     } else if (overrideType === 'text' || type === 'text') {
-      gettext();
+      getText();
     } else {
       return;
     }
@@ -177,7 +180,10 @@ export default function DashboardFileType({
         />
       ) : (file as DbFile).thumbnail && dbFile ? (
         <Box pos='relative'>
-          <MantineImage src={`/raw/${(file as DbFile).thumbnail!.path}`} alt={file.name} />
+          <MantineImage
+            src={`/raw/${(file as DbFile).thumbnail!.path}`}
+            alt={file.name || 'Video thumbnail'}
+          />
 
           <Center
             pos='absolute'
@@ -203,7 +209,7 @@ export default function DashboardFileType({
         <Center>
           <MantineImage
             src={dbFile ? `/raw/${file.name}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)}
-            alt={file.name}
+            alt={file.name || 'Image'}
             style={{
               cursor: allowZoom ? 'zoom-in' : 'default',
               maxWidth: '70vw',
@@ -217,7 +223,7 @@ export default function DashboardFileType({
                 src={
                   dbFile ? `/raw/${file.name}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)
                 }
-                alt={file.name}
+                alt={file.name || 'Image'}
                 style={{
                   maxWidth: '95vw',
                   maxHeight: '95vh',
@@ -234,7 +240,7 @@ export default function DashboardFileType({
           fit='contain'
           mah={400}
           src={dbFile ? `/raw/${file.name}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)}
-          alt={file.name}
+          alt={file.name || 'Image'}
         />
       );
     case 'audio':

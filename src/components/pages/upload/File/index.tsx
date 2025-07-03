@@ -20,7 +20,7 @@ import { useClipboard, useColorScheme } from '@mantine/hooks';
 import { notifications, showNotification } from '@mantine/notifications';
 import { IconDeviceSdCard, IconFiles, IconUpload, IconX } from '@tabler/icons-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import UploadOptionsButton from '../UploadOptionsButton';
 import { uploadFiles } from '../uploadFiles';
 import ToUploadFile from './ToUploadFile';
@@ -49,34 +49,23 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
   });
   const [dropLoading, setLoading] = useState(false);
 
-  const handlePaste = (e: ClipboardEvent) => {
-    if (!e.clipboardData) return;
+  const aggSize = useCallback(() => files.reduce((acc, file) => acc + file.size, 0), [files]);
 
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    if (!e.clipboardData) return;
     for (let i = 0; i !== e.clipboardData.items.length; ++i) {
       if (!e.clipboardData.items[i].type.startsWith('image')) return;
-
       const blob = e.clipboardData.items[i].getAsFile();
       if (!blob) return;
-
-      setFiles([...files, blob]);
-      showNotification({
-        message: `Image ${blob.name} pasted from clipboard`,
-        color: 'blue',
-      });
+      setFiles((prev) => [...prev, blob]);
+      showNotification({ message: `Image ${blob.name} pasted from clipboard`, color: 'blue' });
     }
-  };
-
-  const aggSize = () => files.reduce((acc, file) => acc + file.size, 0);
+  }, []);
 
   const upload = () => {
-    const toPartialFiles: File[] = [];
-    for (let i = 0; i !== files.length; ++i) {
-      const file = files[i];
-      if (config.chunks.enabled && file.size >= bytes(config.chunks.max)) {
-        toPartialFiles.push(file);
-      }
-    }
-
+    const toPartialFiles: File[] = files.filter(
+      (file) => config.chunks.enabled && file.size >= bytes(config.chunks.max),
+    );
     if (toPartialFiles.length > 0) {
       uploadPartialFiles(toPartialFiles, {
         setFiles,
@@ -91,7 +80,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
       });
     } else {
       const size = aggSize();
-      if (size > bytes(config.files.maxFileSize) && !toPartialFiles.length) {
+      if (size > bytes(config.files.maxFileSize)) {
         notifications.show({
           title: 'Upload may fail',
           color: 'yellow',
@@ -105,7 +94,6 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
           ),
         });
       }
-
       uploadFiles(files, {
         setFiles,
         setLoading,
@@ -121,11 +109,22 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
-
     return () => {
       document.removeEventListener('paste', handlePaste);
     };
-  }, []);
+  }, [handlePaste]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (files.length > 0) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [files.length]);
 
   return (
     <>
@@ -142,7 +141,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
       </Group>
 
       <Dropzone
-        onDrop={(f) => setFiles([...f, ...files])}
+        onDrop={(f) => setFiles((prev) => [...f, ...prev])}
         my='sm'
         loading={dropLoading}
         disabled={dropLoading}
@@ -220,7 +219,6 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
 
       <Group justify='right' gap='sm' my='md'>
         <UploadOptionsButton folder={folder} numFiles={files.length} />
-
         <Button
           variant='outline'
           leftSection={<IconUpload size={18} />}

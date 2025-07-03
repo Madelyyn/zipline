@@ -63,12 +63,35 @@ export default function Domains({
         </Button>
       </Group>
 
-      <SimpleGrid mt='md' cols={{ base: 1, sm: 2, md: 3 }} spacing='xs'>
+      <SimpleGrid mt='md' cols={{ base: 1, sm: 2, md: 3 }} spacing='md' verticalSpacing='md'>
         {domains.map((domain, index) => (
-          <Paper key={index} withBorder p='xs'>
-            <Group justify='space-between'>
-              <div>
-                <strong>{domain}</strong>
+          <Paper
+            key={index}
+            withBorder
+            p='md'
+            radius='md'
+            shadow='xs'
+            style={{
+              background: 'rgba(0,0,0,0.03)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              minHeight: 64,
+            }}
+          >
+            <Group justify='space-between' align='center' wrap='nowrap'>
+              <div
+                style={{
+                  minWidth: 0,
+                  flex: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  fontWeight: 500,
+                  fontSize: 16,
+                }}
+              >
+                {domain}
               </div>
               <Button
                 variant='subtle'

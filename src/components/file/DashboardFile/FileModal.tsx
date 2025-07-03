@@ -18,7 +18,6 @@ import {
   Modal,
   Pill,
   PillsInput,
-  ScrollArea,
   SimpleGrid,
   Text,
   Title,
@@ -61,8 +60,8 @@ import {
   removeFromFolder,
   viewFile,
 } from '../actions';
-import FileStat from './FileStat';
 import EditFileDetailsModal from './EditFileDetailsModal';
+import FileStat from './FileStat';
 
 function ActionButton({
   Icon,
@@ -189,9 +188,9 @@ export default function FileModal({
           </Text>
         }
         size='auto'
+        maw='90vw'
         centered
         zIndex={200}
-        scrollAreaComponent={ScrollArea.Autosize}
       >
         {file ? (
           <>

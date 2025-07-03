@@ -7,6 +7,7 @@ import FilesUrlsCountGraph from './parts/FilesUrlsCountGraph';
 import { useApiStats } from './useStats';
 import { StatsCardsSkeleton } from './parts/StatsCards';
 import { StatsTablesSkeleton } from './parts/StatsTables';
+import dayjs from 'dayjs';
 
 const StatsCards = dynamic(() => import('./parts/StatsCards'));
 const StatsTables = dynamic(() => import('./parts/StatsTables'));
@@ -14,9 +15,11 @@ const StorageGraph = dynamic(() => import('./parts/StorageGraph'));
 const ViewsGraph = dynamic(() => import('./parts/ViewsGraph'));
 
 export default function DashboardMetrics() {
+  const today = dayjs();
+
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([
-    new Date(Date.now() - 86400000 * 7).toISOString(),
-    new Date().toISOString(),
+    today.subtract(7, 'day').toISOString(),
+    today.toISOString(),
   ]);
 
   const [open, setOpen] = useState(false);
@@ -40,17 +43,49 @@ export default function DashboardMetrics() {
   return (
     <>
       <Modal title='Change range' opened={open} onClose={() => setOpen(false)} size='auto'>
-        <Paper withBorder>
+        <Paper withBorder style={{ minHeight: 300 }}>
           <DatePicker
             type='range'
             value={dateRange}
             onChange={handleDateChange}
             allowSingleDateInRange={false}
             maxDate={new Date()}
+            presets={[
+              {
+                value: [today.subtract(2, 'day').format('YYYY-MM-DD'), today.format('YYYY-MM-DD')],
+                label: 'Last two days',
+              },
+              {
+                value: [today.subtract(7, 'day').format('YYYY-MM-DD'), today.format('YYYY-MM-DD')],
+                label: 'Last 7 days',
+              },
+              {
+                value: [today.startOf('month').format('YYYY-MM-DD'), today.format('YYYY-MM-DD')],
+                label: 'This month',
+              },
+              {
+                value: [
+                  today.subtract(1, 'month').startOf('month').format('YYYY-MM-DD'),
+                  today.subtract(1, 'month').endOf('month').format('YYYY-MM-DD'),
+                ],
+                label: 'Last month',
+              },
+              {
+                value: [today.startOf('year').format('YYYY-MM-DD'), today.format('YYYY-MM-DD')],
+                label: 'This year',
+              },
+              {
+                value: [
+                  today.subtract(1, 'year').startOf('year').format('YYYY-MM-DD'),
+                  today.subtract(1, 'year').endOf('year').format('YYYY-MM-DD'),
+                ],
+                label: 'Last year',
+              },
+            ]}
           />
         </Paper>
 
-        <Group mt='md'>
+        <Group mt='lg'>
           <Button fullWidth onClick={() => setOpen(false)}>
             Close
           </Button>

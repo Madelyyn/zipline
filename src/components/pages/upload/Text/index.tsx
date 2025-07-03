@@ -16,7 +16,7 @@ import {
 import { useClipboard } from '@mantine/hooks';
 import { IconCursorText, IconEyeFilled, IconFiles, IconUpload } from '@tabler/icons-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import UploadOptionsButton from '../UploadOptionsButton';
 import { renderMode } from '../renderMode';
 import { uploadFiles } from '../uploadFiles';
@@ -30,14 +30,25 @@ export default function UploadText({
   codeMeta: Parameters<typeof DashboardUploadText>[0]['codeMeta'];
 }) {
   const clipboard = useClipboard();
-
   const [options, ephemeral, clearEphemeral] = useUploadOptionsStore(
     useShallow((state) => [state.options, state.ephemeral, state.clearEphemeral]),
   );
-
   const [selectedLanguage, setSelectedLanguage] = useState('txt');
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (text.length > 0) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [text]);
 
   const renderIn = renderMode(selectedLanguage);
 
@@ -52,12 +63,10 @@ export default function UploadText({
 
   const upload = () => {
     const blob = new Blob([text]);
-
     const file = new File([blob], `text.${selectedLanguage}`, {
       type: codeMeta.find((meta) => meta.ext === selectedLanguage)?.mime,
       lastModified: Date.now(),
     });
-
     uploadFiles([file], {
       clipboard,
       setFiles: () => {},

@@ -143,6 +143,10 @@ export async function read() {
   const database = (await readDatabaseSettings()) as Record<string, any>;
   const { dbEnv, env } = readEnv();
 
+  if (global.__tamperedConfig__) {
+    global.__tamperedConfig__ = [];
+  }
+
   // this overwrites database settings with provided env vars if they exist
   for (const [propPath, val] of Object.entries(dbEnv)) {
     const col = Object.entries(DATABASE_TO_PROP).find(([_colName, path]) => path === propPath)?.[0];
