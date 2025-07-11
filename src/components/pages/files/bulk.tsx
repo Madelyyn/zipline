@@ -48,6 +48,7 @@ export async function bulkDelete(ids: string[], setSelectedFiles: (files: File[]
           icon: <IconFilesOff size='1rem' />,
           id: 'bulk-delete',
           autoClose: true,
+          loading: false,
         });
       } else if (data) {
         notifications.update({
@@ -107,6 +108,7 @@ export async function bulkFavorite(ids: string[]) {
           icon: <IconStarsOff size='1rem' />,
           id: 'bulk-favorite',
           autoClose: true,
+          loading: false,
         });
       } else if (data) {
         notifications.update({
@@ -116,6 +118,7 @@ export async function bulkFavorite(ids: string[]) {
           icon: <IconStarsFilled size='1rem' />,
           id: 'bulk-favorite',
           autoClose: true,
+          loading: false,
         });
       }
 

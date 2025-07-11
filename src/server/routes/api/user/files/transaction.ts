@@ -78,7 +78,7 @@ export default fastifyPlugin(
           return res.send(resp);
         }
 
-        if (favorite) {
+        if (typeof favorite === 'boolean') {
           const resp = await prisma.file.updateMany({
             where: {
               id: {
@@ -87,7 +87,7 @@ export default fastifyPlugin(
             },
 
             data: {
-              favorite: favorite ?? false,
+              favorite: favorite,
             },
           });
 
