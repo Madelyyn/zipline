@@ -1,4 +1,5 @@
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
@@ -7,6 +8,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { NodeHttpHandler } from '@smithy/node-http-handler';
+import { createReadStream } from 'fs';
 import { Agent as HttpAgent } from 'http';
 import { Agent as HttpsAgent } from 'https';
 import { Readable } from 'stream';
@@ -14,7 +16,6 @@ import { ReadableStream } from 'stream/web';
 import Logger, { log } from '../logger';
 import { randomCharacters } from '../random';
 import { Datasource } from './Datasource';
-import { createReadStream } from 'fs';
 
 function isOk(code: number) {
   return code >= 200 && code < 300;
@@ -313,6 +314,40 @@ export class S3Datasource extends Datasource {
       this.logger.error('error metadata', e as Record<string, unknown>);
 
       return Readable.fromWeb(new ReadableStream());
+    }
+  }
+
+  public async rename(from: string, to: string): Promise<void> {
+    const copyCommand = new CopyObjectCommand({
+      Bucket: this.options.bucket,
+      Key: this.key(to),
+      CopySource: this.options.bucket + '/' + this.key(from),
+    });
+
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: this.options.bucket,
+      Key: this.key(from),
+    });
+
+    try {
+      const copyRes = await this.client.send(copyCommand);
+      if (!isOk(copyRes.$metadata.httpStatusCode || 0)) {
+        this.logger.error('there was an error while copying object');
+        this.logger.error('error metadata', copyRes.$metadata as Record<string, unknown>);
+        throw new Error('Failed to copy object');
+      }
+
+      const deleteRes = await this.client.send(deleteCommand);
+      if (!isOk(deleteRes.$metadata.httpStatusCode || 0)) {
+        this.logger.error('there was an error while deleting old object');
+        this.logger.error('error metadata', deleteRes.$metadata as Record<string, unknown>);
+        throw new Error('Failed to delete old object');
+      }
+    } catch (e) {
+      this.logger.error('there was an error while renaming object');
+      this.logger.error('error metadata', e as Record<string, unknown>);
+
+      throw new Error('Failed to rename object');
     }
   }
 }

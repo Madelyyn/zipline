@@ -3,7 +3,7 @@ import { fetchApi } from '@/lib/fetchApi';
 import { Button, Divider, Modal, NumberInput, PasswordInput, Stack, TextInput } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { IconEye, IconKey, IconPencil, IconPencilOff, IconTrashFilled } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { mutateFiles } from '../actions';
 
 export default function EditFileDetailsModal({
@@ -17,6 +17,7 @@ export default function EditFileDetailsModal({
 }) {
   if (!file) return null;
 
+  const [name, setName] = useState<string>(file.name ?? '');
   const [maxViews, setMaxViews] = useState<number | null>(file?.maxViews ?? null);
   const [password, setPassword] = useState<string | null>('');
   const [originalName, setOriginalName] = useState<string | null>(file?.originalName ?? null);
@@ -54,12 +55,16 @@ export default function EditFileDetailsModal({
       password?: string;
       originalName?: string;
       type?: string;
+      name?: string;
     } = {};
 
     if (maxViews !== null) data['maxViews'] = maxViews;
-    if (password !== null) data['password'] = password?.trim();
     if (originalName !== null) data['originalName'] = originalName?.trim();
     if (type !== null) data['type'] = type?.trim();
+    if (name !== file.name) data['name'] = name.trim();
+
+    const passwordTrimmed = password?.trim();
+    if (passwordTrimmed !== '') data['password'] = passwordTrimmed;
 
     const { error } = await fetchApi(`/api/user/files/${file.id}`, 'PATCH', data);
 
@@ -85,9 +90,26 @@ export default function EditFileDetailsModal({
     }
   };
 
+  useEffect(() => {
+    if (open) {
+      setName(file.name ?? '');
+      setMaxViews(file.maxViews ?? null);
+      setPassword(file.password ? '' : null);
+      setOriginalName(file.originalName ?? null);
+      setType(file.type ?? null);
+    }
+  }, [open, file]);
+
   return (
     <Modal zIndex={300} title={`Editing "${file.name}"`} onClose={onClose} opened={open}>
       <Stack gap='xs' my='sm'>
+        <TextInput
+          label='Name'
+          description='Rename the file.'
+          value={name}
+          onChange={(event) => setName(event.currentTarget.value.trim())}
+        />
+
         <NumberInput
           label='Max Views'
           placeholder='Unlimited'

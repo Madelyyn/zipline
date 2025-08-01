@@ -82,4 +82,14 @@ export class LocalDatasource extends Datasource {
 
     return readStream;
   }
+
+  public async rename(from: string, to: string): Promise<void> {
+    const fromPath = join(this.dir, from);
+    const toPath = join(this.dir, to);
+
+    if (!existsSync(fromPath))
+      throw new Error(`Something went very wrong! File ${from} does not exist in local datasource.`);
+
+    return rename(fromPath, toPath);
+  }
 }

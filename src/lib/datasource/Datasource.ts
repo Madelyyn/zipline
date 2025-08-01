@@ -10,4 +10,5 @@ export abstract class Datasource {
   public abstract totalSize(): Promise<number>;
   public abstract clear(): Promise<void>;
   public abstract range(file: string, start: number, end: number): Promise<Readable>;
+  public abstract rename(from: string, to: string): Promise<void>;
 }

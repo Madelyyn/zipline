@@ -1,3 +1,4 @@
+import { Prisma } from '@/client';
 import { bytes } from '@/lib/bytes';
 import { hashPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
@@ -16,6 +17,7 @@ type Body = {
   originalName?: string;
   type?: string;
   tags?: string[];
+  name?: string;
 };
 
 type Params = {
@@ -47,12 +49,23 @@ export default fastifyPlugin(
           if (req.body.maxViews !== undefined && req.body.maxViews < 0)
             return res.badRequest('maxViews must be >= 0');
 
-          let password: string | null | undefined = undefined;
+          const data: Prisma.FileUpdateInput = {};
+
+          if (req.body.favorite !== undefined) data.favorite = req.body.favorite;
+          if (req.body.originalName !== undefined) data.originalName = req.body.originalName;
+          if (req.body.type !== undefined) data.type = req.body.type;
+
+          if (req.body.maxViews !== undefined) {
+            if (req.body.maxViews < 0) return res.badRequest('maxViews must be >= 0');
+
+            data.maxViews = req.body.maxViews;
+          }
+
           if (req.body.password !== undefined) {
             if (req.body.password === null || req.body.password === '') {
-              password = null;
+              data.password = null;
             } else if (typeof req.body.password === 'string') {
-              password = await hashPassword(req.body.password);
+              data.password = await hashPassword(req.body.password);
             } else {
               return res.badRequest('password must be a string');
             }
@@ -69,24 +82,38 @@ export default fastifyPlugin(
             });
 
             if (tags.length !== req.body.tags.length) return res.badRequest('invalid tag somewhere');
+
+            data.tags = {
+              set: req.body.tags.map((tag) => ({ id: tag })),
+            };
+          }
+
+          if (req.body.name !== undefined && req.body.name !== file.name) {
+            const name = req.body.name.trim();
+            const existingFile = await prisma.file.findFirst({
+              where: {
+                name,
+              },
+            });
+
+            if (existingFile && existingFile.id !== file.id)
+              return res.badRequest('File with this name already exists');
+
+            data.name = name;
+
+            try {
+              await datasource.rename(file.name, data.name);
+            } catch (error) {
+              logger.error('Failed to rename file in datasource', { error });
+              return res.internalServerError('Failed to rename file in datasource');
+            }
           }
 
           const newFile = await prisma.file.update({
             where: {
               id: req.params.id,
             },
-            data: {
-              ...(req.body.favorite !== undefined && { favorite: req.body.favorite }),
-              ...(req.body.maxViews !== undefined && { maxViews: req.body.maxViews }),
-              ...(req.body.originalName !== undefined && { originalName: req.body.originalName }),
-              ...(req.body.type !== undefined && { type: req.body.type }),
-              ...(password !== undefined && { password }),
-              ...(req.body.tags !== undefined && {
-                tags: {
-                  set: req.body.tags.map((tag) => ({ id: tag })),
-                },
-              }),
-            },
+            data,
             select: fileSelect,
           });
 
