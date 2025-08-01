@@ -65,10 +65,14 @@
 
             scripts = {
               pgup.exec = ''
-                process-compose -D
+                process-compose up postgres -D
               '';
 
-              pgdown.exec = ''
+              minioup.exec = ''
+                process-compose up minio -D
+              '';
+
+              downall.exec = ''
                 process-compose down
               '';
 
@@ -90,23 +94,33 @@
               corepack.enable = true;
             };
 
-            services.postgres = {
-              enable = true;
-              package = pkgs.postgresql_17;
+            services = {
+              postgres = {
+                enable = true;
+                package = pkgs.postgresql_17;
 
-              initialScript = ''
-                CREATE ROLE "${psqlConfig.username}" WITH LOGIN PASSWORD '${psqlConfig.password}' SUPERUSER;
-              '';
+                initialScript = ''
+                  CREATE ROLE "${psqlConfig.username}" WITH LOGIN PASSWORD '${psqlConfig.password}' SUPERUSER;
+                '';
 
-              initialDatabases = [
-                {
-                  name = psqlConfig.database;
-                  user = psqlConfig.username;
-                }
-              ];
+                initialDatabases = [
+                  {
+                    name = psqlConfig.database;
+                    user = psqlConfig.username;
+                  }
+                ];
 
-              listen_addresses = "0.0.0.0";
-              port = 5432;
+                listen_addresses = "0.0.0.0";
+                port = 5432;
+              };
+
+              minio = {
+                enable = true;
+              };
+            };
+
+            process.managers.process-compose = {
+              tui.enable = false;
             };
           };
         };
