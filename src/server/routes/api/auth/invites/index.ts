@@ -54,7 +54,7 @@ export default fastifyPlugin(
       },
     );
 
-    server.get(PATH, { preHandler: [userMiddleware, administratorMiddleware] }, async (req, res) => {
+    server.get(PATH, { preHandler: [userMiddleware, administratorMiddleware] }, async (_, res) => {
       const invites = await prisma.invite.findMany({
         include: {
           inviter: inviteInviterSelect,

@@ -25,58 +25,13 @@ const logger = log('api').c('user').c('files').c('transaction');
 export const PATH = '/api/user/files/transaction';
 export default fastifyPlugin(
   (server, _, done) => {
-    server.route<{
-      Body: Body;
-    }>({
-      url: PATH,
-      method: ['PATCH', 'DELETE'],
-      preHandler: [userMiddleware],
-      ...secondlyRatelimit(2),
-      handler: async (req, res) => {
+    server.patch<{ Body: Body }>(
+      PATH,
+      { preHandler: [userMiddleware], ...secondlyRatelimit(2) },
+      async (req, res) => {
         const { files, favorite, folder } = req.body;
 
         if (!files || !files.length) return res.badRequest('Cannot process transaction without files');
-
-        if (req.method === 'DELETE') {
-          const { delete_datasourceFiles } = req.body;
-
-          logger.debug('preparing transaction', {
-            action: 'delete',
-            files: files.length,
-          });
-
-          if (delete_datasourceFiles) {
-            const dFiles = await prisma.file.findMany({
-              where: {
-                id: {
-                  in: files,
-                },
-              },
-            });
-
-            for (let i = 0; i !== dFiles.length; ++i) {
-              await datasource.delete(dFiles[i].name);
-            }
-
-            logger.info(`${req.user.username} deleted ${dFiles.length} files from datasource`, {
-              user: req.user.id,
-            });
-          }
-
-          const resp = await prisma.file.deleteMany({
-            where: {
-              id: {
-                in: files,
-              },
-            },
-          });
-
-          logger.info(`${req.user.username} deleted ${resp.count} files`, {
-            user: req.user.id,
-          });
-
-          return res.send(resp);
-        }
 
         if (typeof favorite === 'boolean') {
           const resp = await prisma.file.updateMany({
@@ -130,7 +85,56 @@ export default fastifyPlugin(
           name: f.name,
         });
       },
-    });
+    );
+
+    server.delete<{ Body: Body }>(
+      PATH,
+      { preHandler: [userMiddleware], ...secondlyRatelimit(2) },
+      async (req, res) => {
+        const { files, favorite, folder } = req.body;
+
+        if (!files || !files.length) return res.badRequest('Cannot process transaction without files');
+
+        const { delete_datasourceFiles } = req.body;
+
+        logger.debug('preparing transaction', {
+          action: 'delete',
+          files: files.length,
+        });
+
+        if (delete_datasourceFiles) {
+          const dFiles = await prisma.file.findMany({
+            where: {
+              id: {
+                in: files,
+              },
+            },
+          });
+
+          for (let i = 0; i !== dFiles.length; ++i) {
+            await datasource.delete(dFiles[i].name);
+          }
+
+          logger.info(`${req.user.username} deleted ${dFiles.length} files from datasource`, {
+            user: req.user.id,
+          });
+        }
+
+        const resp = await prisma.file.deleteMany({
+          where: {
+            id: {
+              in: files,
+            },
+          },
+        });
+
+        logger.info(`${req.user.username} deleted ${resp.count} files`, {
+          user: req.user.id,
+        });
+
+        return res.send(resp);
+      },
+    );
 
     done();
   },
