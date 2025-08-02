@@ -4,7 +4,7 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { generateKey, totpQrcode, verifyTotpCode } from '@/lib/totp';
 import { userMiddleware } from '@/server/middleware/user';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 
 export type ApiUserMfaTotpResponse = User | { secret: string } | { secret: string; qrcode: string };
@@ -16,7 +16,7 @@ type Body = {
 
 const logger = log('api').c('user').c('mfa').c('totp');
 
-const totpEnabledMiddleware = (_, res: FastifyReply, next: () => void) => {
+const totpEnabledMiddleware = (_: FastifyRequest, res: FastifyReply, next: () => void) => {
   if (!config.mfa.totp.enabled) {
     return res.badRequest('TOTP is disabled');
   }

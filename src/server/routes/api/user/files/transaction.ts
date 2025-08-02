@@ -91,7 +91,7 @@ export default fastifyPlugin(
       PATH,
       { preHandler: [userMiddleware], ...secondlyRatelimit(2) },
       async (req, res) => {
-        const { files, favorite, folder } = req.body;
+        const { files } = req.body;
 
         if (!files || !files.length) return res.badRequest('Cannot process transaction without files');
 
