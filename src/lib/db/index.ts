@@ -1,8 +1,9 @@
 import { log } from '@/lib/logger';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { Prisma, PrismaClient } from '../../../generated/client';
-import { userViewSchema } from './models/user';
-import { metricDataSchema } from './models/metric';
 import { metadataSchema } from './models/incompleteFile';
+import { metricDataSchema } from './models/metric';
+import { userViewSchema } from './models/user';
 
 const building = !!process.env.ZIPLINE_BUILD;
 
@@ -35,7 +36,9 @@ function getClient() {
 
   logger.info('connecting to database ' + process.env.DATABASE_URL);
 
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
   const client = new PrismaClient({
+    adapter,
     log: process.env.ZIPLINE_DB_LOG ? parseDbLog(process.env.ZIPLINE_DB_LOG) : undefined,
   }).$extends({
     result: {

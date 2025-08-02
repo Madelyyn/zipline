@@ -44,6 +44,7 @@
     "@mantine/hooks": "^8.2.2",
     "@mantine/modals": "^8.2.2",
     "@mantine/notifications": "^8.2.2",
+    "@prisma/adapter-pg": "^6.13.0",
     "@prisma/client": "^6.13.0",
     "@prisma/internals": "^6.13.0",
     "@prisma/migrate": "^6.13.0",
