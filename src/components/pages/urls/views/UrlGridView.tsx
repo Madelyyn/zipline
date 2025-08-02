@@ -41,7 +41,9 @@ export default function UrlGridView() {
           }}
           pos='relative'
         >
-          {urls?.map((url) => <UrlCard setSelectedUrl={setSelectedUrl} key={url.id} url={url} />)}
+          {urls?.map((url) => (
+            <UrlCard setSelectedUrl={setSelectedUrl} key={url.id} url={url} />
+          ))}
         </SimpleGrid>
       ) : (
         <Paper withBorder p='sm' my='sm'>

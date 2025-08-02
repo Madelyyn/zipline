@@ -37,7 +37,9 @@ export default function UserGridView() {
           }}
           pos='relative'
         >
-          {users?.map((user) => <UserCard key={user.id} user={user} />)}
+          {users?.map((user) => (
+            <UserCard key={user.id} user={user} />
+          ))}
         </SimpleGrid>
       ) : (
         <Paper withBorder p='sm' my='sm'>

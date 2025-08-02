@@ -37,7 +37,9 @@ export default function InviteGridView() {
           }}
           pos='relative'
         >
-          {folders?.map((invite) => <InviteCard key={invite.id} invite={invite} />)}
+          {folders?.map((invite) => (
+            <InviteCard key={invite.id} invite={invite} />
+          ))}
         </SimpleGrid>
       ) : (
         <Paper withBorder p='sm' my='sm'>
