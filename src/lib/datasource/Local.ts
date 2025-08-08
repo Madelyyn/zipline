@@ -1,5 +1,5 @@
 import { createReadStream, existsSync } from 'fs';
-import { access, constants, readdir, rename, rm, stat, writeFile } from 'fs/promises';
+import { access, constants, copyFile, readdir, rename, rm, stat, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Readable } from 'stream';
 import { Datasource } from './Datasource';
@@ -40,7 +40,18 @@ export class LocalDatasource extends Datasource {
           "Something went very wrong! the temporary directory wasn't readable or the file doesn't exist.",
         );
 
-      return rename(data, path);
+      try {
+        await rename(data, path);
+      } catch (err) {
+        // docker may throw exdev errors when renaming across volumes (/tmp to something else)
+        if ((err as NodeJS.ErrnoException).code === 'EXDEV') {
+          await copyFile(data, path);
+          await rm(data);
+          return;
+        } else {
+          throw err;
+        }
+      }
     }
 
     return writeFile(path, data);
