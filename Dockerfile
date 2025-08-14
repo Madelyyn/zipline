@@ -32,8 +32,7 @@ COPY mimes.json ./mimes.json
 COPY code.json ./code.json
 COPY vite-env.d.ts ./vite-env.d.ts
 
-ENV NEXT_TELEMETRY_DISABLED=1 \
-  NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN ZIPLINE_BUILD=true pnpm run build
 

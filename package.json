@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "build:skip": "pnpm run --stream build:prisma && pnpm run --stream build:server && pnpm run --stream build:client",
-    "build": "pnpm run --stream lint && pnpm run --stream build:types && pnpm run --stream build:prisma && pnpm run --stream build:server && pnpm run --stream build:client",
+    "build": "pnpm run --stream lint && pnpm run --stream build:prisma && pnpm run --stream build:types && pnpm run --stream build:server && pnpm run --stream build:client",
     "build:types": "tsc",
     "build:prisma": "prisma generate --no-hints",
     "build:server": "tsup",
