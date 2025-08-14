@@ -4,18 +4,15 @@ import { bytes } from '@/lib/bytes';
 import useLogin from '@/lib/hooks/useLogin';
 import { Paper, ScrollArea, SimpleGrid, Skeleton, Table, Text, Title } from '@mantine/core';
 import { IconDeviceSdCard, IconEyeFilled, IconFiles, IconLink, IconStarFilled } from '@tabler/icons-react';
-import dynamic from 'next/dynamic';
+import { lazy, Suspense } from 'react';
 import useSWR from 'swr';
 
-const DashboardFile = dynamic(() => import('@/components/file/DashboardFile'), {
-  loading: () => <Skeleton height={350} animate />,
-});
+const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
 
 export default function DashboardHome() {
   const { user } = useLogin();
   const { data: recent, isLoading: recentLoading } = useSWR<Response['/api/user/recent']>('/api/user/recent');
   const { data: stats, isLoading: statsLoading } = useSWR<Response['/api/user/stats']>('/api/user/stats');
-
   return (
     <>
       <Title>
@@ -63,7 +60,9 @@ export default function DashboardHome() {
       ) : recent?.length !== 0 ? (
         <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing={{ base: 'sm', md: 'md' }}>
           {recent!.map((file, i) => (
-            <DashboardFile key={i} file={file} />
+            <Suspense fallback={<Skeleton height={350} animate />} key={i}>
+              <DashboardFile file={file} />
+            </Suspense>
           ))}
         </SimpleGrid>
       ) : (

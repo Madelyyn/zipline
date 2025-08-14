@@ -6,11 +6,11 @@ import { DataTable, DataTableSortStatus } from 'mantine-datatable';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import EditUserModal from '../EditUserModal';
-import Link from 'next/link';
 import RelativeDate from '@/components/RelativeDate';
 import { canInteract, roleName } from '@/lib/role';
 import { useUserStore } from '@/lib/store/user';
 import { deleteUser } from '../actions';
+import { Link } from 'react-router-dom';
 
 export default function UserTableView() {
   const currentUser = useUserStore((state) => state.user);
@@ -87,7 +87,7 @@ export default function UserTableView() {
                   <Tooltip label="View user's files">
                     <ActionIcon
                       component={Link}
-                      href={`/dashboard/admin/users/${user.id}/files`}
+                      to={`/dashboard/admin/users/${user.id}/files`}
                       disabled={!canInteract(currentUser?.role, user?.role)}
                     >
                       <IconFiles size='1rem' />

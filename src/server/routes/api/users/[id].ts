@@ -7,7 +7,7 @@ import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import { UserFilesQuota } from '../../../../../generated/client';
+import { UserFilesQuota } from '@/prisma/client';
 import fastifyPlugin from 'fastify-plugin';
 import { z } from 'zod';
 

@@ -1,7 +1,9 @@
-import DashboardFile from '@/components/file/DashboardFile';
 import { Folder } from '@/lib/db/models/folder';
-import { Alert, Anchor, Button, CopyButton, Group, Modal, SimpleGrid, Text } from '@mantine/core';
+import { Alert, Anchor, Button, CopyButton, Group, Modal, SimpleGrid, Skeleton, Text } from '@mantine/core';
 import { IconShare } from '@tabler/icons-react';
+import { lazy, Suspense } from 'react';
+
+const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
 
 export default function ViewFilesModal({
   folder,
@@ -56,7 +58,9 @@ export default function ViewFilesModal({
           pos='relative'
         >
           {folder?.files?.map((file) => (
-            <DashboardFile file={file} key={file.id} />
+            <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
+              <DashboardFile file={file} key={file.id} />
+            </Suspense>
           ))}
         </SimpleGrid>
       )}

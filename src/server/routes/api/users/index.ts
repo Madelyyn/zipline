@@ -10,7 +10,7 @@ import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 import { readFile } from 'fs/promises';
 import { z } from 'zod';
-import { Role } from '../../../../../generated/client';
+import { Role } from '@/prisma/client';
 
 export type ApiUsersResponse = User[] | User;
 

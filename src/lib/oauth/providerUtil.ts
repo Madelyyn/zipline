@@ -1,4 +1,4 @@
-import type { OAuthProviderType } from '../../../generated/client';
+import type { OAuthProviderType } from '@/prisma/client';
 import { User } from '../db/models/user';
 
 export function findProvider(

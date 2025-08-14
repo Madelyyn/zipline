@@ -1,13 +1,17 @@
+import { type loader } from '@/client/pages/dashboard/admin/users/[id]/files';
 import GridTableSwitcher from '@/components/GridTableSwitcher';
-import { User } from '@/lib/db/models/user';
 import { useViewStore } from '@/lib/store/view';
 import { ActionIcon, Group, Title, Tooltip } from '@mantine/core';
+import { IconArrowBackUp } from '@tabler/icons-react';
+import { Link, useLoaderData } from 'react-router-dom';
 import FileTable from '../files/views/FileTable';
 import Files from '../files/views/Files';
-import Link from 'next/link';
-import { IconArrowBackUp } from '@tabler/icons-react';
 
-export default function ViewFiles({ user }: { user: User }) {
+export default function ViewUserFiles() {
+  const data = useLoaderData<typeof loader>();
+  if (!data) return null;
+
+  const { user } = data;
   if (!user) return null;
 
   const view = useViewStore((state) => state.files);
@@ -17,7 +21,7 @@ export default function ViewFiles({ user }: { user: User }) {
       <Group>
         <Title>{user.username}&apos;s files</Title>
         <Tooltip label='Back to users'>
-          <ActionIcon variant='outline' component={Link} href='/dashboard/admin/users'>
+          <ActionIcon variant='outline' component={Link} to='/dashboard/admin/users'>
             <IconArrowBackUp size='1rem' />
           </ActionIcon>
         </Tooltip>

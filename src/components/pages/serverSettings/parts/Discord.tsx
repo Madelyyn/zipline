@@ -13,8 +13,8 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
 
 type DiscordEmbed = Record<string, any>;
@@ -24,7 +24,7 @@ export default function Discord({
 }: {
   swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const formMain = useForm({
     initialValues: {
@@ -44,7 +44,7 @@ export default function Discord({
     sendValues.discordAvatarUrl =
       values.discordAvatarUrl?.trim() === '' ? null : values.discordAvatarUrl?.trim();
 
-    return settingsOnSubmit(router, formMain)(sendValues);
+    return settingsOnSubmit(navigate, formMain)(sendValues);
   };
 
   const formOnUpload = useForm({
@@ -120,7 +120,7 @@ export default function Discord({
       };
     }
 
-    return settingsOnSubmit(router, type === 'upload' ? formOnUpload : formOnShorten)(sendValues);
+    return settingsOnSubmit(navigate, type === 'upload' ? formOnUpload : formOnShorten)(sendValues);
   };
 
   useEffect(() => {

@@ -13,17 +13,14 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
-/build
+build/
 
 # misc
 .DS_Store
 *.pem
 .idea
+.vscode
 
 # debug
 npm-debug.log*
@@ -38,7 +35,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # eslint
 .eslintcache
@@ -52,4 +48,4 @@ next-env.d.ts
 uploads*/
 *.crt
 *.key
-generated
+src/prisma

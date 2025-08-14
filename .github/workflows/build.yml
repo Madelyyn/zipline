@@ -11,7 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        node: [20.x, 22.x, 24.x]
+        node: [22.x, 24.x]
         arch: [amd64, arm64]
     runs-on: ubuntu-24.04${{ matrix.arch == 'arm64' && '-arm' || '' }}
 
@@ -37,16 +37,23 @@ jobs:
         with:
           path: |
             ${{ steps.pnpm-cache.outputs.store_path }}
-            ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-pnpm-next-store-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-${{ matrix.node }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-next-store-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-${{ matrix.arch }}-${{ matrix.node }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Install
         run: pnpm install
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Generate Prisma
+        run: pnpm build:prisma
+
+      - name: Type Check
+        run: pnpm build:types
+
       - name: Build
         env:
           ZIPLINE_BUILD: 'true'
-          NEXT_TELEMETRY_DISABLED: '1'
-        run: pnpm build
+        run: pnpm build:skip

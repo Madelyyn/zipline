@@ -1,18 +1,17 @@
 import { Box, Button, Group, Modal, Paper, SimpleGrid, Text, Title, Tooltip } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { IconCalendarSearch, IconCalendarTime } from '@tabler/icons-react';
-import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { lazy, useEffect, useState } from 'react';
 import FilesUrlsCountGraph from './parts/FilesUrlsCountGraph';
 import { useApiStats } from './useStats';
 import { StatsCardsSkeleton } from './parts/StatsCards';
 import { StatsTablesSkeleton } from './parts/StatsTables';
 import dayjs from 'dayjs';
 
-const StatsCards = dynamic(() => import('./parts/StatsCards'));
-const StatsTables = dynamic(() => import('./parts/StatsTables'));
-const StorageGraph = dynamic(() => import('./parts/StorageGraph'));
-const ViewsGraph = dynamic(() => import('./parts/ViewsGraph'));
+const StorageGraph = lazy(() => import('./parts/StorageGraph'));
+const ViewsGraph = lazy(() => import('./parts/ViewsGraph'));
+const StatsCards = lazy(() => import('./parts/StatsCards'));
+const StatsTables = lazy(() => import('./parts/StatsTables'));
 
 export default function DashboardMetrics() {
   const today = dayjs();

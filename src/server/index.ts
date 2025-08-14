@@ -21,12 +21,10 @@ import { fastifyStatic } from '@fastify/static';
 import fastify from 'fastify';
 import { mkdir, readFile } from 'fs/promises';
 import ms, { StringValue } from 'ms';
-import querystring from 'querystring';
-import { parse } from 'url';
 import { version } from '../../package.json';
 import { checkRateLimit } from './plugins/checkRateLimit';
-import next, { ALL_METHODS } from './plugins/next';
 import oauthPlugin from './plugins/oauth';
+import vitePlugin from './plugins/vite';
 import loadRoutes from './routes';
 import { filesRoute } from './routes/files.dy';
 import { urlsRoute } from './routes/urls.dy';
@@ -97,6 +95,8 @@ async function main() {
     root: config.core.tempDirectory,
   });
 
+  await server.register(vitePlugin);
+
   await server.register(oauthPlugin);
 
   if (config.ratelimit.enabled) {
@@ -134,15 +134,22 @@ async function main() {
     }
   }
 
+  server.get<{ Params: { id: string } }>('/view/:id', async (_req, res) => {
+    return res.ssr('view');
+  });
+
+  server.get<{ Params: { id: string } }>('/view/url/:id', async (_req, res) => {
+    return res.ssr('view-url');
+  });
+
   if (config.files.route === '/' && config.urls.route === '/') {
     logger.debug('files & urls route = /, using catch-all route');
 
     server.get<{ Params: { id: string } }>('/:id', async (req, res) => {
       const { id } = req.params;
-      const parsedUrl = parse(req.url!, true);
 
-      if (id === '') return server.nextServer.render404(req.raw, res.raw, parsedUrl);
-      else if (id === 'dashboard') return server.nextServer.render(req.raw, res.raw, '/dashboard');
+      if (id === '') return res.callNotFound();
+      else if (id === 'dashboard') return res.callNotFound(); // todo render dashboard
 
       const url = await prisma.url.findFirst({
         where: {
@@ -158,41 +165,29 @@ async function main() {
     server.get(config.urls.route === '/' ? '/:id' : `${config.urls.route}/:id`, urlsRoute);
   }
 
-  if (!argv.includes('--skip-next'))
-    await server.register(next, {
-      dev: MODE === 'development',
-      quiet: MODE === 'production',
-      hostname: config.core.hostname,
-      port: config.core.port,
-      dir: '.',
-    });
-
   const routes = await loadRoutes();
   const routesOptions = Object.values(routes);
   Promise.all(routesOptions.map((route) => server.register(route)));
 
-  if (!argv.includes('--skip-next')) {
-    server.get('/', (_, res) => res.redirect('/dashboard'));
-    server.next('/*', ALL_METHODS);
-    server.next('/dashboard', ALL_METHODS);
-    server.next('/reload', ALL_METHODS);
+  if (MODE === 'production') {
+    server.serveIndex('/dashboard*');
+    server.serveIndex('/auth*');
+    server.serveIndex('/folder*');
   }
 
-  server.addContentTypeParser(
-    'application/x-www-form-urlencoded',
-    { parseAs: 'string' },
-    (req, body, done) => {
-      try {
-        const parsedBody = querystring.parse(body.toString());
+  server.get('/', (_, res) => res.redirect('/dashboard', 301));
 
-        // setting the inner request.body so that next.js can access it.
-        req.raw.body = parsedBody;
-        done(null, parsedBody);
-      } catch {
-        done(null, {});
-      }
-    },
-  );
+  server.setNotFoundHandler((req, res) => {
+    if (req.url.startsWith('/api/')) {
+      return res.status(404).send({
+        message: `Route ${req.method}:${req.url} not found`,
+        error: 'Not Found',
+        statusCode: 404,
+      });
+    } else {
+      return res.serveIndex();
+    }
+  });
 
   server.setErrorHandler((error, _, res) => {
     if (error.statusCode) {

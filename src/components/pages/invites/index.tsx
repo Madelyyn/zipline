@@ -1,20 +1,20 @@
 import GridTableSwitcher from '@/components/GridTableSwitcher';
+import { Response } from '@/lib/api/response';
+import { Invite } from '@/lib/db/models/invite';
+import { fetchApi } from '@/lib/fetchApi';
 import { useViewStore } from '@/lib/store/view';
 import { ActionIcon, Button, Group, Modal, NumberInput, Select, Stack, Title, Tooltip } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { notifications } from '@mantine/notifications';
 import { IconPlus, IconTagOff } from '@tabler/icons-react';
+import { useState } from 'react';
+import { mutate } from 'swr';
 import InviteGridView from './views/InviteGridView';
 import InviteTableView from './views/InviteTableView';
-import { useForm } from '@mantine/form';
-import { fetchApi } from '@/lib/fetchApi';
-import { Response } from '@/lib/api/response';
-import { notifications } from '@mantine/notifications';
-import { Invite } from '@/lib/db/models/invite';
-import { mutate } from 'swr';
-import { parseAsBoolean, useQueryState } from 'nuqs';
 
 export default function DashboardInvites() {
   const view = useViewStore((state) => state.invites);
-  const [open, setOpen] = useQueryState('ciopen', parseAsBoolean.withDefault(false));
+  const [open, setOpen] = useState(false);
 
   const form = useForm<{
     maxUses: number | '';

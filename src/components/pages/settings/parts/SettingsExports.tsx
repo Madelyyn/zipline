@@ -1,10 +1,11 @@
+import RelativeDate from '@/components/RelativeDate';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
-import { ActionIcon, Button, Group, Paper, ScrollArea, Table, Title } from '@mantine/core';
+import { ActionIcon, Button, Group, Paper, ScrollArea, Table, Text, Title, Tooltip } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { showNotification } from '@mantine/notifications';
 import { IconDownload, IconPlus, IconTrashFilled } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 
 export default function SettingsExports() {
@@ -64,53 +65,64 @@ export default function SettingsExports() {
         New Export
       </Button>
 
-      <Title order={4} mt='sm'>
-        Exports
-      </Title>
-
       {data?.length === 0 ? (
         <Paper p='sm' mt='sm' withBorder>
           No exports found. Click the button above to start a new export.
         </Paper>
       ) : (
         <ScrollArea.Autosize mah={500} type='auto'>
-          <Table highlightOnHover stickyHeader>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>ID</Table.Th>
-                <Table.Th>Started On</Table.Th>
-                <Table.Th>Files</Table.Th>
-                <Table.Th>Size</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {isLoading && <Table.Tr>Loading...</Table.Tr>}
-              {data?.map((exportDb) => (
-                <Table.Tr key={exportDb.id}>
-                  <Table.Td>{exportDb.id}</Table.Td>
-                  <Table.Td>{new Date(exportDb.createdAt).toLocaleString()}</Table.Td>
-                  <Table.Td>{exportDb.files}</Table.Td>
-                  <Table.Td>{exportDb.completed ? bytes(Number(exportDb.size)) : ''}</Table.Td>
-                  <Table.Td>
-                    <Group>
-                      <ActionIcon onClick={() => handleDelete(exportDb.id)}>
-                        <IconTrashFilled size='1rem' />
-                      </ActionIcon>
-
-                      <ActionIcon
-                        component={Link}
-                        target='_blank'
-                        href={`/api/user/export?id=${exportDb.id}`}
-                        disabled={!exportDb.completed}
-                      >
-                        <IconDownload size='1rem' />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
+          <Paper withBorder p={0} mt='sm'>
+            <Table highlightOnHover stickyHeader>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>ID</Table.Th>
+                  <Table.Th>Started</Table.Th>
+                  <Table.Th>Files</Table.Th>
+                  <Table.Th>Size</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {isLoading && <Table.Tr>Loading...</Table.Tr>}
+                {data?.map((exportDb) => (
+                  <Table.Tr key={exportDb.id}>
+                    <Table.Td maw={140}>
+                      <Tooltip
+                        label={`${exportDb.id} is ${exportDb.completed ? 'completed' : 'in progress'}`}
+                      >
+                        <Text
+                          style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                          c={exportDb.completed ? 'green' : 'dimmed'}
+                        >
+                          {exportDb.id}
+                        </Text>
+                      </Tooltip>
+                    </Table.Td>
+                    <Table.Td>
+                      <RelativeDate date={new Date(exportDb.createdAt)} />
+                    </Table.Td>
+                    <Table.Td>{exportDb.files}</Table.Td>
+                    <Table.Td>{exportDb.completed ? bytes(Number(exportDb.size)) : ''}</Table.Td>
+                    <Table.Td w={95}>
+                      <Group>
+                        <ActionIcon onClick={() => handleDelete(exportDb.id)}>
+                          <IconTrashFilled size='1rem' />
+                        </ActionIcon>
+
+                        <ActionIcon
+                          component={Link}
+                          target='_blank'
+                          to={`/api/user/export?id=${exportDb.id}`}
+                          disabled={!exportDb.completed}
+                        >
+                          <IconDownload size='1rem' />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Paper>
         </ScrollArea.Autosize>
       )}
     </Paper>

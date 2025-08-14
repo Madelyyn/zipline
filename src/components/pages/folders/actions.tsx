@@ -6,7 +6,7 @@ import { useClipboard } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconCopy, IconFolderOff } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { mutate } from 'swr';
 
 export async function deleteFolder(folder: Folder) {
@@ -30,7 +30,7 @@ export function copyFolderUrl(folder: Folder, clipboard: ReturnType<typeof useCl
   notifications.show({
     title: 'Copied link',
     message: (
-      <Anchor component={Link} href={`/folder/${folder.id}`}>
+      <Anchor component={Link} to={`/folder/${folder.id}`}>
         {`${window.location.protocol}//${window.location.host}/folder/${folder.id}`}
       </Anchor>
     ),

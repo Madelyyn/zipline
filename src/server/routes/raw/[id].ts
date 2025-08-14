@@ -5,7 +5,6 @@ import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import fastifyPlugin from 'fastify-plugin';
-import { parse } from 'url';
 
 type Params = {
   id: string;
@@ -27,8 +26,6 @@ export default fastifyPlugin(
     }>(PATH, async (req, res) => {
       const { id } = req.params;
       const { pw, download } = req.query;
-
-      const parsedUrl = parse(req.url!, true);
 
       const file = await prisma.file.findFirst({
         where: {
@@ -52,12 +49,11 @@ export default fastifyPlugin(
             .error(e as Error);
         }
 
-        return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+        return res.callNotFound();
       }
 
       if (file?.maxViews && file.views >= file.maxViews) {
-        if (!config.features.deleteOnMaxViews)
-          return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+        if (!config.features.deleteOnMaxViews) return res.callNotFound();
 
         try {
           await datasource.delete(file.name);
@@ -74,7 +70,7 @@ export default fastifyPlugin(
             .error(e as Error);
         }
 
-        return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+        return res.callNotFound();
       }
 
       if (file?.password) {
@@ -90,7 +86,7 @@ export default fastifyPlugin(
         const [start, end] = parseRange(req.headers.range, size);
         if (start >= size || end >= size) {
           const buf = await datasource.get(file?.name ?? id);
-          if (!buf) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+          if (!buf) return res.callNotFound();
 
           return res
             .type(file?.type || 'application/octet-stream')
@@ -109,7 +105,7 @@ export default fastifyPlugin(
         }
 
         const buf = await datasource.range(file?.name ?? id, start || 0, end);
-        if (!buf) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+        if (!buf) return res.callNotFound();
 
         return res
           .type(file?.type || 'application/octet-stream')
@@ -130,7 +126,7 @@ export default fastifyPlugin(
       }
 
       const buf = await datasource.get(file?.name ?? id);
-      if (!buf) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+      if (!buf) return res.callNotFound();
 
       return res
         .type(file?.type || 'application/octet-stream')

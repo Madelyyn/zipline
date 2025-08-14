@@ -1,4 +1,4 @@
-import { Prisma } from '../../../../../generated/client';
+import { Prisma } from '@/prisma/client';
 import { bytes } from '@/lib/bytes';
 import { compressFile } from '@/lib/compress';
 import { config } from '@/lib/config';

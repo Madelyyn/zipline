@@ -3,10 +3,9 @@ import { IncompleteFile } from '@/lib/db/models/incompleteFile';
 import { fetchApi } from '@/lib/fetchApi';
 import { ActionIcon, Badge, Button, Card, Group, Modal, Paper, Stack, Text, Tooltip } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import { IncompleteFileStatus } from '../../../../generated/client';
+import { IncompleteFileStatus } from '@/prisma/client';
 import { IconFileDots, IconTrashFilled } from '@tabler/icons-react';
-import { parseAsBoolean, useQueryState } from 'nuqs';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import useSWR from 'swr';
 
 const badgeMap: Record<IncompleteFileStatus, ReactNode> = {
@@ -33,7 +32,7 @@ const badgeMap: Record<IncompleteFileStatus, ReactNode> = {
 };
 
 export default function PendingFilesButton() {
-  const [open, setOpen] = useQueryState('popen', parseAsBoolean.withDefault(false));
+  const [open, setOpen] = useState(false);
 
   const { data: incompleteFiles, mutate } = useSWR<
     Extract<IncompleteFile[], Response['/api/user/files/incomplete']>

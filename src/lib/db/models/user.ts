@@ -1,4 +1,4 @@
-import { OAuthProvider, UserPasskey, UserQuota } from '../../../../generated/client';
+import { OAuthProvider, UserPasskey, UserQuota } from '@/prisma/client';
 import { z } from 'zod';
 
 export type User = {

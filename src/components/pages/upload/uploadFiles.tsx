@@ -6,7 +6,7 @@ import { useClipboard } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { IconClipboardCopy, IconExternalLink, IconFileUpload, IconFileXFilled } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export function filesModal(
   files: Response['/api/upload']['files'],
@@ -24,7 +24,7 @@ export function filesModal(
     notifications.show({
       title: 'Copied URL to clipboard',
       message: (
-        <Anchor component={Link} href={files[idx].url} target='_blank'>
+        <Anchor component={Link} to={files[idx].url} target='_blank'>
           {files[idx].url}
         </Anchor>
       ),
@@ -42,7 +42,7 @@ export function filesModal(
           {files.map((file, idx) => (
             <Group key={idx} justify='space-between'>
               <Group justify='left'>
-                <Anchor component={Link} href={file.url}>
+                <Anchor component={Link} to={file.url}>
                   {file.url}
                 </Anchor>
               </Group>

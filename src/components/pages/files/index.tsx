@@ -6,10 +6,10 @@ import FileTable from './views/FileTable';
 import Files from './views/Files';
 import TagsButton from './tags/TagsButton';
 import PendingFilesButton from './PendingFilesButton';
-import Link from 'next/link';
 import { IconFileUpload } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
 
-export default function DashbaordFiles() {
+export default function DashboardFiles() {
   const view = useViewStore((state) => state.files);
 
   return (
@@ -18,7 +18,7 @@ export default function DashbaordFiles() {
         <Title>Files</Title>
 
         <Tooltip label='Upload a file'>
-          <Link href='/dashboard/upload/file'>
+          <Link to='/dashboard/upload/file'>
             <ActionIcon variant='outline'>
               <IconFileUpload size='1rem' />
             </ActionIcon>

@@ -1,8 +1,7 @@
 import { Anchor, Code, Group, Paper, Text, Title, Image as MantineImage } from '@mantine/core';
 import { IconPrompt } from '@tabler/icons-react';
-import Image from 'next/image';
 import GeneratorButton from './GeneratorButton';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export default function SettingsGenerators() {
   return (
@@ -17,35 +16,30 @@ export default function SettingsGenerators() {
         <GeneratorButton
           name='ShareX'
           icon={
-            <Image width={24} height={24} alt='sharex logo' src='https://getsharex.com/img/ShareX_Logo.svg' />
+            <img width={24} height={24} alt='sharex logo' src='https://getsharex.com/img/ShareX_Logo.svg' />
           }
         />
         <GeneratorButton
           name='Flameshot'
           icon={
-            <Image
-              width={24}
-              height={24}
-              alt='flameshot logo'
-              src='https://flameshot.org/flameshot-icon.svg'
-            />
+            <img width={24} height={24} alt='flameshot logo' src='https://flameshot.org/flameshot-icon.svg' />
           }
           desc={
             <>
               To use this script, you need{' '}
-              <Anchor component={Link} href='https://flameshot.org'>
+              <Anchor component={Link} to='https://flameshot.org'>
                 Flameshot
               </Anchor>
               ,{' '}
-              <Anchor component={Link} href='https://curl.se/'>
+              <Anchor component={Link} to='https://curl.se/'>
                 <Code>curl</Code>
               </Anchor>
               ,{' '}
-              <Anchor component={Link} href='https://github.com/stedolan/jq'>
+              <Anchor component={Link} to='https://github.com/stedolan/jq'>
                 <Code>jq</Code>
               </Anchor>
               , and{' '}
-              <Anchor component={Link} href='https://github.com/astrand/xclip'>
+              <Anchor component={Link} to='https://github.com/astrand/xclip'>
                 <Code>xclip</Code> (linux only)
               </Anchor>{' '}
               installed. This script is intended for use on Linux and macOS only (see options below).
@@ -75,19 +69,19 @@ export default function SettingsGenerators() {
           desc={
             <>
               To use this script, you need <Code>bash</Code>,{' '}
-              <Anchor component={Link} href='https://curl.se/'>
+              <Anchor component={Link} to='https://curl.se/'>
                 <Code>curl</Code>
               </Anchor>
               ,{' '}
-              <Anchor component={Link} href='https://darwinsys.com/file/'>
+              <Anchor component={Link} to='https://darwinsys.com/file/'>
                 <Code>file</Code>
               </Anchor>
               ,{' '}
-              <Anchor component={Link} href='https://github.com/stedolan/jq'>
+              <Anchor component={Link} to='https://github.com/stedolan/jq'>
                 <Code>jq</Code>
               </Anchor>
               , and{' '}
-              <Anchor component={Link} href='https://github.com/astrand/xclip'>
+              <Anchor component={Link} to='https://github.com/astrand/xclip'>
                 <Code>xclip</Code> (linux only)
               </Anchor>{' '}
               installed. This script is intended for use on Linux and macOS only (see options below).

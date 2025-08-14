@@ -5,7 +5,6 @@ import { useState } from 'react';
 import KaTeX from './KaTeX';
 import Markdown from './Markdown';
 import HighlightCode from './code/HighlightCode';
-import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 export function RenderAlert({
   renderer,
@@ -47,11 +46,9 @@ export default function Render({
   language: string;
   code: string;
 }) {
-  const [overrideRender] = useQueryState('orender', parseAsStringEnum<RenderMode>(Object.values(RenderMode)));
-
   const [highlight, setHighlight] = useState(false);
 
-  switch (overrideRender || mode) {
+  switch (mode) {
     case RenderMode.Katex:
       return (
         <>

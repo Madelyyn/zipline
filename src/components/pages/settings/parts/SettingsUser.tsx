@@ -1,3 +1,4 @@
+import { useConfig } from '@/components/ConfigProvider';
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
 import { useUserStore } from '@/lib/store/user';
@@ -24,11 +25,14 @@ import {
   IconUser,
   IconUserCancel,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
+import { lazy, useEffect, useState } from 'react';
 import { mutate } from 'swr';
 import { useShallow } from 'zustand/shallow';
 
+const SettingsAvatar = lazy(() => import('./SettingsAvatar'));
+
 export default function SettingsUser() {
+  const config = useConfig();
   const [user, setUser] = useUserStore(useShallow((state) => [state.user, state.setUser]));
 
   const [tokenShown, setTokenShown] = useState(false);
@@ -93,7 +97,7 @@ export default function SettingsUser() {
 
   return (
     <Paper withBorder p='sm'>
-      <Title order={2}>User Info</Title>
+      <Title order={2}>User</Title>
       <Text c='dimmed' size='sm' mb='sm'>
         {user?.id}
       </Text>

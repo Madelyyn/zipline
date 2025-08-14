@@ -1,9 +1,7 @@
 import { config } from '@/lib/config';
 import fastifyPlugin from 'fastify-plugin';
-import type { MetadataRoute } from 'next';
-import { parse } from 'url';
 
-function generateIcons(sizes: number[]): MetadataRoute.Manifest['icons'] {
+function generateIcons(sizes: number[]) {
   return sizes.map((size) => ({
     src: `/favicon-${size}x${size}.png`,
     sizes: `${size}x${size}`,
@@ -15,9 +13,7 @@ export const PATH = '/manifest.json';
 export default fastifyPlugin(
   (server, _, done) => {
     server.get(PATH, async (req, res) => {
-      const parsedUrl = parse(req.url!, true);
-
-      if (!config.pwa.enabled) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+      if (!config.pwa.enabled) return res.callNotFound();
 
       return {
         name: config.pwa.title,
@@ -29,7 +25,7 @@ export default fastifyPlugin(
         start_url: '/',
         display: 'standalone',
         icons: generateIcons([16, 32, 64, 128, 512]),
-      } satisfies MetadataRoute.Manifest;
+      };
     });
 
     done();

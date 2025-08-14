@@ -1,5 +1,4 @@
 .github
-.next
 build
 node_modules
 uploads*

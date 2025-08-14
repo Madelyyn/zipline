@@ -1,4 +1,4 @@
-import type { Folder as PrismaFolder } from '../../../../generated/client';
+import type { Folder as PrismaFolder } from '@/prisma/client';
 import { File, cleanFiles } from './file';
 
 export type Folder = PrismaFolder & {

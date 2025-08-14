@@ -1,18 +1,21 @@
 import glob from 'fast-glob';
-import { defineConfig } from 'tsup';
-import { replaceTscAliasPaths } from 'tsc-alias';
 import { copyFile, mkdir } from 'fs/promises';
+import { replaceTscAliasPaths } from 'tsc-alias';
+import { defineConfig } from 'tsup';
 
 export default defineConfig(async (_) => {
   return [
     {
       platform: 'node',
       format: 'cjs',
+      outExtension: () => ({ js: '.js' }),
       clean: true,
       sourcemap: true,
       entry: await glob('./src/**/*.ts', {
-        ignore: ['./src/components/**/*.ts', './src/pages/**/*.ts'],
+        ignore: ['./src/components/**/*.ts', './src/client/**/*.(ts|tsx|html)'],
       }),
+      shims: true,
+      esbuildPlugins: [],
       outDir: 'build',
       bundle: false,
       onSuccess: async () => {

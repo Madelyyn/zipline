@@ -15,7 +15,6 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { renderMode } from '../pages/upload/renderMode';
 import Render from '../render/Render';
 import fileIcon from './fileIcon';
-import { parseAsStringLiteral, useQueryState } from 'nuqs';
 
 function PlaceholderContent({ text, Icon }: { text: string; Icon: Icon }) {
   return (
@@ -78,8 +77,6 @@ export default function DashboardFileType({
   code?: boolean;
   allowZoom?: boolean;
 }) {
-  const [overrideType] = useQueryState('otype', parseAsStringLiteral(['video', 'audio', 'image', 'text']));
-
   const disableMediaPreview = useSettingsStore((state) => state.settings.disableMediaPreview);
 
   const dbFile = 'id' in file;
@@ -135,7 +132,7 @@ export default function DashboardFileType({
     if (code) {
       setType('text');
       getText();
-    } else if (overrideType === 'text' || type === 'text') {
+    } else if (type === 'text') {
       getText();
     } else {
       return;
@@ -167,7 +164,7 @@ export default function DashboardFileType({
       </Paper>
     );
 
-  switch (overrideType || type) {
+  switch (type) {
     case 'video':
       return show ? (
         <video

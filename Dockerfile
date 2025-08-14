@@ -20,11 +20,17 @@ FROM base AS builder
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY src ./src
-COPY next.config.js ./next.config.js
+COPY .gitignore ./.gitignore
+
+COPY postcss.config.cjs ./postcss.config.cjs
+COPY prettier.config.cjs ./prettier.config.cjs
+COPY eslint.config.mjs ./eslint.config.mjs
+COPY vite.config.ts ./vite.config.ts
 COPY tsup.config.ts ./tsup.config.ts
 COPY tsconfig.json ./tsconfig.json
 COPY mimes.json ./mimes.json
 COPY code.json ./code.json
+COPY vite-env.d.ts ./vite-env.d.ts
 
 ENV NEXT_TELEMETRY_DISABLED=1 \
   NODE_ENV=production
@@ -36,12 +42,9 @@ FROM base
 COPY --from=deps /zipline/node_modules ./node_modules
 
 COPY --from=builder /zipline/build ./build
-COPY --from=builder /zipline/.next ./.next
 
 COPY --from=builder /zipline/mimes.json ./mimes.json
 COPY --from=builder /zipline/code.json ./code.json
-COPY --from=builder /zipline/generated ./generated
-
 
 RUN pnpm build:prisma
 

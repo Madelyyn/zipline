@@ -6,7 +6,7 @@ import { RegistrationResponseJSON } from '@github/webauthn-json/dist/types/brows
 import { ActionIcon, Button, Group, Modal, Paper, Stack, Text, TextInput } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { UserPasskey } from '../../../../../../generated/client';
+import { UserPasskey } from '@/prisma/client';
 import { IconKey, IconKeyOff, IconTrashFilled } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { mutate } from 'swr';

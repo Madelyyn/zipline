@@ -2,6 +2,7 @@ import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
 import { useUserStore } from '@/lib/store/user';
 import {
+  Anchor,
   Button,
   ColorInput,
   Divider,
@@ -97,7 +98,10 @@ export default function SettingsFileView() {
     <Paper withBorder p='sm'>
       <Title order={2}>Viewing Files</Title>
       <Text c='dimmed' mt='xs'>
-        All text fields support using variables.
+        All text fields support using{' '}
+        <Anchor target='_blank' href='https://zipline.diced.sh/docs/guides/variables/'>
+          variables.
+        </Anchor>
       </Text>
       <Stack gap='sm' mt='xs'>
         <form onSubmit={form.onSubmit(onSubmit)}>

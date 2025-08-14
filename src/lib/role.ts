@@ -1,4 +1,4 @@
-import type { Role } from '../../generated/client';
+import type { Role } from '@/prisma/client';
 
 export function isAdministrator(role?: Role) {
   return role === 'ADMIN' || role === 'SUPERADMIN';

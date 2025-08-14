@@ -5,7 +5,8 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { FastifyReply } from 'fastify';
 import { FastifyRequest } from 'fastify/types/request';
 import { getSession } from '../session';
-import { parseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
+// import cookie from 'cookie';
+import * as cookie from 'cookie';
 
 declare module 'fastify' {
   export interface FastifyRequest {
@@ -40,14 +41,14 @@ export function parseUserToken(
 }
 
 export async function userMiddleware(req: FastifyRequest, res: FastifyReply) {
-  const cookies = parseCookie(req.headers.cookie ?? '');
+  const cookies = cookie.parse(req.headers.cookie ?? '');
 
   // conditions met to allow anonymous folder uploads but later handled in the upload route
   const anonFolderUpload =
     req.headers['x-zipline-folder'] &&
     req.url.toLowerCase().trim() === '/api/upload' &&
     !req.headers.authorization &&
-    !cookies.has('zipline_session');
+    !cookies['zipline_session'];
   if (anonFolderUpload) return;
 
   const authorization = req.headers.authorization;

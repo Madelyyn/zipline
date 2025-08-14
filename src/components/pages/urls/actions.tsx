@@ -8,7 +8,7 @@ import { Anchor } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconCopy, IconLinkOff } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { mutate } from 'swr';
 
 export async function deleteUrl(warnDeletion: boolean, url: Url) {
@@ -27,7 +27,7 @@ export function copyUrl(url: Url, config: SafeConfig, clipboard: ReturnType<type
   notifications.show({
     title: 'Copied link',
     message: (
-      <Anchor component={Link} href={formatRootUrl(config.urls.route, url.vanity ?? url.code)}>
+      <Anchor component={Link} to={formatRootUrl(config.urls.route, url.vanity ?? url.code)}>
         {`${domain}${formatRootUrl(config.urls.route, url.vanity ?? url.code)}`}
       </Anchor>
     ),

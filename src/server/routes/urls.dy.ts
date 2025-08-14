@@ -3,7 +3,6 @@ import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { parse } from 'url';
 
 type Params = {
   id: string;
@@ -22,15 +21,13 @@ export async function urlsRoute(
   const { id } = req.params;
   const { pw } = req.query;
 
-  const parsedUrl = parse(req.url!, true);
-
   const url = await prisma.url.findFirst({
     where: {
       OR: [{ code: id }, { vanity: id }, { id }],
     },
   });
-  if (!url) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
-  if (!url.enabled) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+  if (!url) return res.callNotFound();
+  if (!url.enabled) return res.callNotFound();
 
   if (url.maxViews && url.views >= url.maxViews) {
     if (config.features.deleteOnMaxViews) {
@@ -47,7 +44,7 @@ export async function urlsRoute(
       });
     }
 
-    return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+    return res.callNotFound();
   }
 
   if (url.password) {

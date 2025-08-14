@@ -16,7 +16,7 @@ import {
   IconTrashFilled,
   IconTrashXFilled,
 } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { mutate } from 'swr';
 
 export function viewFile(file: File) {
@@ -37,7 +37,7 @@ export function copyFile(file: File, clipboard: ReturnType<typeof useClipboard>)
   notifications.show({
     title: 'Copied link',
     message: (
-      <Anchor component={Link} href={url}>
+      <Anchor component={Link} to={url}>
         {url}
       </Anchor>
     ),

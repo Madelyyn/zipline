@@ -1,4 +1,4 @@
-import { Prisma } from '../../../../../../generated/client';
+import { Prisma } from '@/prisma/client';
 import { prisma } from '@/lib/db';
 import { Invite, inviteInviterSelect } from '@/lib/db/models/invite';
 import { log } from '@/lib/logger';

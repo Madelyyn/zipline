@@ -2,8 +2,8 @@ import { Response } from '@/lib/api/response';
 import { Button, Grid, JsonInput, Paper, Switch, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
 
 const defaultExternalLinks = [
@@ -22,7 +22,8 @@ export default function Website({
 }: {
   swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
+
   const form = useForm({
     initialValues: {
       websiteTitle: 'Zipline',
@@ -72,7 +73,7 @@ export default function Website({
 
     sendValues.websiteLoginBackgroundBlur = values.websiteLoginBackgroundBlur;
 
-    return settingsOnSubmit(router, form)(sendValues);
+    return settingsOnSubmit(navigate, form)(sendValues);
   };
 
   useEffect(() => {

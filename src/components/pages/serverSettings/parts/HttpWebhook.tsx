@@ -2,8 +2,8 @@ import { Response } from '@/lib/api/response';
 import { Button, LoadingOverlay, Paper, SimpleGrid, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
 
 export default function HttpWebhook({
@@ -11,7 +11,8 @@ export default function HttpWebhook({
 }: {
   swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
+
   const form = useForm({
     initialValues: {
       httpWebhookOnUpload: '',
@@ -33,7 +34,7 @@ export default function HttpWebhook({
       }
     }
 
-    return settingsOnSubmit(router, form)(values);
+    return settingsOnSubmit(navigate, form)(values);
   };
 
   useEffect(() => {

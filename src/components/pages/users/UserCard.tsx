@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { deleteUser } from './actions';
 import RelativeDate from '@/components/RelativeDate';
 import { canInteract, isAdministrator, roleName } from '@/lib/role';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export default function UserCard({ user }: { user: User }) {
   const currentUser = useUserStore((state) => state.user);
@@ -31,19 +31,14 @@ export default function UserCard({ user }: { user: User }) {
                 {user.username[0].toUpperCase()}
               </Avatar>
 
-              <Stack gap={1}>
-                <Text fw={400}>{user.username}</Text>
-                <Text size='xs' c='dimmed'>
-                  {user.id}
-                </Text>
-              </Stack>
+              <Text fw={400}>{user.username}</Text>
             </Group>
 
             <Group gap='xs'>
               <ActionIcon
                 variant={canInteract(currentUser?.role, user?.role) ? 'subtle' : 'transparent'}
                 component={Link}
-                href={`/dashboard/admin/users/${user.id}/files`}
+                to={`/dashboard/admin/users/${user.id}/files`}
                 disabled={!canInteract(currentUser?.role, user?.role)}
               >
                 <IconFiles size='1rem' />
@@ -79,6 +74,9 @@ export default function UserCard({ user }: { user: User }) {
 
         <Card.Section inheritPadding py='xs'>
           <Stack gap={1}>
+            <Text size='xs' c='dimmed'>
+              <b>Id:</b> {user.id}
+            </Text>
             <Text size='xs' c='dimmed'>
               <b>Role:</b> {roleName(user.role)}
             </Text>

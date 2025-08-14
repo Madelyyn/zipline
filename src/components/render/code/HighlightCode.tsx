@@ -1,19 +1,27 @@
 import { ActionIcon, Button, CopyButton, Paper, ScrollArea, Text, useMantineTheme } from '@mantine/core';
 import { IconCheck, IconClipboardCopy, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
-import hljs from 'highlight.js';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import './HighlightCode.theme.scss';
+import { type HLJSApi } from 'highlight.js';
 
 export default function HighlightCode({ language, code }: { language: string; code: string }) {
   const theme = useMantineTheme();
   const [expanded, setExpanded] = useState(false);
+  const [hljs, setHljs] = useState<HLJSApi | null>(null);
+
+  useEffect(() => {
+    import('highlight.js').then((mod) => setHljs(mod.default || mod));
+  }, []);
 
   const lines = code.split('\n');
   const lineNumbers = lines.map((_, i) => i + 1);
   const displayLines = expanded ? lines : lines.slice(0, 50);
   const displayLineNumbers = expanded ? lineNumbers : lineNumbers.slice(0, 50);
 
-  if (!hljs.getLanguage(language)) {
-    language = 'text';
+  let lang = language;
+  if (!hljs || !hljs.getLanguage(lang)) {
+    lang = 'text';
   }
 
   return (
@@ -53,7 +61,7 @@ export default function HighlightCode({ language, code }: { language: string; co
                 <span
                   className='line'
                   dangerouslySetInnerHTML={{
-                    __html: language === 'none' ? line : hljs.highlight(line, { language }).value,
+                    __html: lang === 'none' || !hljs ? line : hljs.highlight(line, { language: lang }).value,
                   }}
                 />
               </div>

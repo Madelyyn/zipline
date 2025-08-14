@@ -1,6 +1,5 @@
 import Render from '@/components/render/Render';
 import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
-import DashboardUploadText from '@/pages/dashboard/upload/text';
 import {
   ActionIcon,
   Button,
@@ -15,20 +14,17 @@ import {
 } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { IconCursorText, IconEyeFilled, IconFiles, IconUpload } from '@tabler/icons-react';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useShallow } from 'zustand/shallow';
 import UploadOptionsButton from '../UploadOptionsButton';
 import { renderMode } from '../renderMode';
 import { uploadFiles } from '../uploadFiles';
 
+import { useCodeMap } from '@/components/ConfigProvider';
 import styles from './index.module.css';
-import { useShallow } from 'zustand/shallow';
 
-export default function UploadText({
-  codeMeta,
-}: {
-  codeMeta: Parameters<typeof DashboardUploadText>[0]['codeMeta'];
-}) {
+export default function UploadText() {
   const clipboard = useClipboard();
   const [options, ephemeral, clearEphemeral] = useUploadOptionsStore(
     useShallow((state) => [state.options, state.ephemeral, state.clearEphemeral]),
@@ -36,6 +32,8 @@ export default function UploadText({
   const [selectedLanguage, setSelectedLanguage] = useState('txt');
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const codeMap = useCodeMap();
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -64,9 +62,10 @@ export default function UploadText({
   const upload = () => {
     const blob = new Blob([text]);
     const file = new File([blob], `text.${selectedLanguage}`, {
-      type: codeMeta.find((meta) => meta.ext === selectedLanguage)?.mime,
+      type: codeMap.find((meta) => meta.ext === selectedLanguage)?.mime,
       lastModified: Date.now(),
     });
+
     uploadFiles([file], {
       clipboard,
       setFiles: () => {},
@@ -84,7 +83,7 @@ export default function UploadText({
         <Title order={1}>Upload text</Title>
 
         <Tooltip label='View your files'>
-          <ActionIcon component={Link} href='/dashboard/files' variant='outline' radius='sm'>
+          <ActionIcon component={Link} to='/dashboard/files' variant='outline' radius='sm'>
             <IconFiles size={18} />
           </ActionIcon>
         </Tooltip>
@@ -128,7 +127,7 @@ export default function UploadText({
         <Select
           searchable
           defaultValue='txt'
-          data={codeMeta.map((meta) => ({ value: meta.ext, label: meta.name }))}
+          data={codeMap.map((meta) => ({ value: meta.ext, label: meta.name }))}
           onChange={(value) => setSelectedLanguage(value as string)}
         />
         <UploadOptionsButton numFiles={1} />

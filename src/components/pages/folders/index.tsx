@@ -7,7 +7,7 @@ import { ActionIcon, Button, Group, Modal, Stack, Switch, TextInput, Title, Tool
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { IconFolderPlus, IconPlus } from '@tabler/icons-react';
-import { parseAsBoolean, useQueryState } from 'nuqs';
+import { useState } from 'react';
 import { mutate } from 'swr';
 import FolderGridView from './views/FolderGridView';
 import FolderTableView from './views/FolderTableView';
@@ -15,7 +15,7 @@ import FolderTableView from './views/FolderTableView';
 export default function DashboardFolders() {
   const view = useViewStore((state) => state.folders);
 
-  const [open, setOpen] = useQueryState('cfopen', parseAsBoolean.withDefault(false));
+  const [open, setOpen] = useState(false);
 
   const form = useForm({
     initialValues: {

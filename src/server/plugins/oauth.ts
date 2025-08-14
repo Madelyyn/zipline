@@ -3,7 +3,7 @@ import { createToken, decrypt } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import Logger, { log } from '@/lib/logger';
 import { findProvider } from '@/lib/oauth/providerUtil';
-import { OAuthProviderType, User } from '../../../generated/client';
+import { OAuthProviderType, User } from '@/prisma/client';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { getSession, saveSession } from '../session';

@@ -30,7 +30,7 @@ export default function SettingsDashboard() {
   });
 
   return (
-    <Paper withBorder p='sm'>
+    <Paper withBorder p='sm' h='100%'>
       <Title order={2}>Dashboard Settings</Title>
       <Text size='sm' c='dimmed' mt={3}>
         These settings are saved in your browser.

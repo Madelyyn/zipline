@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db';
 import { File, cleanFiles, fileSelect } from '@/lib/db/models/file';
 import { canInteract } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
-import { Prisma } from '../../../../../../generated/client';
+import { Prisma } from '@/prisma/client';
 import fastifyPlugin from 'fastify-plugin';
 import { z } from 'zod';
 

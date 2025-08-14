@@ -13,13 +13,13 @@ import {
   Text,
 } from '@mantine/core';
 import { IconDownload, IconEyeFilled, IconGlobe, IconPercentage, IconWriting } from '@tabler/icons-react';
-import Link from 'next/link';
 import React, { useReducer, useState } from 'react';
 import useSWR from 'swr';
 import { flameshot } from './generators/flameshot';
 import { sharex } from './generators/sharex';
 import { shell } from './generators/shell';
 import { ishare } from './generators/ishare';
+import { Link } from 'react-router-dom';
 
 export type GeneratorOptions = {
   deletesAt: string | null;
@@ -283,7 +283,7 @@ export default function GeneratorButton({
                 description={
                   <>
                     If using a compositor such as{' '}
-                    <Anchor size='xs' component={Link} href='https://github.com/hyprwm/hyprland'>
+                    <Anchor size='xs' component={Link} to='https://github.com/hyprwm/hyprland'>
                       Hyprland
                     </Anchor>
                     , this option will set the <Code>XDG_CURRENT_DESKTOP=sway</Code> to workaround

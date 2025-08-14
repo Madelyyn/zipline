@@ -1,4 +1,4 @@
-import type { Invite as PrismaInvite } from '../../../../generated/client';
+import type { Invite as PrismaInvite } from '@/prisma/client';
 import type { User } from './user';
 
 export type Invite = PrismaInvite & {

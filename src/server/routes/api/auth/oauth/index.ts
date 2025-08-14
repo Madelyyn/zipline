@@ -1,6 +1,6 @@
 import { log } from '@/lib/logger';
 import fastifyPlugin from 'fastify-plugin';
-import { OAuthProvider, OAuthProviderType } from '../../../../../../generated/client';
+import { OAuthProvider, OAuthProviderType } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import { prisma } from '@/lib/db';
 

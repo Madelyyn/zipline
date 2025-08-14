@@ -2,8 +2,8 @@ import { Response } from '@/lib/api/response';
 import { Button, LoadingOverlay, Paper, SimpleGrid, Text, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
 
 export default function Tasks({
@@ -11,7 +11,8 @@ export default function Tasks({
 }: {
   swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
+
   const form = useForm({
     initialValues: {
       tasksDeleteInterval: '30m',
@@ -25,7 +26,7 @@ export default function Tasks({
     }),
   });
 
-  const onSubmit = settingsOnSubmit(router, form);
+  const onSubmit = settingsOnSubmit(navigate, form);
 
   useEffect(() => {
     if (!data) return;

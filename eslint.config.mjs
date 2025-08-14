@@ -2,9 +2,9 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
-import nextConfig from '@next/eslint-plugin-next';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import reactPlugin from 'eslint-plugin-react';
+import reactRefreshPlugin from 'eslint-plugin-react-refresh';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +23,13 @@ const gitignorePatterns = gitignoreContent
 export default tseslint.config(
   { ignores: gitignorePatterns },
 
-  ...tseslint.configs.recommended,
+  {
+    extends: [
+      tseslint.configs.recommended,
+      reactHooksPlugin.configs['recommended-latest'],
+      reactRefreshPlugin.configs.vite,
+    ],
+  },
 
   {
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
@@ -39,18 +45,11 @@ export default tseslint.config(
     plugins: {
       'unused-imports': unusedImports,
       prettier: prettier,
-      '@next/next': nextConfig,
-      'react-hooks': reactHooksPlugin,
       react: reactPlugin,
       'jsx-a11y': jsxA11yPlugin,
     },
     rules: {
       ...reactPlugin.configs.recommended.rules,
-
-      ...reactHooksPlugin.configs.recommended.rules,
-
-      ...nextConfig.configs.recommended.rules,
-      ...nextConfig.configs['core-web-vitals'].rules,
 
       ...prettierConfig.rules,
       'prettier/prettier': [
@@ -60,7 +59,6 @@ export default tseslint.config(
           fileInfoOptions: {
             withNodeModules: false,
           },
-          ignoreFileExtensions: ['pnpm-lock.yaml'],
         },
       ],
 
@@ -78,6 +76,7 @@ export default tseslint.config(
       'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'off',
       'react-hooks/exhaustive-deps': 'off',
+      'react-refresh/only-export-components': 'off',
       'react/jsx-uses-react': 'warn',
       'react/jsx-uses-vars': 'warn',
       'react/no-danger-with-children': 'warn',
@@ -109,9 +108,6 @@ export default tseslint.config(
     settings: {
       react: {
         version: 'detect',
-      },
-      next: {
-        rootDir: __dirname,
       },
     },
   },

@@ -4,7 +4,7 @@ import { Button, Paper, SimpleGrid, Skeleton, Text, Title } from '@mantine/core'
 import { modals } from '@mantine/modals';
 import { showNotification } from '@mantine/notifications';
 import { IconLogout } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 
 export default function SettingsSessions() {
@@ -61,7 +61,7 @@ export default function SettingsSessions() {
         >
           Log out everywhere
         </Button>
-        <Button color='yellow' component={Link} href='/auth/logout' leftSection={<IconLogout size='1rem' />}>
+        <Button color='yellow' component={Link} to='/auth/logout' leftSection={<IconLogout size='1rem' />}>
           Log out of this browser
         </Button>
       </SimpleGrid>

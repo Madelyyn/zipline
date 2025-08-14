@@ -3,12 +3,12 @@ import React from 'react';
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
 import { showNotification } from '@mantine/notifications';
-import { NextRouter } from 'next/router';
 import { mutate } from 'swr';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
+import { NavigateFunction } from 'react-router-dom';
 
-export function settingsOnSubmit(router: NextRouter, form: ReturnType<typeof useForm<any>>) {
+export function settingsOnSubmit(navigate: NavigateFunction, form: ReturnType<typeof useForm<any>>) {
   return async (values: unknown) => {
     const { data, error } = await fetchApi<Response['/api/server/settings']>(
       '/api/server/settings',
@@ -41,7 +41,9 @@ export function settingsOnSubmit(router: NextRouter, form: ReturnType<typeof use
 
       await fetch('/reload');
       mutate('/api/server/settings', data);
-      router.replace(router.asPath, undefined, { scroll: false });
+      mutate('/api/server/settings/web');
+      mutate('/api/server/public');
+      navigate('/dashboard/admin/settings', { replace: true });
     }
   };
 }

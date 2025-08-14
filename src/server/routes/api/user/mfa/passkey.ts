@@ -7,7 +7,7 @@ import { userMiddleware } from '@/server/middleware/user';
 import { RegistrationResponseJSON } from '@github/webauthn-json/dist/types/browser-ponyfill';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
-import { Prisma } from '../../../../../../generated/client';
+import { Prisma } from '@/prisma/client';
 
 export type ApiUserMfaPasskeyResponse = User | User['passkeys'];
 

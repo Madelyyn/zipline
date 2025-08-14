@@ -6,7 +6,7 @@ import { Anchor } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconCopy, IconTagOff } from '@tabler/icons-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { mutate } from 'swr';
 
 export async function deleteInvite(warnDeletion: boolean, invite: Invite) {
@@ -23,7 +23,7 @@ export function copyInviteUrl(invite: Invite, clipboard: ReturnType<typeof useCl
   notifications.show({
     title: 'Copied link',
     message: (
-      <Anchor component={Link} href={`/invite/${invite.code}`}>
+      <Anchor component={Link} to={`/invite/${invite.code}`}>
         {`${window.location.protocol}//${window.location.host}/invite/${invite.code}`}
       </Anchor>
     ),

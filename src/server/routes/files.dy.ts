@@ -5,7 +5,6 @@ import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { parse } from 'url';
 
 type Params = {
   id: string;
@@ -24,9 +23,6 @@ export async function filesRoute(
 ) {
   const { id } = req.params;
   const { pw, download } = req.query;
-
-  const parsedUrl = parse(req.url!, true);
-
   const file = await prisma.file.findFirst({
     where: {
       name: decodeURIComponent(id),
@@ -35,8 +31,7 @@ export async function filesRoute(
       User: true,
     },
   });
-
-  if (!file) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+  if (!file) return res.callNotFound();
 
   if (file.deletesAt && file.deletesAt <= new Date()) {
     try {
@@ -53,14 +48,10 @@ export async function filesRoute(
         })
         .error(e as Error);
     }
-
-    return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+    return res.callNotFound();
   }
-
   if (file.maxViews && file.views >= file.maxViews) {
-    if (!config.features.deleteOnMaxViews)
-      return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
-
+    if (!config.features.deleteOnMaxViews) return res.callNotFound();
     try {
       await datasource.delete(file.name);
       await prisma.file.delete({
@@ -75,28 +66,20 @@ export async function filesRoute(
         })
         .error(e as Error);
     }
-
-    return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+    return res.callNotFound();
   }
-
   if (file.User?.view.enabled) return res.redirect(`/view/${encodeURIComponent(file.name)}`);
-
   if (file.type.startsWith('text/')) return res.redirect(`/view/${encodeURIComponent(file.name)}`);
-
   const stream = await datasource.get(file.name);
-  if (!stream) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+  if (!stream) return res.callNotFound();
   if (file.password) {
     if (!pw) return res.redirect(`/view/${encodeURIComponent(file.name)}`);
-
     const verified = await verifyPassword(pw as string, file.password!);
-
     if (!verified) {
       logger.warn('password protected file accessed with an incorrect password', { id: file.id, ip: req.ip });
-
-      return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
+      return res.callNotFound();
     }
   }
-
   if (!req.headers.range) {
     await prisma.file.update({
       where: {
@@ -109,15 +92,12 @@ export async function filesRoute(
       },
     });
   }
-
   const size = file?.size || (await datasource.size(file?.name ?? id));
-
   if (req.headers.range) {
     const [start, end] = parseRange(req.headers.range, size);
     if (start >= size || end >= size) {
       const buf = await datasource.get(file?.name ?? id);
-      if (!buf) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
-
+      if (!buf) return res.callNotFound();
       return res
         .type(file?.type || 'application/octet-stream')
         .headers({
@@ -133,10 +113,8 @@ export async function filesRoute(
         .status(416)
         .send(buf);
     }
-
     const buf = await datasource.range(file?.name ?? id, start || 0, end);
-    if (!buf) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
-
+    if (!buf) return res.callNotFound();
     return res
       .type(file?.type || 'application/octet-stream')
       .headers({
@@ -154,10 +132,8 @@ export async function filesRoute(
       .status(206)
       .send(buf);
   }
-
   const buf = await datasource.get(file?.name ?? id);
-  if (!buf) return req.server.nextServer.render404(req.raw, res.raw, parsedUrl);
-
+  if (!buf) return res.callNotFound();
   return res
     .type(file?.type || 'application/octet-stream')
     .headers({

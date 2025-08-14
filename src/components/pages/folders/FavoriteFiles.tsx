@@ -1,4 +1,4 @@
-import DashboardFile from '@/components/file/DashboardFile';
+import { useQueryState } from '@/lib/hooks/useQueryState';
 import {
   Accordion,
   Button,
@@ -8,16 +8,19 @@ import {
   Pagination,
   Paper,
   SimpleGrid,
+  Skeleton,
   Stack,
   Title,
 } from '@mantine/core';
 import { IconFileUpload, IconFilesOff } from '@tabler/icons-react';
-import Link from 'next/link';
-import { parseAsInteger, useQueryState } from 'nuqs';
+import { Link } from 'react-router-dom';
 import { useApiPagination } from '../files/useApiPagination';
+import { lazy, Suspense } from 'react';
+
+const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
 
 export default function FavoriteFiles() {
-  const [page, setPage] = useQueryState('fpage', parseAsInteger.withDefault(1));
+  const [page, setPage] = useQueryState('fpage', 1);
   const { data, isLoading } = useApiPagination({
     page,
     favorite: true,
@@ -47,7 +50,11 @@ export default function FavoriteFiles() {
                     <LoadingOverlay visible />
                   </Paper>
                 ) : (data?.page.length ?? 0 > 0) ? (
-                  data?.page.map((file) => <DashboardFile key={file.id} file={file} />)
+                  data?.page.map((file) => (
+                    <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
+                      <DashboardFile file={file} />
+                    </Suspense>
+                  ))
                 ) : (
                   <Paper withBorder p='sm'>
                     <Center>
@@ -61,7 +68,7 @@ export default function FavoriteFiles() {
                           size='compact-sm'
                           leftSection={<IconFileUpload size='1rem' />}
                           component={Link}
-                          href='/dashboard/upload/file'
+                          to='/dashboard/upload/file'
                         >
                           Upload a file
                         </Button>

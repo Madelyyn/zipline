@@ -2,16 +2,20 @@ import { Response } from '@/lib/api/response';
 import { Button, Group, LoadingOverlay, Paper, SimpleGrid, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
+
+const DOMAIN_REGEX =
+  /^[a-zA-Z0-9][a-zA-Z0-9-_]{0,61}[a-zA-Z0-9]{0,1}\.([a-zA-Z]{1,6}|[a-zA-Z0-9-]{1,30}\.[a-zA-Z]{2,3})$/gim;
 
 export default function Domains({
   swr: { data, isLoading },
 }: {
   swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
+
   const [domains, setDomains] = useState<string[]>([]);
   const form = useForm({
     initialValues: {
@@ -19,7 +23,7 @@ export default function Domains({
     },
   });
 
-  const onSubmit = settingsOnSubmit(router, form);
+  const onSubmit = settingsOnSubmit(navigate, form);
 
   useEffect(() => {
     if (!data) return;
@@ -32,6 +36,10 @@ export default function Domains({
   const addDomain = () => {
     const { newDomain } = form.values;
     if (!newDomain) return;
+
+    if (!DOMAIN_REGEX.test(newDomain)) {
+      return form.setFieldError('newDomain', 'Invalid Domain');
+    }
 
     const updatedDomains = [...domains, newDomain.trim()];
     setDomains(updatedDomains);

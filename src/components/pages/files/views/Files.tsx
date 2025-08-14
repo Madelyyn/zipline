@@ -12,22 +12,19 @@ import {
   Title,
 } from '@mantine/core';
 import { IconFileUpload, IconFilesOff } from '@tabler/icons-react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { parseAsInteger, useQueryState } from 'nuqs';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useApiPagination } from '../useApiPagination';
+import { Link } from 'react-router-dom';
+import { useQueryState } from '@/lib/hooks/useQueryState';
 
-const DashboardFile = dynamic(() => import('@/components/file/DashboardFile'), {
-  loading: () => <Skeleton height={350} animate />,
-});
+const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
 
 const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45];
 
 export default function Files({ id }: { id?: string }) {
-  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1));
-  const [perpage, setPerpage] = useState<number>(15);
-  const [cachedPages, setCachedPages] = useState<number>(1);
+  const [page, setPage] = useQueryState('page', 1);
+  const [perpage, setPerpage] = useState(15);
+  const [cachedPages, setCachedPages] = useState(1);
 
   const { data, isLoading } = useApiPagination({
     page,
@@ -60,7 +57,11 @@ export default function Files({ id }: { id?: string }) {
         {isLoading ? (
           [...Array(9)].map((_, i) => <Skeleton key={i} height={350} animate />)
         ) : (data?.page?.length ?? 0 > 0) ? (
-          data?.page.map((file) => <DashboardFile key={file.id} file={file} />)
+          data?.page.map((file) => (
+            <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
+              <DashboardFile file={file} />
+            </Suspense>
+          ))
         ) : (
           <Paper withBorder p='sm'>
             <Center>
@@ -75,7 +76,7 @@ export default function Files({ id }: { id?: string }) {
                     size='compact-sm'
                     leftSection={<IconFileUpload size='1rem' />}
                     component={Link}
-                    href='/dashboard/upload/file'
+                    to='/dashboard/upload/file'
                   >
                     Upload a file
                   </Button>

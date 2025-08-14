@@ -5,7 +5,6 @@ import { fetchApi } from '@/lib/fetchApi';
 import { ActionIcon, Group, Modal, Paper, Stack, Text, Title, Tooltip } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { IconPencil, IconPlus, IconTagOff, IconTags, IconTrashFilled } from '@tabler/icons-react';
-import { parseAsBoolean, useQueryState } from 'nuqs';
 import { useState } from 'react';
 import useSWR from 'swr';
 import CreateTagModal from './CreateTagModal';
@@ -13,8 +12,8 @@ import EditTagModal from './EditTagModal';
 import TagPill from './TagPill';
 
 export default function TagsButton() {
-  const [open, setOpen] = useQueryState('topen', parseAsBoolean.withDefault(false));
-  const [createModalOpen, setCreateModalOpen] = useQueryState('ctopen', parseAsBoolean.withDefault(false));
+  const [open, setOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
 
   const { data: tags, mutate } = useSWR<Extract<Tag[], Response['/api/user/tags']>>('/api/user/tags');

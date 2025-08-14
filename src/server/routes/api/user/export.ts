@@ -9,7 +9,7 @@ import { Zip, ZipPassThrough } from 'fflate';
 import { createWriteStream } from 'fs';
 import { rm, stat } from 'fs/promises';
 import { join } from 'path';
-import { Export } from '../../../../../generated/client';
+import { Export } from '@/prisma/client';
 
 export type ApiUserExportResponse = {
   running?: boolean;

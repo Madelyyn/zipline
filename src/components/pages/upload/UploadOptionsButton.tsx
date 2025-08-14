@@ -30,16 +30,15 @@ import {
   IconTrashFilled,
   IconWriting,
 } from '@tabler/icons-react';
-import Link from 'next/link';
-import { parseAsBoolean, useQueryState } from 'nuqs';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 import { useShallow } from 'zustand/shallow';
 
 export default function UploadOptionsButton({ folder, numFiles }: { folder?: string; numFiles: number }) {
   const config = useConfig();
 
-  const [opened, setOpen] = useQueryState('upopen', parseAsBoolean.withDefault(false));
+  const [opened, setOpen] = useState(false);
   const [options, ephemeral, setOption, setEphemeral, changes, clearEphemeral, clearOptions] =
     useUploadOptionsStore(
       useShallow((state) => [
@@ -151,7 +150,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
                 ) : (
                   <>
                     {'You can set a default expiration time in the '}
-                    <Link href='/dashboard/admin/settings'>settings</Link>
+                    <Link to='/dashboard/admin/settings'>settings</Link>
                     {'.'}
                   </>
                 )}

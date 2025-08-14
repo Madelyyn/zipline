@@ -3,6 +3,7 @@ import type { SafeConfig } from '@/lib/config/safe';
 import { fetchApi } from '@/lib/fetchApi';
 import useAvatar from '@/lib/hooks/useAvatar';
 import useLogin from '@/lib/hooks/useLogin';
+import { Outlet, useLocation } from 'react-router-dom';
 import { isAdministrator } from '@/lib/role';
 import { useUserStore } from '@/lib/store/user';
 import {
@@ -44,11 +45,11 @@ import {
   IconUpload,
   IconUsersGroup,
 } from '@tabler/icons-react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useState } from 'react';
 import ConfigProvider from './ConfigProvider';
 import VersionBadge from './VersionBadge';
+import { Link, useLoaderData } from 'react-router-dom';
+import { dashboardLoader } from '../client/routes';
 
 type NavLinks = {
   label: string;
@@ -142,14 +143,17 @@ const navLinks: NavLinks[] = [
   },
 ];
 
-export default function Layout({ children, config }: { children: React.ReactNode; config: SafeConfig }) {
+export default function Layout() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const [opened, setOpened] = useState(false);
-  const router = useRouter();
   const modals = useModals();
   const clipboard = useClipboard();
   const setUser = useUserStore((s) => s.setUser);
+  const location = useLocation();
+
+  const loaderData = useLoaderData<typeof dashboardLoader>();
+  const config = loaderData.config;
 
   const { user, mutate } = useLogin();
   const { avatar } = useAvatar();
@@ -275,7 +279,8 @@ export default function Layout({ children, config }: { children: React.ReactNode
                 <Menu.Item
                   leftSection={<IconSettingsFilled size='1rem' />}
                   component={Link}
-                  href='/dashboard/settings'
+                  to='/dashboard/settings'
+                  prefetch='intent'
                 >
                   Settings
                 </Menu.Item>
@@ -284,7 +289,8 @@ export default function Layout({ children, config }: { children: React.ReactNode
                   <Menu.Item
                     leftSection={<IconAdjustments size='1rem' />}
                     component={Link}
-                    href='/dashboard/admin/settings'
+                    to='/dashboard/admin/settings'
+                    prefetch='intent'
                   >
                     Server Settings
                   </Menu.Item>
@@ -295,7 +301,7 @@ export default function Layout({ children, config }: { children: React.ReactNode
                   color='red'
                   leftSection={<IconLogout size='1rem' />}
                   component={Link}
-                  href='/auth/logout'
+                  to='/auth/logout'
                 >
                   Logout
                 </Menu.Item>
@@ -322,9 +328,10 @@ export default function Layout({ children, config }: { children: React.ReactNode
                   leftSection={link.icon}
                   variant='light'
                   rightSection={<IconChevronRight size='0.7rem' />}
-                  active={router.pathname === link.href}
+                  active={location.pathname === link.href}
                   component={Link}
-                  href={link.href || ''}
+                  to={link.href || ''}
+                  prefetch='intent'
                 />
               );
             } else {
@@ -335,7 +342,7 @@ export default function Layout({ children, config }: { children: React.ReactNode
                   leftSection={link.icon}
                   variant='light'
                   rightSection={<IconChevronRight size='0.7rem' />}
-                  defaultOpened={link.active(router.pathname)}
+                  defaultOpened={link.active(location.pathname)}
                 >
                   {link.links
                     .filter(
@@ -348,9 +355,10 @@ export default function Layout({ children, config }: { children: React.ReactNode
                         leftSection={sublink.icon}
                         rightSection={<IconChevronRight size='0.7rem' />}
                         variant='light'
-                        active={router.pathname === sublink.href}
+                        active={location.pathname === sublink.href}
                         component={Link}
-                        href={sublink.href || ''}
+                        to={sublink.href || ''}
+                        prefetch='intent'
                       />
                     ))}
                 </NavLink>
@@ -372,7 +380,7 @@ export default function Layout({ children, config }: { children: React.ReactNode
                   leftSection={<IconExternalLink size='1rem' />}
                   variant='light'
                   component={Link}
-                  href={url}
+                  to={url}
                   target='_blank'
                 />
               ))}
@@ -382,9 +390,9 @@ export default function Layout({ children, config }: { children: React.ReactNode
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <ConfigProvider config={config}>
+        <ConfigProvider data={loaderData}>
           <Paper m='lg' withBorder p='xs'>
-            {children}
+            <Outlet />
           </Paper>
         </ConfigProvider>
       </AppShell.Main>

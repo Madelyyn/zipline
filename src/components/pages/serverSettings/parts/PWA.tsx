@@ -13,8 +13,8 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy, IconRefresh } from '@tabler/icons-react';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
 
 export default function PWA({
@@ -22,7 +22,8 @@ export default function PWA({
 }: {
   swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
+
   const form = useForm({
     initialValues: {
       pwaEnabled: false,
@@ -48,7 +49,7 @@ export default function PWA({
     sendValues.pwaDescription = values.pwaDescription.trim() === '' ? null : values.pwaDescription.trim();
 
     return settingsOnSubmit(
-      router,
+      navigate,
       form,
     )({
       ...sendValues,
@@ -72,7 +73,7 @@ export default function PWA({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <Paper withBorder p='sm' pos='relative' h='100%'>
       <LoadingOverlay visible={isLoading} />
 
       <Title order={2}>PWA</Title>
@@ -130,7 +131,7 @@ export default function PWA({
           <Button type='submit' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
             Save
           </Button>
-          <Button onClick={() => router.reload()} leftSection={<IconRefresh size='1rem' />}>
+          <Button onClick={() => window.location.reload()} leftSection={<IconRefresh size='1rem' />}>
             Refresh
           </Button>
         </Group>

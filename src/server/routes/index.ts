@@ -6,7 +6,7 @@ const DEV = process.env.NODE_ENV === 'development';
 
 const loadRoutes = async (): Promise<Record<string, ReturnType<typeof fastifyPlugin>>> => {
   const files = await glob(`./${DEV ? 'src' : 'build'}/server/routes/**/!(*.dy).@(ts|js)`, {
-    ignore: [`./${DEV ? 'src' : 'build'}/server/routes/index.(ts|js)`],
+    ignore: [`./${DEV ? 'src' : 'build'}/server/routes/(index).(ts|js)`],
   });
 
   const routes: Record<string, ReturnType<typeof fastifyPlugin>> = {};

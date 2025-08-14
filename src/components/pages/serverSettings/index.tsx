@@ -1,60 +1,69 @@
 import { Response } from '@/lib/api/response';
 import { Alert, Anchor, Collapse, Group, SimpleGrid, Skeleton, Stack, Title } from '@mantine/core';
-import useSWR from 'swr';
-import dynamic from 'next/dynamic';
 import { useDisclosure } from '@mantine/hooks';
-import Domains from './parts/Domains';
+import useSWR from 'swr';
+import { lazy, Suspense, useMemo } from 'react';
+
+const Core = lazy(() => import('./parts/Core'));
+const Chunks = lazy(() => import('./parts/Chunks'));
+const Discord = lazy(() => import('./parts/Discord'));
+const Domains = lazy(() => import('./parts/Domains'));
+const Features = lazy(() => import('./parts/Features'));
+const Files = lazy(() => import('./parts/Files'));
+const HttpWebhook = lazy(() => import('./parts/HttpWebhook'));
+const Invites = lazy(() => import('./parts/Invites'));
+const Mfa = lazy(() => import('./parts/Mfa'));
+const Oauth = lazy(() => import('./parts/Oauth'));
+const PWA = lazy(() => import('./parts/PWA'));
+const Ratelimit = lazy(() => import('./parts/Ratelimit'));
+const Tasks = lazy(() => import('./parts/Tasks'));
+const Urls = lazy(() => import('./parts/Urls'));
+const Website = lazy(() => import('./parts/Website'));
 
 function SettingsSkeleton() {
-  return <Skeleton height={280} animate />;
+  return Array(17)
+    .fill(null)
+    .map((_, index) => <Skeleton key={index} height={280} animate />);
 }
 
-const Core = dynamic(() => import('./parts/Core'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Chunks = dynamic(() => import('./parts/Chunks'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Discord = dynamic(() => import('./parts/Discord'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Features = dynamic(() => import('./parts/Features'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Files = dynamic(() => import('./parts/Files'), {
-  loading: () => <SettingsSkeleton />,
-});
-const HttpWebhook = dynamic(() => import('./parts/HttpWebhook'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Invites = dynamic(() => import('./parts/Invites'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Mfa = dynamic(() => import('./parts/Mfa'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Oauth = dynamic(() => import('./parts/Oauth'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Ratelimit = dynamic(() => import('./parts/Ratelimit'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Tasks = dynamic(() => import('./parts/Tasks'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Urls = dynamic(() => import('./parts/Urls'), {
-  loading: () => <SettingsSkeleton />,
-});
-const Website = dynamic(() => import('./parts/Website'), {
-  loading: () => <SettingsSkeleton />,
-});
-const PWA = dynamic(() => import('./parts/PWA'), {
-  loading: () => <SettingsSkeleton />,
-});
-
-export default function DashboardSettings() {
+export default function DashboardServerSettings() {
   const { data, isLoading, error } = useSWR<Response['/api/server/settings']>('/api/server/settings');
   const [opened, { toggle }] = useDisclosure(false);
+
+  const scrollToSetting = useMemo(() => {
+    return (setting: string) => {
+      console.log('scrolling to setting:', setting);
+      const input = document.querySelector<HTMLInputElement>(`[data-path="${setting}"]`);
+      if (input) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            if (entries[0].isIntersecting) {
+              observer.disconnect();
+              const parent = input.parentElement?.parentElement;
+              if (parent) {
+                parent.style.transition = 'transform 0.35s';
+                parent.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                  parent.style.transform = 'scale(1)';
+                }, 350);
+              }
+            }
+          },
+          { threshold: 1.0 },
+        );
+        observer.observe(input);
+
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+      }
+    };
+  }, []);
+
+  const onTamperedClick = (e: React.MouseEvent<HTMLAnchorElement>, setting: string) => {
+    e.preventDefault();
+
+    scrollToSetting(setting);
+  };
 
   return (
     <>
@@ -75,7 +84,9 @@ export default function DashboardSettings() {
           <Collapse in={opened} transitionDuration={200}>
             <ul>
               {data!.tampered.map((setting) => (
-                <li key={setting}>{setting}</li>
+                <li key={setting}>
+                  <Anchor onClick={(e) => onTamperedClick(e, setting)}>{setting}</Anchor>
+                </li>
               ))}
             </ul>
           </Collapse>
@@ -86,7 +97,7 @@ export default function DashboardSettings() {
         {error ? (
           <div>Error loading server settings</div>
         ) : (
-          <>
+          <Suspense fallback={<SettingsSkeleton />}>
             <Core swr={{ data, isLoading }} />
             <Chunks swr={{ data, isLoading }} />
             <Tasks swr={{ data, isLoading }} />
@@ -100,15 +111,16 @@ export default function DashboardSettings() {
             </Stack>
 
             <Ratelimit swr={{ data, isLoading }} />
-            <Website swr={{ data, isLoading }} />
+            <Stack>
+              <Website swr={{ data, isLoading }} />
+              <PWA swr={{ data, isLoading }} />
+            </Stack>
             <Oauth swr={{ data, isLoading }} />
-
-            <PWA swr={{ data, isLoading }} />
 
             <HttpWebhook swr={{ data, isLoading }} />
 
             <Domains swr={{ data, isLoading }} />
-          </>
+          </Suspense>
         )}
       </SimpleGrid>
 

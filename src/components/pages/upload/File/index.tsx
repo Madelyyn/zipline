@@ -1,4 +1,6 @@
 import { useConfig } from '@/components/ConfigProvider';
+import { bytes } from '@/lib/bytes';
+import { humanizeDuration } from '@/lib/relativeTime';
 import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
 import {
   ActionIcon,
@@ -19,15 +21,13 @@ import { Dropzone } from '@mantine/dropzone';
 import { useClipboard, useColorScheme } from '@mantine/hooks';
 import { notifications, showNotification } from '@mantine/notifications';
 import { IconDeviceSdCard, IconFiles, IconUpload, IconX } from '@tabler/icons-react';
-import Link from 'next/link';
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useShallow } from 'zustand/shallow';
 import UploadOptionsButton from '../UploadOptionsButton';
 import { uploadFiles } from '../uploadFiles';
-import ToUploadFile from './ToUploadFile';
-import { bytes } from '@/lib/bytes';
 import { uploadPartialFiles } from '../uploadPartialFiles';
-import { humanizeDuration } from '@/lib/relativeTime';
-import { useShallow } from 'zustand/shallow';
+import ToUploadFile from './ToUploadFile';
 
 export default function UploadFile({ title, folder }: { title?: string; folder?: string }) {
   const theme = useMantineTheme();
@@ -126,6 +126,8 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
     };
   }, [files.length]);
 
+  if (!config) return null;
+
   return (
     <>
       <Group gap='sm'>
@@ -133,7 +135,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
 
         {!folder && (
           <Tooltip label='View your files'>
-            <ActionIcon component={Link} href='/dashboard/files' variant='outline' radius='sm'>
+            <ActionIcon component={Link} to='/dashboard/files' variant='outline' radius='sm'>
               <IconFiles size={18} />
             </ActionIcon>
           </Tooltip>

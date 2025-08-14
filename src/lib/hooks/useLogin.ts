@@ -1,13 +1,12 @@
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { redirect } from 'react-router-dom';
 import useSWR from 'swr';
-import type { Response } from '../api/response';
-import { useUserStore } from '../store/user';
-import { isAdministrator } from '../role';
 import { useShallow } from 'zustand/shallow';
+import type { Response } from '../api/response';
+import { isAdministrator } from '../role';
+import { useUserStore } from '../store/user';
 
 export default function useLogin(administratorOnly: boolean = false) {
-  const router = useRouter();
   const { data, error, isLoading, mutate } = useSWR<Response['/api/user']>('/api/user', {
     fallbackData: { user: undefined },
   });
@@ -18,13 +17,13 @@ export default function useLogin(administratorOnly: boolean = false) {
     if (data?.user) {
       setUser(data.user);
     } else if (error) {
-      router.push('/auth/login');
+      redirect('/auth/login');
     }
   }, [data, error]);
 
   useEffect(() => {
     if (user && administratorOnly && !isAdministrator(user.role)) {
-      router.push('/dashboard');
+      redirect('/dashboard');
     }
   }, [user]);
 

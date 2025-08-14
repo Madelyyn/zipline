@@ -1,3 +1,4 @@
+import { Response } from '@/lib/api/response';
 import { Config } from '@/lib/config/validate';
 import { useSettingsStore } from '@/lib/store/settings';
 import { useUserStore } from '@/lib/store/user';
@@ -6,6 +7,7 @@ import dark_blue from '@/lib/theme/builtins/dark_blue';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { useColorScheme } from '@mantine/hooks';
 import { createContext, useContext } from 'react';
+import useSWR from 'swr';
 import { useShallow } from 'zustand/shallow';
 
 const ThemeContext = createContext<{
@@ -21,15 +23,25 @@ export function useThemes() {
   return ctx.themes;
 }
 
-export default function Theming({
-  themes,
-  defaultTheme,
+export default function ThemeProvider({
+  ssrThemes,
+  ssrDefaultTheme,
   children,
 }: {
-  themes: ZiplineTheme[];
+  ssrThemes?: ZiplineTheme[];
+  ssrDefaultTheme?: Config['website']['theme'];
   children: React.ReactNode;
-  defaultTheme?: Config['website']['theme'];
 }) {
+  const { data: clientThemes } = useSWR<Response['/api/server/themes']>('/api/server/themes', {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    refreshWhenHidden: false,
+    revalidateIfStale: false,
+  });
+
+  const themes = ssrThemes ?? clientThemes?.themes;
+  const defaultTheme = ssrDefaultTheme ?? clientThemes?.defaultTheme;
+
   const user = useUserStore((state) => state.user);
   const [userTheme, preferredDark, preferredLight] = useSettingsStore(
     useShallow((state) => [state.settings.theme, state.settings.themeDark, state.settings.themeLight]),
@@ -53,7 +65,7 @@ export default function Theming({
   }
 
   return (
-    <ThemeContext.Provider value={{ themes }}>
+    <ThemeContext.Provider value={{ themes: themes ?? [] }}>
       <MantineProvider
         defaultColorScheme={theme.colorScheme as unknown as any}
         forceColorScheme={theme.colorScheme as unknown as any}

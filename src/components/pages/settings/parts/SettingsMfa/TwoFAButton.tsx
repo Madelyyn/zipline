@@ -17,8 +17,8 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconShieldLockFilled } from '@tabler/icons-react';
-import Link from 'next/link';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import useSWR, { mutate } from 'swr';
 import { useShallow } from 'zustand/shallow';
 
@@ -129,13 +129,13 @@ export default function TwoFAButton() {
               <Text size='sm' c='dimmed'>
                 <b>Step 1</b> Open/download an authenticator that supports QR code scanning or manual code
                 entry. Popular options include{' '}
-                <Anchor component={Link} href='https://2fas.com/' target='_blank'>
+                <Anchor component={Link} to='https://2fas.com/' target='_blank'>
                   2FAs
                 </Anchor>
                 ,{' '}
                 <Anchor
                   component={Link}
-                  href='https://support.google.com/accounts/answer/1066447'
+                  to='https://support.google.com/accounts/answer/1066447'
                   target='_blank'
                 >
                   Google Authenticator
@@ -143,7 +143,7 @@ export default function TwoFAButton() {
                 , and{' '}
                 <Anchor
                   component={Link}
-                  href='https://www.microsoft.com/en-us/security/mobile-authenticator-app'
+                  to='https://www.microsoft.com/en-us/security/mobile-authenticator-app'
                   target='_blank'
                 >
                   Microsoft Authenticator
