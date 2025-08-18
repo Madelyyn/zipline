@@ -1,53 +1,80 @@
-name: Bug
-description: File a bug report
-title: 'Bug: [insert title]'
+name: Bug Report
+description: Report a reproducible bug in Zipline
+title: 'Bug: [short description of the issue]'
 labels: ['bug']
 body:
+  - type: checkboxes
+    id: agree
+    attributes:
+      label: Confirm bug report
+      description: Please make sure that this is a bug with Zipline and not with any external services. Dealing with reproducible bugs help us a ton when trying to fix them. Please check the following that apply to this report.
+      options:
+        - label: "✅ This bug is a Zipline bug and is reproducible"
+        - label: "❌ I am not sure if this is a Zipline bug (it may be due to a configuration, user error, or external service)"
+
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened?
-      description: Provide steps to reproduce the bug, and some context.
-      value: 'A bug happened!'
+      label: Bug description
+      description: |
+        Describe in detail what you were doing and what happened.
+        Please include screenshots, logs, or error messages if possible, as they help diagnose the issue faster.
     validations:
       required: true
+
   - type: dropdown
-    id: version
+    id: runtime-type
     attributes:
-      label: Version
-      description: What version (or docker image) of Zipline are you using?
+      label: How is Zipline being run?
+      description: 
       options:
-        - Latest release (ghcr.io/diced/zipline or ghcr.io/diced/zipline:latest)
-        - Latest commit (ghcr.io/diced/zipline:trunk)
-        - other (provide version in additional info)
+        - On docker (docker, docker compose, etc.)
+        - Built from source (running it through `pnpm start` or `node`, etc.)
+        - Other (please specify in the "Zipline Version" section)
     validations:
       required: true
+
+  - type: textarea
+    id: runtime-version
+    attributes:
+      label: Zipline Version
+      description: |
+        Provide the version of Zipline you are using:
+        - If version checking is enabled (it is by default): paste the response from `http://<domain>/api/version`
+        - If using docker (and can't do the above): specify the tag you are using (`latest`, `trunk`, or a tag digest)
+        - A simple version number (e.g. "4.2.1") may also suffice
+      placeholder: "4.2.1"
+    validations:
+      required: true
+
   - type: dropdown
     id: browsers
     attributes:
-      label: What browser(s) are you seeing the problem on?
+      label: If applicable, what browsers are you seeing this issue on?
       multiple: true
       options:
-        - Firefox
-        - Chromium-based (Chrome, Edge, Brave, Opera, mobile chrome/chromium based, etc)
-        - Safari
-        - Chromium-based Mobile (Chrome, Edge, Brave, Android WebView, etc)
-        - Firefox Mobile
-        - Safari Mobile
+        - Chromium based (Chrome, Brave, Edge, Opera, etc.)
+        - Firefox based (Firefox, Zen Browser, Waterfox, etc.)
+        - Safari (On macOS and/or iOS)
+        - Chromium based on Android/iOS
+        - Firefox based on Android/iOS
+        - Other (Please specify in the "Steps to Reproduce" section)
+
   - type: textarea
     id: zipline-logs
     attributes:
-      label: Zipline Logs
-      description: Please copy and paste any relevant log output. Not seeing anything interesting? Try adding the `DEBUG=zipline` (v4) environment variable to see more logs, make sure to review the output and remove any sensitive information as it can be VERY verbose at times.
-      render: shell
+      label: Relevant Logs
+      description: |
+        Paste any relevant logs from Zipline or the browser (if applicable).
+        If logs don't look useful, you can enable debug mode by setting the environment variable `DEBUG=zipline` when starting Zipline.
+        Then reproduce the issue and copy the logs here.
+        **Note:** Debug logs may contain sensitive information.
+
   - type: textarea
-    id: browser-logs
+    id: reproduction
     attributes:
-      label: Browser Logs
-      description: Please copy and paste any relevant log output.
-      render: shell
-  - type: textarea
-    id: additional-info
-    attributes:
-      label: Additional Info
-      description: Anything else that could be used to narrow down the issue, like your config.
+      label: Steps to Reproduce
+      descritpion: |
+        Please list the exact steps required to reproduce the issue.
+        Include any relevant configuration options, settings, or external services that may affect Zipline’s functionality.
+
