@@ -35,8 +35,6 @@ import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 import { useShallow } from 'zustand/shallow';
 
-type SettingsDomains = { settings?: { domains?: string[] }; domains?: string[] };
-
 function checkDomains(domains?: unknown): string[] {
   if (!domains) return [];
   if (!Array.isArray(domains)) return [];
@@ -70,16 +68,12 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
   const { data: folders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
     '/api/user/folders?noincl=true',
   );
-  const { data: settingsData } = useSWR<SettingsDomains>(
-    folder ? '/api/server/public' : '/api/server/settings',
-  );
+  const { data: settingsData } = useSWR<Response['/api/server/public']>('/api/server/public');
 
   const combobox = useCombobox();
   const [folderSearch, setFolderSearch] = useState('');
 
-  const domains = folder
-    ? checkDomains(settingsData?.domains)
-    : checkDomains(settingsData?.settings?.domains);
+  const domains = checkDomains(settingsData?.domains);
 
   const domainOptions = [
     { value: '', label: 'Default Domain' },
