@@ -67,6 +67,8 @@ export default fastifyPlugin(
       const options = parseHeaders(req.headers, config.files);
       if (options.header) return res.badRequest('bad options, receieved: ' + JSON.stringify(options));
 
+      if (options.partial) return res.badRequest('bad options, receieved: partial upload');
+
       let folder = null;
       if (options.folder) {
         folder = await prisma.folder.findFirst({
