@@ -11,11 +11,12 @@ import {
   Text,
 } from '@mantine/core';
 import { Icon, IconFileUnknown, IconPlayerPlay, IconShieldLockFilled } from '@tabler/icons-react';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { renderMode } from '../pages/upload/renderMode';
+import Asciinema from '../render/Asciinema';
+import Pdf from '../render/Pdf';
 import Render from '../render/Render';
 import fileIcon from './fileIcon';
-import Asciinema from '../render/Asciinema';
 
 function PlaceholderContent({ text, Icon }: { text: string; Icon: Icon }) {
   return (
@@ -204,6 +205,7 @@ export default function DashboardFileType({
       ) : (
         <Placeholder text={`Click to play video ${file.name}`} Icon={fileIcon(file.type)} />
       );
+
     case type === 'image':
       return show ? (
         <Center>
@@ -243,6 +245,7 @@ export default function DashboardFileType({
           alt={file.name || 'Image'}
         />
       );
+
     case type === 'audio':
       return show ? (
         <audio
@@ -255,6 +258,7 @@ export default function DashboardFileType({
       ) : (
         <Placeholder text={`Click to play audio ${file.name}`} Icon={fileIcon(file.type)} />
       );
+
     case type === 'text':
       return show ? (
         fileContent.trim() === '' ? (
@@ -279,15 +283,24 @@ export default function DashboardFileType({
       ) : (
         <Placeholder text={`Click to view text ${file.name}`} Icon={fileIcon(file.type)} />
       );
+
     case isAsciicast === true:
       return show && dbFile ? (
-        <Asciinema src={`/raw/${file.name}`} />
+        <Asciinema src={`/raw/${file.name}${password ? `?pw=${password}` : ''}`} />
       ) : (
         <Placeholder
           text={`Click to download asciinema cast ${file.name}`}
           Icon={fileIcon('application/x-asciicast')}
         />
       );
+
+    case file.type === 'application/pdf':
+      return show && dbFile ? (
+        <Pdf src={`/raw/${file.name}${password ? `?pw=${password}` : ''}`} />
+      ) : (
+        <Placeholder text={`Click to view PDF ${file.name}`} Icon={fileIcon(file.type)} />
+      );
+
     default:
       if (dbFile && !show)
         return <Placeholder text={`Click to view file ${file.name}`} Icon={fileIcon(file.type)} />;
