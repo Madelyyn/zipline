@@ -66,7 +66,6 @@ async function main() {
   await mkdir(config.core.tempDirectory, { recursive: true });
 
   const server = fastify({
-    ignoreTrailingSlash: true,
     https: notNull(config.ssl.key, config.ssl.cert)
       ? {
           key: await readFile(config.ssl.key!, 'utf8'),

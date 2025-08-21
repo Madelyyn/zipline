@@ -3,16 +3,14 @@
 
 The next generation ShareX / File upload server
 
-![Stars](https://img.shields.io/github/stars/diced/zipline?logo=github&style=flat)
-![Version](https://img.shields.io/github/package-json/v/diced/zipline?logo=git&logoColor=white&style=flat)
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/diced/zipline/trunk?logo=git&logoColor=white&style=flat)
-[![Discord](https://img.shields.io/discord/729771078196527176?color=%23777ed3&label=discord&logo=discord&logoColor=white&style=flat)](https://discord.gg/EAhCRfGxCF)
+![Stars](https://img.shields.io/github/stars/diced/zipline?logo=github&style=for-the-badge)
+![Version](https://img.shields.io/github/package-json/v/diced/zipline?logo=git&logoColor=white&style=for-the-badge)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/diced/zipline/trunk?logo=git&logoColor=white&style=for-the-badge)
+[![Discord](https://img.shields.io/discord/729771078196527176?color=%23777ed3&label=discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/EAhCRfGxCF)
 
-![Build](https://img.shields.io/github/actions/workflow/status/diced/zipline/build.yml?logo=github&style=flat&branch=trunk)
+![Build](https://img.shields.io/github/actions/workflow/status/diced/zipline/build.yml?logo=github&style=for-the-badge&branch=trunk)
 
-[zipline.diced.sh](https://zipline.diced.sh) | [old v3.zipline.diced.sh](https://v3.zipline.diced.sh)
-
-<!-- TODO: change these links and image branch -->
+Documentation: [zipline.diced.sh](https://zipline.diced.sh)
 
 </div>
 
@@ -200,13 +198,13 @@ Here's how to setup Zipline for development
 
 #### Nix
 
-If you have [direnv](https://direnv.net/) installed, you can simply cd into the cloned directory and run the following command:
+If you have [Nix](https://nixos.org) and [direnv](https://direnv.net/) installed, you can simply cd into the cloned directory and run the following command:
 
 ```bash
 direnv allow
 ```
 
-Granted that you have direnv setup properly, you will now be in a new nix shell with all the dependencies and PostgreSQL installed.
+After doing so, your shell will be setup for development.
 
 If you aren't using direnv, you can run the following command to enter the nix shell:
 
@@ -216,11 +214,12 @@ nix develop --no-pure-eval
 
 Useful commands regarding the postgres server:
 
-| Command         | Description                                         |
-| --------------- | --------------------------------------------------- |
-| `pgup`          | Starts the postgres server in the background.       |
-| `pgdown`        | Stops the postgres server running in the background |
-| `pg_ctl status` | See if the postgres server is running               |
+| Command         | Description                                   |
+| --------------- | --------------------------------------------- |
+| `pgup`          | Starts the postgres server in the background. |
+| `pg_ctl status` | See if the postgres server is running         |
+| `minioup`       | Start a Minio server for testing S3           |
+| `downall`       | Stops any running postgres or minio service.  |
 
 After familiarizing yourself with the environment, you can continue below (skipping the prerequisites since they are already installed).
 
