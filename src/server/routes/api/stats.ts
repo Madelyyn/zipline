@@ -1,6 +1,7 @@
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { Metric } from '@/lib/db/models/metric';
+import { isAdministrator } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -17,6 +18,8 @@ export default fastifyPlugin(
   (server, _, done) => {
     server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       if (!config.features.metrics) return res.forbidden('metrics are disabled');
+
+      if (config.features.metrics.adminOnly && !isAdministrator(req.user.role)) return res.forbidden('admin only');
 
       const { from, to, all } = req.query;
 

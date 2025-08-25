@@ -26,6 +26,9 @@ export type ApiServerPublicResponse = {
   features: {
     oauthRegistration: boolean;
     userRegistration: boolean;
+    metrics?: {
+      adminOnly?: boolean;
+    };
   };
   mfa: {
     passkeys: boolean;
@@ -77,6 +80,10 @@ export default fastifyPlugin(
         firstSetup: zipline.firstSetup,
         domains: config.domains,
       };
+
+      if (config.features.metrics.adminOnly) {
+        response.features.metrics = { adminOnly: true };
+      }
 
       if (config.website.tos) {
         try {
