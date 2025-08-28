@@ -199,7 +199,44 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
             description='The file name format to use when upload this file, the "File name" field will override this value.'
             leftSection={<IconWriting size='1rem' />}
             value={options.format}
-            onChange={(value) => setOption('format', value || ('default' as any))}
+            onChange={(value) => setOption('format', (value as any) || 'default')}
+            comboboxProps={{
+              withinPortal: true,
+              portalProps: {
+                style: {
+                  zIndex: 100000000,
+                },
+              },
+            }}
+          />
+
+          <Select
+            data={[
+              { value: 'default', label: `Default (.${config.files.defaultCompressionFormat ?? 'jpg'})` },
+              { value: 'jpg', label: '.jpg' },
+              { value: 'png', label: '.png' },
+              { value: 'webp', label: '.webp' },
+              { value: 'jxl', label: '.jxl' },
+            ]}
+            label={
+              <>
+                Compression Format{' '}
+                {options.imageCompressionFormat !== 'default' ? (
+                  <Badge variant='outline' size='xs'>
+                    saved
+                  </Badge>
+                ) : null}
+              </>
+            }
+            description={
+              <>
+                The image compression format to use <b>only when a compression percent is specified</b>. Leave
+                at &quot;default&quot; to use the server default compression format.
+              </>
+            }
+            leftSection={<IconFileInfo size='1rem' />}
+            value={options.imageCompressionFormat || 'default'}
+            onChange={(value) => setOption('imageCompressionFormat', (value as any) || 'default')}
             comboboxProps={{
               withinPortal: true,
               portalProps: {
@@ -221,7 +258,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
                 ) : null}
               </>
             }
-            description='The compression level to use on images (only). Leave blank to disable compression.'
+            description='The compression level to use on images (only). The above format will be used to compress images. Leave blank to disable compression.'
             leftSection={<IconPercentage size='1rem' />}
             max={100}
             min={0}

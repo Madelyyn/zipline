@@ -4,6 +4,7 @@ import { type ZodIssue, z } from 'zod';
 import { log } from '../logger';
 import { ParsedConfig } from './read';
 import { PROP_TO_ENV } from './read/env';
+import { checkOutput, COMPRESS_TYPES } from '../compress';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -97,6 +98,10 @@ export const schema = z.object({
     removeGpsMetadata: z.boolean().default(false),
     randomWordsNumAdjectives: z.number().default(3),
     randomWordsSeparator: z.string().default('-'),
+    defaultCompressionFormat: z
+      .enum(COMPRESS_TYPES)
+      .default('jpg')
+      .refine((v) => checkOutput(v), 'System does not support outputting this image format.'),
   }),
   urls: z.object({
     route: z.string().startsWith('/').min(1).trim().toLowerCase().default('/go'),

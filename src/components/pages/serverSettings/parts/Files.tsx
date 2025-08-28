@@ -35,6 +35,7 @@ export default function Files({
     filesRemoveGpsMetadata: boolean;
     filesRandomWordsNumAdjectives: number;
     filesRandomWordsSeparator: string;
+    filesDefaultCompressionFormat: string;
   }>({
     initialValues: {
       filesRoute: '/u',
@@ -48,6 +49,7 @@ export default function Files({
       filesRemoveGpsMetadata: false,
       filesRandomWordsNumAdjectives: 3,
       filesRandomWordsSeparator: '-',
+      filesDefaultCompressionFormat: 'jpg',
     },
     enhanceGetInputProps: (payload) => ({
       disabled: data?.tampered?.includes(payload.field) || false,
@@ -98,6 +100,7 @@ export default function Files({
       filesRemoveGpsMetadata: data.settings.filesRemoveGpsMetadata ?? false,
       filesRandomWordsNumAdjectives: data.settings.filesRandomWordsNumAdjectives ?? 3,
       filesRandomWordsSeparator: data.settings.filesRandomWordsSeparator ?? '-',
+      filesDefaultCompressionFormat: data.settings.filesDefaultCompressionFormat ?? 'jpg',
     });
   }, [data]);
 
@@ -185,6 +188,19 @@ export default function Files({
             description='The separator to use for the random-words/gfycat format.'
             placeholder='-'
             {...form.getInputProps('filesRandomWordsSeparator')}
+          />
+
+          <Select
+            label='Default Compression Format'
+            description='The default image compression format to use when only a compression percent is specified.'
+            placeholder='jpg'
+            data={[
+              { value: 'jpg', label: '.jpg' },
+              { value: 'png', label: '.png' },
+              { value: 'webp', label: '.webp' },
+              { value: 'jxl', label: '.jxl' },
+            ]}
+            {...form.getInputProps('filesDefaultCompressionFormat')}
           />
         </SimpleGrid>
 

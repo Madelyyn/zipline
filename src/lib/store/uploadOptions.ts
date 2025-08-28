@@ -6,6 +6,7 @@ export const defaultUploadOptions: UploadOptionsStore['options'] = {
   deletesAt: 'default',
   format: 'default',
   imageCompressionPercent: null,
+  imageCompressionFormat: 'default',
   maxViews: null,
   addOriginalName: false,
   overrides_returnDomain: null,
@@ -22,6 +23,7 @@ export type UploadOptionsStore = {
     deletesAt: string | 'never';
     format: Config['files']['defaultFormat'] | 'default';
     imageCompressionPercent: number | null;
+    imageCompressionFormat: Config['files']['defaultCompressionFormat'] | 'default';
     maxViews: number | null;
     addOriginalName: boolean | null;
     overrides_returnDomain: string | null;

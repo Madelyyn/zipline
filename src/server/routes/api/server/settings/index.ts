@@ -1,4 +1,5 @@
 import { bytes } from '@/lib/bytes';
+import { checkOutput, COMPRESS_TYPES } from '@/lib/compress';
 import { reloadSettings } from '@/lib/config';
 import type { readDatabaseSettings } from '@/lib/config/read/db';
 import { safeConfig } from '@/lib/config/safe';
@@ -153,6 +154,9 @@ export default fastifyPlugin(
             filesRemoveGpsMetadata: z.boolean(),
             filesRandomWordsNumAdjectives: z.number().min(1).max(20),
             filesRandomWordsSeparator: z.string(),
+            filesDefaultCompressionFormat: z
+              .enum(COMPRESS_TYPES)
+              .refine((v) => checkOutput(v), 'System does not support outputting this image format.'),
 
             urlsRoute: z
               .string()

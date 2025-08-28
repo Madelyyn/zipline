@@ -1,6 +1,7 @@
 import ms from 'ms';
 import { Config } from '../config/validate';
 import { checkOutput, COMPRESS_TYPES, CompressType } from '../compress';
+import { config } from '../config';
 
 // from ms@3.0.0-canary.1
 type Unit =
@@ -148,7 +149,7 @@ function parsePercent(header: keyof UploadHeaders, percent: string) {
 function headerError(header: keyof UploadHeaders, message: string) {
   return {
     header,
-    message: `[${header}]: ${message}`
+    message: `[${header}]: ${message}`,
   };
 }
 
@@ -215,7 +216,7 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
     if (typeof percent === 'object') return percent;
 
     response.imageCompression = {
-      type: 'jpg',
+      type: config.files.defaultCompressionFormat,
       percent,
     };
   }

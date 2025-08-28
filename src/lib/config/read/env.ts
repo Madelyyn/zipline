@@ -57,6 +57,7 @@ export const ENVS = [
   env('files.removeGpsMetadata', 'FILES_REMOVE_GPS_METADATA', 'boolean', true),
   env('files.randomWordsNumAdjectives', 'FILES_RANDOM_WORDS_NUM_ADJECTIVES', 'number', true),
   env('files.randomWordsSeparator', 'FILES_RANDOM_WORDS_SEPARATOR', 'string', true),
+  env('files.defaultCompressionFormat', 'FILES_DEFAULT_COMPRESSION_FORMAT', 'string', true),
 
   env('urls.route', 'URLS_ROUTE', 'string', true),
   env('urls.length', 'URLS_LENGTH', 'number', true),

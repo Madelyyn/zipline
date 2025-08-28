@@ -42,6 +42,7 @@ model Zipline {
   filesRemoveGpsMetadata              Boolean  @default(false)
   filesRandomWordsNumAdjectives       Int      @default(2)
   filesRandomWordsSeparator           String   @default("-")
+  filesDefaultCompressionFormat       String?  @default("jpg")
 
   urlsRoute  String @default("/go")
   urlsLength Int    @default(6)
