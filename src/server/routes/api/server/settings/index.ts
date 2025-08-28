@@ -182,6 +182,7 @@ export default fastifyPlugin(
                 cpus().length,
                 'Number of threads must be less than or equal to the number of CPUs: ' + cpus().length,
               ),
+            featuresThumbnailsFormat: z.enum(['jpg', 'png', 'webp']),
 
             featuresMetricsEnabled: z.boolean(),
             featuresMetricsAdminOnly: z.boolean(),

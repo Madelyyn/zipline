@@ -56,6 +56,7 @@ model Zipline {
 
   featuresThumbnailsEnabled       Boolean @default(true)
   featuresThumbnailsNumberThreads Int     @default(4)
+  featuresThumbnailsFormat        String  @default("jpg")
 
   featuresMetricsEnabled          Boolean @default(true)
   featuresMetricsAdminOnly        Boolean @default(false)

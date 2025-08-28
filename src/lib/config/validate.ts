@@ -160,6 +160,7 @@ export const schema = z.object({
     thumbnails: z.object({
       enabled: z.boolean().default(true),
       num_threads: z.number().default(4),
+      format: z.enum(['jpg', 'png', 'webp']).default('jpg'),
     }),
     metrics: z.object({
       enabled: z.boolean().default(true),

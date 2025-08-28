@@ -34,13 +34,22 @@ if (!enabled) {
 
 logger.debug('started thumbnail worker');
 
-function genThumbnail(file: string, thumbnailTmp: string): Promise<Buffer | undefined> {
+const formatMimes = {
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+};
+
+function name(str: string) {
+  return `${str}.${config.features.thumbnails.format}`;
+}
+
+function genThumbnail(input: string, output: string): Promise<Buffer | undefined> {
   return new Promise((resolve, reject) => {
-    ffmpeg(file)
+    ffmpeg(input)
       .videoFilters('thumbnail')
       .frames(1)
-      .format('mjpeg')
-      .output(thumbnailTmp)
+      .output(output)
       .on('start', (cmd) => {
         logger.debug('generating thumbnail', { cmd });
       })
@@ -51,7 +60,7 @@ function genThumbnail(file: string, thumbnailTmp: string): Promise<Buffer | unde
           // the method will return an empty buffer since there is no video stream
 
           logger.error(
-            `file ${file} does not contain any video stream, it is probably an audio file... ignoring...`,
+            `file ${input} does not contain any video stream, it is probably an audio file... ignoring...`,
           );
           resolve(Buffer.alloc(0));
         }
@@ -60,17 +69,17 @@ function genThumbnail(file: string, thumbnailTmp: string): Promise<Buffer | unde
         reject(err);
       })
       .on('end', () => {
-        if (!existsSync(thumbnailTmp)) {
-          logger.error('expected thumbnail file does not exist', { thumbnailTmp });
-          unlinkSync(file);
+        if (!existsSync(output)) {
+          logger.error('expected thumbnail file does not exist', { thumbnailTmp: output });
+          unlinkSync(input);
           return resolve(undefined);
         }
 
-        const buffer = readFileSync(thumbnailTmp);
+        const buffer = readFileSync(output);
 
-        unlinkSync(thumbnailTmp);
-        unlinkSync(file);
-        logger.debug('removed temporary files', { file, thumbnail: thumbnailTmp });
+        unlinkSync(output);
+        unlinkSync(input);
+        logger.debug('removed temporary files', { file: input, thumbnail: output });
 
         resolve(buffer);
       })
@@ -107,17 +116,17 @@ async function generate(config: Config, datasource: Datasource, ids: string[]) {
       writeStream.on('finish', resolve as any);
     });
 
-    const thumbnailTmpFile = join(config.core.tempDirectory, `zthumbnail_${file.id}.jpg`);
+    const thumbnailTmpFile = join(config.core.tempDirectory, name(`zthumbnail_${file.id}`));
     const thumbnail = await genThumbnail(tmpFile, thumbnailTmpFile);
     if (!thumbnail) return;
 
-    const existing = await datasource.size(`.thumbnail.${file.id}.jpg`);
+    const existing = await datasource.size(name(`.thumbnail.${file.id}`));
     if (existing || existing === 0) {
-      await datasource.delete(`.thumbnail.${file.id}.jpg`);
+      await datasource.delete(name(`.thumbnail.${file.id}`));
     }
 
-    await datasource.put(`.thumbnail.${file.id}.jpg`, thumbnail, {
-      mimetype: 'image/jpeg',
+    await datasource.put(name(`.thumbnail.${file.id}`), thumbnail, {
+      mimetype: formatMimes[config.features.thumbnails.format] || 'image/jpeg',
     });
 
     const existingThumbnail = await dbProxy<ThumbnailId>('thumbnail.findFirst', {
@@ -131,7 +140,7 @@ async function generate(config: Config, datasource: Datasource, ids: string[]) {
       t = await dbProxy<ThumbnailId>('thumbnail.create', {
         data: {
           fileId: file.id,
-          path: `.thumbnail.${file.id}.jpg`,
+          path: name(`.thumbnail.${file.id}`),
         },
       });
     } else {

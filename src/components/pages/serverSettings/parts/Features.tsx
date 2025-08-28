@@ -5,6 +5,7 @@ import {
   LoadingOverlay,
   NumberInput,
   Paper,
+  Select,
   SimpleGrid,
   Switch,
   TextInput,
@@ -33,6 +34,7 @@ export default function Features({
       featuresDeleteOnMaxViews: true,
       featuresThumbnailsEnabled: true,
       featuresThumbnailsNumberThreads: 4,
+      featuresThumbnailsFormat: 'jpg',
       featuresMetricsEnabled: true,
       featuresMetricsAdminOnly: false,
       featuresMetricsShowUserSpecific: true,
@@ -58,6 +60,7 @@ export default function Features({
       featuresDeleteOnMaxViews: data.settings.featuresDeleteOnMaxViews ?? true,
       featuresThumbnailsEnabled: data.settings.featuresThumbnailsEnabled ?? true,
       featuresThumbnailsNumberThreads: data.settings.featuresThumbnailsNumberThreads ?? 4,
+      featuresThumbnailsFormat: data.settings.featuresThumbnailsFormat ?? 'jpg',
       featuresMetricsEnabled: data.settings.featuresMetricsEnabled ?? true,
       featuresMetricsAdminOnly: data.settings.featuresMetricsAdminOnly ?? false,
       featuresMetricsShowUserSpecific: data.settings.featuresMetricsShowUserSpecific ?? true,
@@ -82,7 +85,7 @@ export default function Features({
 
           <Switch
             label='/robots.txt'
-            description='Enables a robots.txt file for search engine optimization. Requires a server restart.'
+            description='Enables a /robots.txt to stop search crawlers. Requires a server restart.'
             {...form.getInputProps('featuresRobotsTxt', { type: 'checkbox' })}
           />
 
@@ -142,6 +145,20 @@ export default function Features({
             max={16}
             {...form.getInputProps('featuresThumbnailsNumberThreads')}
           />
+
+          <Select
+            label='Thumbnails Format'
+            description='The output format for thumbnails. Requires a server restart.'
+            data={[
+              { value: 'jpg', label: '.jpg' },
+              { value: 'png', label: '.png' },
+              { value: 'webp', label: '.webp' },
+            ]}
+            allowDeselect={false}
+            {...form.getInputProps('featuresThumbnailsFormat')}
+          />
+
+          <div />
 
           <Switch
             label='Version Checking'

@@ -38,6 +38,7 @@ export const rawConfig: any = {
     removeGpsMetadata: undefined,
     randomWordsNumAdjectives: undefined,
     randomWordsSeparator: undefined,
+    defaultCompressionFormat: undefined,
   },
   urls: {
     route: undefined,
@@ -57,6 +58,7 @@ export const rawConfig: any = {
     thumbnails: {
       enabled: undefined,
       num_threads: undefined,
+      format: undefined,
     },
     metrics: {
       enabled: undefined,
