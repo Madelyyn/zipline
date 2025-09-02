@@ -128,6 +128,7 @@ export default function ViewFileId() {
                   __html: sanitize.sanitize(
                     parseString(user.view.content, {
                       file: file as unknown as File,
+                      user: user as User,
                       link: {
                         returned: `${host}${formatRootUrl(filesRoute ?? '/u', file.name!)}`,
                         raw: `${host}/raw/${file.name}`,
