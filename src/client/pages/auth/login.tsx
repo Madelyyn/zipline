@@ -32,7 +32,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
-import { Link, redirect, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import GenericError from '../../error/GenericError';
 import { useTitle } from '@/lib/hooks/useTitle';
@@ -157,13 +157,14 @@ export default function Login() {
   }, [user]);
 
   useEffect(() => {
+    console.log({ willRedirect, config });
     if (willRedirect && config) {
       const provider = Object.keys(config.oauthEnabled).find(
         (x) => config.oauthEnabled[x as keyof typeof config.oauthEnabled] === true,
       );
 
       if (provider) {
-        redirect(`/api/auth/oauth/${provider.toLowerCase()}`);
+        window.location.href = `/api/auth/oauth/${provider.toLowerCase()}`;
       }
     }
   }, [willRedirect, config]);
