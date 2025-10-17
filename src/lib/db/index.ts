@@ -4,6 +4,7 @@ import { type Prisma, PrismaClient } from '@/prisma/client';
 import { metadataSchema } from './models/incompleteFile';
 import { metricDataSchema } from './models/metric';
 import { userViewSchema } from './models/user';
+import { readDbVars, REQUIRED_DB_VARS } from '../config/read/env';
 
 const building = !!process.env.ZIPLINE_BUILD;
 
@@ -31,12 +32,27 @@ function parseDbLog(env: string): Prisma.LogLevel[] {
     .filter((v) => v) as unknown as Prisma.LogLevel[];
 }
 
+function pgConnectionString() {
+  const vars = readDbVars();
+  if (vars.DATABASE_URL) return vars.DATABASE_URL;
+
+  return `postgresql://${vars.DATABASE_USERNAME}:${vars.DATABASE_PASSWORD}@${vars.DATABASE_HOST}:${vars.DATABASE_PORT}/${vars.DATABASE_NAME}`;
+}
+
 function getClient() {
   const logger = log('db');
 
-  logger.info('connecting to database ' + process.env.DATABASE_URL);
+  const connectionString = pgConnectionString();
+  if (!connectionString) {
+    logger.error(`either DATABASE_URL or all of [${REQUIRED_DB_VARS.join(', ')}] not set, exiting...`);
+    process.exit(1);
+  }
 
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  process.env.DATABASE_URL = connectionString;
+
+  logger.info('connecting to database', { url: connectionString });
+
+  const adapter = new PrismaPg({ connectionString });
   const client = new PrismaClient({
     adapter,
     log: process.env.ZIPLINE_DB_LOG ? parseDbLog(process.env.ZIPLINE_DB_LOG) : undefined,

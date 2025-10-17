@@ -67,7 +67,6 @@ export const schema = z.object({
         });
       }
     }),
-    databaseUrl: z.url(),
     returnHttpsUrls: z.boolean().default(false),
     defaultDomain: z.string().nullable().default(null),
     tempDirectory: z
@@ -75,6 +74,29 @@ export const schema = z.object({
       .transform((s) => resolve(s))
       .default(join(tmpdir(), 'zipline')),
     trustProxy: z.boolean().default(false),
+
+    databaseUrl: z.url(),
+
+    database: z
+      .object({
+        username: z.string().nullable().default(null),
+        password: z.string().nullable().default(null),
+        host: z.string().nullable().default(null),
+        port: z.number().nullable().default(null),
+        name: z.string().nullable().default(null),
+      })
+      .superRefine((val, c) => {
+        const values = Object.values(val);
+        const someSet = values.some((v) => v !== null);
+        const allSet = values.every((v) => v !== null);
+
+        if (someSet && !allSet) {
+          c.addIssue({
+            code: 'custom',
+            message: 'If one database field is set, all fields must be set',
+          });
+        }
+      }),
   }),
   chunks: z.object({
     max: z.string().default('95mb'),

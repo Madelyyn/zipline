@@ -1,5 +1,6 @@
 import { bytes } from '@/lib/bytes';
 import { reloadSettings } from '@/lib/config';
+import { checkDbVars, REQUIRED_DB_VARS } from '@/lib/config/read/env';
 import { getDatasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { runMigrations } from '@/lib/db/migration';
@@ -46,8 +47,8 @@ async function main() {
   const argv = process.argv.slice(2);
   logger.info('starting zipline', { mode: MODE, version: version, argv });
 
-  if (!process.env.DATABASE_URL) {
-    logger.error('DATABASE_URL not set, exiting...');
+  if (!checkDbVars()) {
+    logger.error(`either DATABASE_URL or all of [${REQUIRED_DB_VARS.join(', ')}] not set, exiting...`);
     process.exit(1);
   }
 
