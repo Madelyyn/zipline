@@ -265,7 +265,7 @@ export async function render(
       : ''
   }
 
-  <title>${file.name}</title>
+  <title>${file.originalName ?? file.name}</title>
 `;
 
   return {
