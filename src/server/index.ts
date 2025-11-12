@@ -286,20 +286,14 @@ async function main() {
   tasks.start();
 
   if (process.env.DEBUG_MONITOR_MEMORY === 'true') {
-    await writeFile('.memory.log.json', '', 'utf8');
+    await writeFile('.memory.log', '', 'utf8');
     setInterval(async () => {
       const mu = process.memoryUsage();
       const cpu = process.cpuUsage();
 
-      const entry = {
-        timestamp: new Date().toISOString(),
-        data: {
-          memoryUsage: mu,
-          cpuUsage: cpu,
-        },
-      };
+      const entry = `${Math.floor(Date.now() / 1000)},${mu.rss},${mu.heapUsed},${mu.heapTotal},${mu.external},${mu.arrayBuffers},${cpu.system},${cpu.user}\n`;
 
-      await appendFile('.memory.log.json', JSON.stringify(entry) + '\n', 'utf8');
+      await appendFile('.memory.log', entry, 'utf8');
     }, 1000);
   }
 }

@@ -49,4 +49,4 @@ uploads*/
 *.crt
 *.key
 src/prisma
-.memory.log.json
+.memory.log*
