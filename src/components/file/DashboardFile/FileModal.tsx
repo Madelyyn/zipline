@@ -29,6 +29,7 @@ import { showNotification } from '@mantine/notifications';
 import {
   Icon,
   IconBombFilled,
+  IconClipboardTypography,
   IconCopy,
   IconDeviceSdCard,
   IconDownload,
@@ -402,6 +403,11 @@ export default function FileModal({
                   onClick={() => viewFile(file)}
                   tooltip='View file in a new tab'
                   color='blue'
+                />
+                <ActionButton
+                  Icon={IconClipboardTypography}
+                  onClick={() => copyFile(file, clipboard, true)}
+                  tooltip='Copy raw file link'
                 />
                 <ActionButton
                   Icon={IconCopy}

@@ -45,7 +45,9 @@ async function vitePlugin(fastify: FastifyInstance) {
         return;
       }
 
-      await new Promise<void>((resolve, reject) => {
+      reply.hijack();
+
+      return new Promise<void>((resolve, reject) => {
         vite!.middlewares(req.raw, reply.raw, (err: any) => {
           if (err) reject(err);
           else resolve();

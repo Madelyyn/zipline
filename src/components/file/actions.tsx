@@ -27,10 +27,14 @@ export function downloadFile(file: File) {
   window.open(`/raw/${file.name}?download=true`, '_blank');
 }
 
-export function copyFile(file: File, clipboard: ReturnType<typeof useClipboard>) {
+export function copyFile(file: File, clipboard: ReturnType<typeof useClipboard>, raw: boolean = false) {
   const domain = `${window.location.protocol}//${window.location.host}`;
 
-  const url = file.url ? `${domain}${file.url}` : `${domain}/view/${file.name}`;
+  const url = raw
+    ? `${domain}/raw/${file.name}`
+    : file.url
+      ? `${domain}${file.url}`
+      : `${domain}/view/${file.name}`;
 
   clipboard.copy(url);
 
