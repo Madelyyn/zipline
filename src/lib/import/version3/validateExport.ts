@@ -407,7 +407,7 @@ export const V3_SETTINGS_TRANSFORM: Record<keyof typeof V3_COMPATIBLE_SETTINGS, 
 export function validateExport(data: unknown): ReturnType<typeof export3Schema.safeParse> {
   const result = export3Schema.safeParse(data);
   if (!result.success) {
-    if (typeof window === 'object') console.error('Failed to validate export data', result.error);
+    if (typeof window === 'object') console.error('Failed to validate export3 data', result.error);
   }
 
   return result;

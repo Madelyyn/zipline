@@ -3,7 +3,7 @@ import ClearTempButton from './ClearTempButton';
 import ClearZerosButton from './ClearZerosButton';
 import GenThumbsButton from './GenThumbsButton';
 import RequerySizeButton from './RequerySizeButton';
-import ImportButton from './ImportButton';
+import ImportExportButton from './ImportExportButton';
 
 export default function SettingsServerActions() {
   return (
@@ -18,7 +18,7 @@ export default function SettingsServerActions() {
         <ClearTempButton />
         <RequerySizeButton />
         <GenThumbsButton />
-        <ImportButton />
+        <ImportExportButton />
       </Group>
     </Paper>
   );

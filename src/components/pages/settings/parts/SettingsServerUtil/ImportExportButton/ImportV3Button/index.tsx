@@ -6,7 +6,7 @@ import {
   V3_SETTINGS_TRANSFORM,
   validateExport,
 } from '@/lib/import/version3/validateExport';
-import { Alert, Button, Code, FileButton, Modal, Stack } from '@mantine/core';
+import { Alert, Button, Code, FileButton, Modal, Pill, Stack } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { showNotification, updateNotification } from '@mantine/notifications';
 import {
@@ -23,7 +23,7 @@ import Export3Details from './Export3Details';
 import Export3ImportSettings from './Export3ImportSettings';
 import Export3UserChoose from './Export3UserChoose';
 
-export default function ImportButton() {
+export default function ImportV3Button() {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [export3, setExport3] = useState<Export3 | null>(null);
@@ -262,7 +262,7 @@ export default function ImportButton() {
 
   return (
     <>
-      <Modal opened={open} onClose={() => setOpen(false)} title='Import data' size='xl'>
+      <Modal opened={open} onClose={() => setOpen(false)} title='Import V3 Data' size='xl'>
         {export3 ? (
           <Button
             onClick={() => {
@@ -315,8 +315,8 @@ export default function ImportButton() {
         )}
       </Modal>
 
-      <Button size='sm' leftSection={<IconDatabaseImport size='1rem' />} onClick={() => setOpen(true)}>
-        Import Data
+      <Button size='xl' rightSection={<Pill>V3</Pill>} onClick={() => setOpen(true)}>
+        Import{' '}
       </Button>
     </>
   );
