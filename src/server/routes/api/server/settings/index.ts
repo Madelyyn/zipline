@@ -150,6 +150,7 @@ export default fastifyPlugin(
             filesMaxFileSize: zBytes,
 
             filesDefaultExpiration: zMs.nullable(),
+            filesMaxExpiration: zMs.nullable(),
             filesAssumeMimetypes: z.boolean(),
             filesDefaultDateFormat: z.string(),
             filesRemoveGpsMetadata: z.boolean(),
@@ -397,13 +398,42 @@ export default fastifyPlugin(
           });
         }
 
+        const parsed = { ...result.data };
+
+        try {
+          if (parsed.filesDefaultExpiration && parsed.filesMaxExpiration) {
+            const parsedDefault = ms(String(parsed.filesDefaultExpiration) as StringValue) as number;
+            const parsedMaxAfter = ms(String(parsed.filesMaxExpiration) as StringValue) as number;
+            if (
+              !isNaN(Number(parsedDefault)) &&
+              !isNaN(Number(parsedMaxAfter)) &&
+              parsedDefault > parsedMaxAfter
+            ) {
+              // set default to the provided max value
+              parsed.filesDefaultExpiration = String(parsed.filesMaxExpiration);
+            }
+          }
+        } catch (e) {
+          // If normalization fails, log the error and proceed with original values.
+          logger.debug('error normalizing expiration settings', { err: e });
+        }
+
+        // Use the keys present in the Zod-parsed object as the allowed set.
+        const allowedFromSchema = new Set(Object.keys(parsed));
+        const filteredData = Object.fromEntries(
+          Object.entries(parsed).filter(([k]) => allowedFromSchema.has(k)),
+        );
+
+        if (Object.keys(filteredData).length === 0) {
+          return res.status(400).send({ statusCode: 400, message: 'No valid fields to update' });
+        }
         const newSettings = await prisma.zipline.update({
           where: {
             id: settings.id,
           },
           // @ts-ignore
           data: {
-            ...result.data,
+            ...filteredData,
           },
           omit: {
             createdAt: true,
