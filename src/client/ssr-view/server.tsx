@@ -270,6 +270,6 @@ export async function render(
 
   return {
     html,
-    meta: `${meta}\n${createZiplineSsr(data)}`,
+    meta: `${user.view.embed ? meta : ''}\n${createZiplineSsr(data)}`,
   };
 }
