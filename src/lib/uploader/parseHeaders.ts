@@ -199,12 +199,6 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
   const imageCompressionType = headers['x-zipline-image-compression-type'];
 
   if (imageCompressionType) {
-    if (!imageCompressionPercent)
-      return headerError(
-        'x-zipline-image-compression-percent',
-        'missing "x-zipline-image-compression-percent" when "x-zipline-image-compression-type" is provided',
-      );
-
     if (!COMPRESS_TYPES.includes(imageCompressionType))
       return headerError(
         'x-zipline-image-compression-type',
@@ -217,13 +211,15 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
         `Compression type "${imageCompressionType}" is not supported on the system.`,
       );
 
-    const percent = parsePercent('x-zipline-image-compression-percent', imageCompressionPercent);
-    if (typeof percent === 'object') return percent;
+    if (imageCompressionPercent) {
+      const percent = parsePercent('x-zipline-image-compression-percent', imageCompressionPercent);
+      if (typeof percent === 'object') return percent;
 
-    response.imageCompression = {
-      type: imageCompressionType,
-      percent,
-    };
+      response.imageCompression = {
+        type: imageCompressionType,
+        percent,
+      };
+    }
   } else if (imageCompressionPercent) {
     const percent = parsePercent('x-zipline-image-compression-percent', imageCompressionPercent);
     if (typeof percent === 'object') return percent;
