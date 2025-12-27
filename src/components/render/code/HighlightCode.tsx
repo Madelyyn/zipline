@@ -4,9 +4,13 @@ import type { HLJSApi } from 'highlight.js';
 import { useEffect, useMemo, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
 
+import { useLocation } from 'react-router-dom';
 import './HighlightCode.theme.scss';
 
 export default function HighlightCode({ language, code }: { language: string; code: string }) {
+  const { pathname } = useLocation();
+  const noClamp = pathname.startsWith('/view/');
+
   const theme = useMantineTheme();
   const [expanded, setExpanded] = useState(false);
   const [hljs, setHljs] = useState<HLJSApi | null>(null);
@@ -16,8 +20,8 @@ export default function HighlightCode({ language, code }: { language: string; co
   }, []);
 
   const lines = useMemo(() => code.split('\n'), [code]);
-  const visible = expanded ? lines.length : Math.min(lines.length, 50);
-  const expandable = lines.length > 50;
+  const visible = expanded || noClamp ? lines.length : Math.min(lines.length, 50);
+  const expandable = !noClamp && lines.length > 50;
 
   const lang = useMemo(() => {
     if (!hljs) return 'plaintext';
@@ -62,7 +66,11 @@ export default function HighlightCode({ language, code }: { language: string; co
         {index + 1}
       </Text>
 
-      <code className='theme hljs' style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: hlLines[index] }} />
+      <code
+        className='theme hljs'
+        style={{ flex: 1, fontSize: '0.8rem' }}
+        dangerouslySetInnerHTML={{ __html: hlLines[index] }}
+      />
     </div>
   );
 
@@ -86,11 +94,21 @@ export default function HighlightCode({ language, code }: { language: string; co
         )}
       </CopyButton>
 
-      <ScrollArea type='auto' offsetScrollbars={false} style={{ maxHeight: 400 }}>
-        <List height={400} width='100%' itemCount={visible} itemSize={20} overscanCount={10}>
-          {Row}
-        </List>
-      </ScrollArea>
+      {noClamp ? (
+        <ScrollArea type='auto' offsetScrollbars={false}>
+          <div>
+            {hlLines.map((_, index) => (
+              <Row key={index} index={index} style={{}} />
+            ))}
+          </div>
+        </ScrollArea>
+      ) : (
+        <ScrollArea type='auto' offsetScrollbars={false} style={{ maxHeight: 400 }}>
+          <List height={400} width='100%' itemCount={visible} itemSize={20} overscanCount={10}>
+            {Row}
+          </List>
+        </ScrollArea>
+      )}
 
       {expandable && (
         <Button
