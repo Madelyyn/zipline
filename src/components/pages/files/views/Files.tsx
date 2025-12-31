@@ -59,7 +59,7 @@ export default function Files({ id }: { id?: string }) {
         ) : (data?.page?.length ?? 0 > 0) ? (
           data?.page.map((file) => (
             <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
-              <DashboardFile file={file} />
+              <DashboardFile file={file} id={id} />
             </Suspense>
           ))
         ) : (

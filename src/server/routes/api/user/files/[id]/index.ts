@@ -85,7 +85,7 @@ export default fastifyPlugin(
       if (req.body.tags !== undefined) {
         const tags = await prisma.tag.findMany({
           where: {
-            userId: req.user.id,
+            userId: req.user.id !== file.User?.id ? file.User?.id : req.user.id,
             id: {
               in: req.body.tags,
             },

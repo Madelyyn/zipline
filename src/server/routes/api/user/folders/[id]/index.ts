@@ -1,7 +1,9 @@
 import { prisma } from '@/lib/db';
 import { fileSelect } from '@/lib/db/models/file';
 import { Folder, cleanFolder } from '@/lib/db/models/folder';
+import { User } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
+import { canInteract } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -19,6 +21,16 @@ type Body = {
 
   delete?: 'file' | 'folder';
 };
+
+// TODO: need to refactor interaction checks to use this function in the future
+function checkInteraction(current?: Partial<User> | null, owner?: Partial<User> | null) {
+  if (!current || !owner) return false;
+  if (current.id === owner.id) return true;
+
+  const can = canInteract(current.role, owner.role);
+
+  return can;
+}
 
 const logger = log('api').c('user').c('folders').c('[id]');
 
@@ -46,10 +58,11 @@ export default fastifyPlugin(
                 password: true,
               },
             },
+            User: true,
           },
         });
         if (!folder) return res.notFound('Folder not found');
-        if (req.user.id !== folder.userId) return res.forbidden('You do not own this folder');
+        if (!checkInteraction(req.user, folder.User)) return res.notFound('Folder not found');
 
         if (req.method === 'PUT') {
           const { id } = req.body;
@@ -59,9 +72,12 @@ export default fastifyPlugin(
             where: {
               id,
             },
+            include: {
+              User: true,
+            },
           });
           if (!file) return res.notFound('File not found');
-          if (file.userId !== req.user.id) return res.forbidden('You do not own this file');
+          if (!checkInteraction(req.user, file.User)) return res.notFound('File not found');
 
           const fileInFolder = await prisma.file.findFirst({
             where: {
@@ -91,6 +107,7 @@ export default fastifyPlugin(
                   password: true,
                 },
               },
+              User: true,
             },
           });
 
@@ -145,6 +162,7 @@ export default fastifyPlugin(
                     password: true,
                   },
                 },
+                User: true,
               },
             });
 
@@ -161,9 +179,12 @@ export default fastifyPlugin(
               where: {
                 id,
               },
+              include: {
+                User: true,
+              },
             });
             if (!file) return res.notFound('File not found');
-            if (file.userId !== req.user.id) return res.forbidden('You do not own this file');
+            if (!checkInteraction(req.user, file.User)) return res.notFound('File not found');
 
             const fileInFolder = await prisma.file.findFirst({
               where: {

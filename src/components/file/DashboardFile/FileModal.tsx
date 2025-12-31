@@ -103,7 +103,7 @@ export default function FileModal({
   const [editFileOpen, setEditFileOpen] = useState(false);
 
   const { data: folders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
-    '/api/user/folders?noincl=true',
+    '/api/user/folders?noincl=true' + (user ? `&user=${user}` : ''),
   );
 
   const folderCombobox = useCombobox();
@@ -117,7 +117,9 @@ export default function FileModal({
     }
   };
 
-  const { data: tags } = useSWR<Extract<Response['/api/user/tags'], Tag[]>>('/api/user/tags');
+  const { data: tags } = useSWR<Extract<Response['/api/user/tags'], Tag[]>>(
+    user ? `/api/users/${user}/tags` : '/api/user/tags',
+  );
 
   const tagsCombobox = useCombobox();
   const [value, setValue] = useState(file?.tags?.map((x) => x.id) ?? []);
@@ -229,7 +231,7 @@ export default function FileModal({
               )}
             </SimpleGrid>
 
-            {!reduce && !user && (
+            {!reduce && (
               <SimpleGrid cols={{ base: 1, md: 2 }} spacing='md' my='xs'>
                 <Box>
                   <Title order={4} mt='lg' mb='xs'>

@@ -3,6 +3,7 @@ import { fileSelect } from '@/lib/db/models/file';
 import { Folder, cleanFolder, cleanFolders } from '@/lib/db/models/folder';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { canInteract } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -17,6 +18,7 @@ type Body = {
 
 type Query = {
   noincl?: boolean;
+  user?: string;
 };
 
 const logger = log('api').c('user').c('folders');
@@ -25,11 +27,24 @@ export const PATH = '/api/user/folders';
 export default fastifyPlugin(
   (server, _, done) => {
     server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      const { noincl } = req.query;
+      const { noincl, user } = req.query;
+
+      if (user) {
+        const user = await prisma.user.findUnique({
+          where: {
+            id: req.user.id,
+          },
+        });
+
+        if (!user) return res.notFound();
+        if (req.user.id !== user.id) {
+          if (!canInteract(req.user.role, user.role)) return res.notFound();
+        }
+      }
 
       const folders = await prisma.folder.findMany({
         where: {
-          userId: req.user.id,
+          userId: user || req.user.id,
         },
         orderBy: {
           createdAt: 'desc',
