@@ -33,13 +33,20 @@ export default fastifyPlugin(
         const thumbnail = await prisma.thumbnail.findFirst({
           where: {
             path: id,
+          },
+          include: {
             file: {
-              userId: req.user.id,
+              include: {
+                User: true,
+              },
             },
           },
         });
 
         if (!thumbnail) return res.callNotFound();
+        if (thumbnail.file && thumbnail.file.userId !== req.user.id) {
+          if (!canInteract(req.user.role, thumbnail.file.User?.role)) return res.callNotFound();
+        }
       }
 
       const file = await prisma.file.findFirst({
