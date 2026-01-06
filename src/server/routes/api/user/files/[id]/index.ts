@@ -8,6 +8,7 @@ import { log } from '@/lib/logger';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 import { canInteract } from '@/lib/role';
+import { sanitizeFilename } from '@/lib/fs';
 
 export type ApiUserFilesIdResponse = File;
 
@@ -100,6 +101,9 @@ export default fastifyPlugin(
       }
 
       if (req.body.name !== undefined && req.body.name !== file.name) {
+        const sanitized = sanitizeFilename(req.body.name);
+        if (!sanitized) return res.badRequest('Invalid file name');
+
         const name = req.body.name.trim();
         const existingFile = await prisma.file.findFirst({
           where: {
