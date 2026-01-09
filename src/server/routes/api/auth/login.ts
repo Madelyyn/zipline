@@ -45,8 +45,8 @@ export default fastifyPlugin(
         },
       });
       if (!user) return res.badRequest('Invalid username or password');
+      if (!user.password) return res.badRequest('Invalid username or password');
 
-      if (!user.password) return res.badRequest('User does not have a password, login through a provider');
       const valid = await verifyPassword(password, user.password);
       if (!valid) {
         logger.warn('invalid login attempt', {
@@ -54,6 +54,7 @@ export default fastifyPlugin(
           ip: req.ip ?? 'unknown',
           ua: req.headers['user-agent'],
         });
+
         return res.badRequest('Invalid username or password');
       }
 

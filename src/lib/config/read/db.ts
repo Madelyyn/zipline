@@ -96,7 +96,9 @@ export const DATABASE_TO_PROP = {
 
   mfaTotpEnabled: 'mfa.totp.enabled',
   mfaTotpIssuer: 'mfa.totp.issuer',
-  mfaPasskeys: 'mfa.passkeys',
+  mfaPasskeysEnabled: 'mfa.passkeys.enabled',
+  mfaPasskeysRpID: 'mfa.passkeys.rpID',
+  mfaPasskeysOrigin: 'mfa.passkeys.origin',
 
   ratelimitEnabled: 'ratelimit.enabled',
   ratelimitMax: 'ratelimit.max',

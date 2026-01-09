@@ -2,17 +2,26 @@ import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { User } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
+import { isTruthy } from '@/lib/primitive';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { TimedCache } from '@/lib/timedCache';
+import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
-import { RegistrationResponseJSON } from '@github/webauthn-json/dist/types/browser-ponyfill';
+import {
+  AuthenticatorTransportFuture,
+  generateRegistrationOptions,
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialDescriptorJSON,
+  RegistrationResponseJSON,
+  verifyRegistrationResponse,
+} from '@simplewebauthn/server';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
-import { Prisma } from '@/prisma/client';
 
 export type ApiUserMfaPasskeyResponse = User | User['passkeys'];
 
 type Body = {
-  reg?: RegistrationResponseJSON;
+  response: RegistrationResponseJSON;
   name?: string;
 
   id?: string;
@@ -20,20 +29,87 @@ type Body = {
 
 const logger = log('api').c('user').c('mfa').c('passkey');
 
-const passkeysEnabledHandler = (_: FastifyRequest, res: FastifyReply, done: () => void) => {
-  if (!config.mfa.passkeys) {
-    return res.badRequest('Passkeys are not enabled');
-  }
+const passkeysEnabled = (): boolean =>
+  isTruthy(config.mfa.passkeys.enabled, config.mfa.passkeys.rpID, config.mfa.passkeys.origin);
+
+export const passkeysEnabledHandler = (_: FastifyRequest, res: FastifyReply, done: () => void) => {
+  if (!passkeysEnabled()) return res.notFound();
 
   done();
 };
+
+export type PasskeyReg = {
+  webauthn: {
+    webAuthnUserID: string;
+    id: string;
+    publicKey: string;
+    counter: number;
+    transports?: string[];
+    deviceType?: string;
+    backedUp?: boolean;
+  };
+};
+
+const OPTIONS_CACHE = new TimedCache<string, PublicKeyCredentialCreationOptionsJSON>(3 * 60_000); // 3 min ttl
 
 export const PATH = '/api/user/mfa/passkey';
 export default fastifyPlugin(
   (server, _, done) => {
     server.get(PATH, { preHandler: [userMiddleware, passkeysEnabledHandler] }, async (req, res) => {
-      return res.send(req.user.passkeys);
+      const passkeys = await prisma.userPasskey.findMany({
+        where: {
+          userId: req.user.id,
+        },
+        omit: {
+          reg: true,
+        },
+      });
+
+      return res.send(passkeys);
     });
+
+    server.get(
+      PATH + '/options',
+      { preHandler: [userMiddleware, passkeysEnabledHandler], ...secondlyRatelimit(1) },
+      async (req, res) => {
+        if (OPTIONS_CACHE.has(req.user.id)) return res.send(OPTIONS_CACHE.get(req.user.id)!);
+
+        const existingPasskeys = (await prisma.userPasskey.findMany({
+          where: { userId: req.user.id },
+          select: {
+            reg: true,
+          },
+        })) as { reg: PasskeyReg | null }[];
+
+        const options: PublicKeyCredentialCreationOptionsJSON = await generateRegistrationOptions({
+          rpName: 'Zipline',
+          rpID: config.mfa.passkeys.rpID!,
+
+          userName: req.user.username,
+          userID: new TextEncoder().encode(req.user.id),
+
+          authenticatorSelection: {
+            userVerification: 'preferred',
+            residentKey: 'preferred',
+          },
+
+          excludeCredentials: existingPasskeys
+            .filter((pk) => pk.reg?.webauthn && pk.reg.webauthn.id)
+            .map(
+              (pk) =>
+                ({
+                  id: pk.reg!.webauthn.id,
+                  type: 'public-key',
+                  transports: (pk.reg!.webauthn!.transports as AuthenticatorTransportFuture[]) ?? undefined,
+                }) satisfies PublicKeyCredentialDescriptorJSON,
+            ),
+        });
+
+        OPTIONS_CACHE.set(req.user.id, options);
+
+        return res.send(options);
+      },
+    );
 
     server.post<{ Body: Body }>(
       PATH,
@@ -42,17 +118,50 @@ export default fastifyPlugin(
         ...secondlyRatelimit(1),
       },
       async (req, res) => {
-        const { reg, name } = req.body;
-        if (!reg) return res.badRequest('Missing webauthn response');
-        if (!name) return res.badRequest('Missing name');
+        const { response, name } = req.body;
+        if (!response) return res.badRequest('Missing webauthn response');
+
+        const normalizedName = (name ?? '').trim();
+        if (normalizedName.length === 0) return res.badRequest('Passkey name cannot be empty');
+
+        const optionsCached = OPTIONS_CACHE.get(req.user.id);
+        if (!optionsCached) return res.badRequest('passkey registration timed out, try again later');
+
+        OPTIONS_CACHE.delete(req.user.id);
+
+        let verification;
+        try {
+          verification = await verifyRegistrationResponse({
+            response: response,
+            expectedChallenge: optionsCached.challenge,
+            expectedRPID: optionsCached.rp.id!,
+            expectedOrigin: config.mfa.passkeys.origin!,
+          });
+        } catch (e) {
+          console.error(e);
+          logger.warn('error verifying passkey registration');
+          return res.badRequest('Error verifying passkey registration');
+        }
+
+        if (!verification.verified) return res.badRequest('Could not verify passkey registration');
 
         const user = await prisma.user.update({
           where: { id: req.user.id },
           data: {
             passkeys: {
               create: {
-                name,
-                reg: reg as unknown as Prisma.InputJsonValue,
+                name: normalizedName,
+                reg: {
+                  webauthn: {
+                    webAuthnUserID: optionsCached.user.id,
+                    id: verification.registrationInfo.credential.id,
+                    publicKey: verification.registrationInfo.credential.publicKey,
+                    counter: verification.registrationInfo.credential.counter,
+                    transports: verification.registrationInfo.credential.transports,
+                    deviceType: verification.registrationInfo.credentialDeviceType,
+                    backedUp: verification.registrationInfo.credentialBackedUp,
+                  },
+                } as unknown as Prisma.InputJsonValue,
                 lastUsed: new Date(),
               },
             },
@@ -62,7 +171,6 @@ export default fastifyPlugin(
         logger.info('user created a new passkey', {
           user: user.username,
           name,
-          reg: reg.id,
         });
 
         return res.send(user);

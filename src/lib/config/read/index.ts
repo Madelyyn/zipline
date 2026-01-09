@@ -96,7 +96,11 @@ export const rawConfig: any = {
       enabled: undefined,
       issuer: undefined,
     },
-    passkeys: undefined,
+    passkeys: {
+      enabled: undefined,
+      rpID: undefined,
+      origin: undefined,
+    },
   },
   oauth: {
     bypassLocalLogin: undefined,

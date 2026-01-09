@@ -1,12 +1,15 @@
 import RelativeDate from '@/components/RelativeDate';
 import { fetchApi } from '@/lib/fetchApi';
-import { registerWeb } from '@/lib/passkey';
 import { useUserStore } from '@/lib/store/user';
-import { RegistrationResponseJSON } from '@github/webauthn-json/dist/types/browser-ponyfill';
+import { UserPasskey } from '@/prisma/client';
 import { ActionIcon, Button, Group, Modal, Paper, Stack, Text, TextInput } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { UserPasskey } from '@/prisma/client';
+import {
+  PublicKeyCredentialCreationOptionsJSON,
+  RegistrationResponseJSON,
+  startRegistration,
+} from '@simplewebauthn/browser';
 import { IconKey, IconKeyOff, IconTrashFilled } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { mutate } from 'swr';
@@ -19,14 +22,21 @@ export default function PasskeyButton() {
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [namerShown, setNamerShown] = useState(false);
   const [savedKey, setSavedKey] = useState<RegistrationResponseJSON | null>(null);
+  const [options, setOptions] = useState<PublicKeyCredentialCreationOptionsJSON | null>(null);
   const [name, setName] = useState('');
 
   const handleRegisterPasskey = async () => {
     try {
+      const { data } = await fetchApi<PublicKeyCredentialCreationOptionsJSON>(
+        '/api/user/mfa/passkey/options',
+        'GET',
+      );
+
       setPasskeyLoading(true);
-      const res = await registerWeb(user!);
+      const res = await startRegistration({ optionsJSON: data! });
       setNamerShown(true);
-      setSavedKey(res.toJSON());
+      setSavedKey(res);
+      setOptions(data);
     } catch (e: any) {
       setPasskeyError(e.message ?? 'An error occurred while creating a passkey');
       setPasskeyLoading(false);
@@ -38,7 +48,7 @@ export default function PasskeyButton() {
     if (!savedKey) return;
 
     const { error } = await fetchApi('/api/user/mfa/passkey', 'POST', {
-      reg: savedKey,
+      response: savedKey,
       name: name.trim(),
     });
 

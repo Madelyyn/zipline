@@ -37,6 +37,16 @@ export const reservedRoutes = [
   '/favicon.ico',
 ];
 
+const jsonTransform = (value: any, ctx: z.RefinementCtx) => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    ctx.addIssue({ code: 'custom', message: 'Invalid JSON' });
+    return z.NEVER;
+  }
+};
+
 const zMs = z.string().refine((value) => ms(value as StringValue) > 0, 'Value must be greater than 0');
 const zBytes = z.string().refine((value) => bytes(value) > 0, 'Value must be greater than 0');
 
@@ -61,7 +71,7 @@ const discordEmbed = z
     z.string(),
   ])
   .nullable()
-  .transform((value) => (typeof value === 'string' ? JSON.parse(value) : value))
+  .transform(jsonTransform)
   .transform((value) =>
     typeof value === 'object' ? (Object.keys(value || {}).length ? value : null) : value,
   );
@@ -208,7 +218,7 @@ export default fastifyPlugin(
                 ),
                 z.string(),
               ])
-              .transform((value) => (typeof value === 'string' ? JSON.parse(value) : value)),
+              .transform(jsonTransform),
             websiteLoginBackground: z.url().nullable(),
             websiteLoginBackgroundBlur: z.boolean(),
             websiteDefaultAvatar: z
@@ -282,7 +292,9 @@ export default fastifyPlugin(
 
             mfaTotpEnabled: z.boolean(),
             mfaTotpIssuer: z.string(),
-            mfaPasskeys: z.boolean(),
+            mfaPasskeysEnabled: z.boolean(),
+            mfaPasskeysRpID: z.string(),
+            mfaPasskeysOrigin: z.string(),
 
             ratelimitEnabled: z.boolean(),
             ratelimitMax: z.number().refine((value) => value > 0, 'Value must be greater than 0'),

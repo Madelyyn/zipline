@@ -5,14 +5,14 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, ServerResponse } from 'http';
 import { getIronSession, type SessionOptions } from 'iron-session';
 
-const cookieOptions: SessionOptions['cookieOptions'] = {
+const cookieOptions: NonNullable<SessionOptions['cookieOptions']> = {
   // 2 weeks
   maxAge: 60 * 60 * 24 * 14,
   expires: new Date(Date.now() + 60 * 60 * 24 * 14 * 1000),
   path: '/',
   sameSite: 'lax',
-  httpOnly: false,
-  secure: false,
+  httpOnly: true,
+  // secure is set in below session functions based on config
 };
 
 export type ZiplineSession = {
@@ -24,6 +24,8 @@ export async function getSession(
   req: FastifyRequest | IncomingMessage,
   reply: FastifyReply | ServerResponse<IncomingMessage>,
 ) {
+  cookieOptions.secure = config.core.returnHttpsUrls;
+
   if (!(req as any).raw || !(req as any).raw) {
     const session = await getIronSession<ZiplineSession>(
       req as IncomingMessage,
@@ -56,6 +58,8 @@ export async function saveSession(
   user: { id: string } & Record<string, any>,
   overwriteSessions = true,
 ) {
+  cookieOptions.secure = config.core.returnHttpsUrls;
+
   session.id = user.id;
 
   if (overwriteSessions || !session.sessionId) {

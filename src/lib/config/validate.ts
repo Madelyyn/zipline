@@ -244,7 +244,11 @@ export const schema = z.object({
       enabled: z.boolean().default(false),
       issuer: z.string().default('Zipline'),
     }),
-    passkeys: z.boolean().default(true),
+    passkeys: z.object({
+      enabled: z.boolean().default(false),
+      rpID: z.string().nullable().default(null),
+      origin: z.url().nullable().default(null),
+    }),
   }),
   oauth: z.object({
     bypassLocalLogin: z.boolean().default(false),

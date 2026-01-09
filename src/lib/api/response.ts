@@ -5,7 +5,7 @@ import { ApiLoginResponse } from '@/server/routes/api/auth/login';
 import { ApiLogoutResponse } from '@/server/routes/api/auth/logout';
 import { ApiAuthOauthResponse } from '@/server/routes/api/auth/oauth';
 import { ApiAuthRegisterResponse } from '@/server/routes/api/auth/register';
-import { ApiAuthWebauthnResponse } from '@/server/routes/api/auth/webauthn';
+import { ApiAuthWebauthnOptionsResponse, ApiAuthWebauthnResponse } from '@/server/routes/api/auth/webauthn';
 import { ApiHealthcheckResponse } from '@/server/routes/api/healthcheck';
 import { ApiServerClearTempResponse } from '@/server/routes/api/server/clear_temp';
 import { ApiServerClearZerosResponse } from '@/server/routes/api/server/clear_zeros';
@@ -50,6 +50,7 @@ export type Response = {
   '/api/auth/invites/web': ApiAuthInvitesWebResponse;
   '/api/auth/register': ApiAuthRegisterResponse;
   '/api/auth/webauthn': ApiAuthWebauthnResponse;
+  '/api/auth/webauthn/options': ApiAuthWebauthnOptionsResponse;
   '/api/auth/oauth': ApiAuthOauthResponse;
   '/api/auth/login': ApiLoginResponse;
   '/api/auth/logout': ApiLogoutResponse;

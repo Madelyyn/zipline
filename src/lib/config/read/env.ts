@@ -131,7 +131,9 @@ export const ENVS = [
 
   env('mfa.totp.enabled', 'MFA_TOTP_ENABLED', 'boolean', true),
   env('mfa.totp.issuer', 'MFA_TOTP_ISSUER', 'string', true),
-  env('mfa.passkeys', 'MFA_PASSKEYS', 'boolean', true),
+  env('mfa.passkeys.enabled', 'MFA_PASSKEYS_ENABLED', 'boolean', true),
+  env('mfa.passkeys.rpID', 'MFA_PASSKEYS_RP_ID', 'string', true),
+  env('mfa.passkeys.origin', 'MFA_PASSKEYS_ORIGIN', 'string', true),
 
   env('ratelimit.enabled', 'RATELIMIT_ENABLED', 'boolean', true),
   env('ratelimit.max', 'RATELIMIT_MAX', 'number', true),

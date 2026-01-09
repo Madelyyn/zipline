@@ -1,84 +1,186 @@
 import { config } from '@/lib/config';
+import { createToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
+import { TimedCache } from '@/lib/timedCache';
 import { getSession, saveSession } from '@/server/session';
-import { AuthenticationResponseJSON } from '@github/webauthn-json/dist/types/browser-ponyfill';
+import { JsonObject } from '@prisma/client/runtime/client';
+import { AuthenticationResponseJSON } from '@simplewebauthn/browser';
+import {
+  generateAuthenticationOptions,
+  PublicKeyCredentialRequestOptionsJSON,
+  verifyAuthenticationResponse,
+} from '@simplewebauthn/server';
 import fastifyPlugin from 'fastify-plugin';
+import { PasskeyReg, passkeysEnabledHandler } from '../user/mfa/passkey';
 
 export type ApiAuthWebauthnResponse = {
   user: User;
 };
 
+export type ApiAuthWebauthnOptionsResponse = {
+  id: string;
+  options: PublicKeyCredentialRequestOptionsJSON;
+};
+
 type Body = {
-  auth: AuthenticationResponseJSON;
+  response: AuthenticationResponseJSON;
 };
 
 const logger = log('api').c('auth').c('webauthn');
 
+const OPTIONS_CACHE = new TimedCache<string, PublicKeyCredentialRequestOptionsJSON>(2 * 60_000);
+
 export const PATH = '/api/auth/webauthn';
 export default fastifyPlugin(
   (server, _, done) => {
-    server.post<{ Body: Body }>(PATH, async (req, res) => {
-      const session = await getSession(req, res);
-      if (!config.mfa.passkeys) return res.badRequest('Passkeys are not enabled');
+    server.get(
+      PATH + '/options',
+      { preHandler: [passkeysEnabledHandler], ...secondlyRatelimit(20) },
+      async (req, res) => {
+        if (req.cookies['webauthn-challenge-id']) {
+          const existing = OPTIONS_CACHE.get(req.cookies['webauthn-challenge-id']);
+          if (existing)
+            return res.send({
+              id: req.cookies['webauthn-challenge-id'],
+              options: existing,
+            });
+        }
 
-      const { auth } = req.body;
-      if (!auth) return res.badRequest('Missing webauthn payload');
+        const options = await generateAuthenticationOptions({
+          rpID: config.mfa.passkeys.rpID!,
+          userVerification: 'preferred',
+        });
 
-      const user = await prisma.user.findFirst({
-        where: {
-          passkeys: {
-            some: {
-              reg: {
-                path: ['id'],
-                equals: auth.id,
+        const id = createToken();
+        res.setCookie('webauthn-challenge-id', id, {
+          expires: new Date(Date.now() + 2 * 60_000),
+          httpOnly: true,
+          secure: config.core.returnHttpsUrls,
+          sameSite: 'lax',
+        });
+        OPTIONS_CACHE.set(id, options);
+
+        return res.send({
+          id,
+          options,
+        });
+      },
+    );
+
+    server.post<{ Body: Body }>(
+      PATH,
+      { preHandler: [passkeysEnabledHandler], ...secondlyRatelimit(10) },
+      async (req, res) => {
+        const session = await getSession(req, res);
+
+        const webauthnChallengeId = req.cookies['webauthn-challenge-id'];
+        if (!webauthnChallengeId) return res.badRequest('Missing webauthn challenge id');
+
+        const { response } = req.body;
+        if (!response) return res.badRequest('Missing webauthn payload');
+
+        const cachedOptions = OPTIONS_CACHE.get(webauthnChallengeId);
+        if (!cachedOptions) return res.badRequest();
+
+        const user = await prisma.user.findFirst({
+          where: {
+            passkeys: {
+              some: {
+                reg: {
+                  path: ['webauthn', 'id'],
+                  equals: response.id,
+                },
               },
             },
           },
-        },
-        select: {
-          ...userSelect,
-          password: true,
-          token: true,
-        },
-      });
-      if (!user) {
-        logger.warn('invalid webauthn attempt', {
-          id: auth.id,
-        });
-        logger.debug('invalid webauthn attempt', {
-          request: auth,
-        });
-
-        return res.badRequest('Invalid passkey');
-      }
-
-      await saveSession(session, user, false);
-
-      delete (user as any).password;
-
-      await prisma.userPasskey.updateMany({
-        where: {
-          reg: {
-            path: ['id'],
-            equals: auth.id,
+          select: {
+            ...userSelect,
+            password: true,
+            token: true,
           },
-        },
-        data: {
-          lastUsed: new Date(),
-        },
-      });
+        });
+        if (!user) {
+          logger.warn('invalid webauthn attempt', {
+            req: webauthnChallengeId,
+          });
+          logger.debug('invalid webauthn attempt', {
+            request: response,
+          });
 
-      logger.info('user logged in with passkey', {
-        user: user.username,
-        passkey: auth.id,
-      });
+          return res.badRequest();
+        }
 
-      return res.send({
-        user,
-      });
-    });
+        const passkey = user.passkeys.find((pk) => {
+          const webauthn = (pk?.reg as JsonObject).webauthn as { id: string };
+          if (!webauthn) return false;
+          return webauthn.id === response.id;
+        });
+
+        if (!passkey) return res.badRequest();
+        const reg = passkey.reg as PasskeyReg;
+
+        if (!reg.webauthn) {
+          logger.debug('invalid webauthn attempt, legacy passkey found...');
+          return res.badRequest();
+        }
+
+        OPTIONS_CACHE.delete(webauthnChallengeId);
+
+        let verification;
+        try {
+          verification = await verifyAuthenticationResponse({
+            response: response,
+            expectedChallenge: cachedOptions.challenge,
+            expectedRPID: cachedOptions.rpId!,
+            expectedOrigin: config.mfa.passkeys.origin!,
+            credential: {
+              id: reg.webauthn.id,
+              counter: reg.webauthn.counter,
+              publicKey: new Uint8Array(Buffer.from(reg.webauthn.publicKey, 'base64')),
+            },
+          });
+        } catch (e) {
+          console.error(e);
+          logger.warn('error verifying passkey authentication');
+          return res.badRequest('Error verifying passkey authentication');
+        }
+
+        if (!verification.verified) {
+          logger.warn('failed passkey authentication attempt', {
+            user: user.username,
+          });
+          return res.badRequest('Could not verify passkey authentication');
+        }
+
+        const { newCounter } = verification.authenticationInfo;
+
+        await saveSession(session, user, false);
+
+        delete (user as any).password;
+
+        await prisma.userPasskey.update({
+          where: {
+            id: passkey.id,
+          },
+          data: {
+            lastUsed: new Date(),
+            reg: { webauthn: { ...reg.webauthn, counter: newCounter } },
+          },
+        });
+
+        logger.info('user logged in with passkey', {
+          user: user.username,
+          passkey: passkey.name,
+        });
+
+        return res.send({
+          user,
+        });
+      },
+    );
 
     done();
   },

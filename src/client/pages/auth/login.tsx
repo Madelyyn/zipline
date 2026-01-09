@@ -2,7 +2,7 @@ import ExternalAuthButton from '@/components/pages/login/ExternalAuthButton';
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
 import useLogin from '@/lib/hooks/useLogin';
-import { authenticateWeb } from '@/lib/passkey';
+import { useTitle } from '@/lib/hooks/useTitle';
 import {
   Button,
   Center,
@@ -21,6 +21,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications, showNotification } from '@mantine/notifications';
+import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import {
   IconBrandDiscordFilled,
   IconBrandGithubFilled,
@@ -35,7 +36,6 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import GenericError from '../../error/GenericError';
-import { useTitle } from '@/lib/hooks/useTitle';
 
 export default function Login() {
   useTitle('Login');
@@ -128,9 +128,24 @@ export default function Login() {
   const handlePasskeyLogin = async () => {
     try {
       setPasskeyLoading(true);
-      const res = await authenticateWeb();
+      const { data: options, error: optionsError } = await fetchApi<Response['/api/auth/webauthn/options']>(
+        '/api/auth/webauthn/options',
+        'GET',
+      );
+      if (optionsError) {
+        setPasskeyErrored(true);
+        setPasskeyLoading(false);
+        notifications.show({
+          title: 'Error while authenticating with passkey',
+          message: optionsError.error,
+          color: 'red',
+        });
+        return;
+      }
+
+      const res = await startAuthentication({ optionsJSON: options!.options! });
       const { data, error } = await fetchApi<Response['/api/auth/webauthn']>('/api/auth/webauthn', 'POST', {
-        auth: res.toJSON(),
+        response: res,
       });
       if (error) {
         setPasskeyErrored(true);
@@ -336,7 +351,7 @@ export default function Login() {
               <Divider label='or' />
             )}
 
-            {config.mfa.passkeys && (
+            {config.mfa.passkeys && browserSupportsWebAuthn() && (
               <Button
                 onClick={handlePasskeyLogin}
                 size='md'

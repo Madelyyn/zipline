@@ -108,7 +108,10 @@ model Zipline {
 
   mfaTotpEnabled Boolean @default(false)
   mfaTotpIssuer  String  @default("Zipline")
-  mfaPasskeys    Boolean @default(false)
+
+  mfaPasskeysEnabled Boolean @default(false)
+  mfaPasskeysRpID    String?
+  mfaPasskeysOrigin  String?
 
   ratelimitEnabled     Boolean  @default(true)
   ratelimitMax         Int      @default(10)
