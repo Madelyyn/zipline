@@ -32,6 +32,8 @@ export function settingsOnSubmit(navigate: NavigateFunction, form: ReturnType<ty
           }
         }
       }
+
+      return error;
     } else {
       showNotification({
         message: 'Settings saved',
