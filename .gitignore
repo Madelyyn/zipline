@@ -50,3 +50,4 @@ uploads*/
 *.key
 src/prisma
 .memory.log*
+openapi.json

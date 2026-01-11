@@ -269,6 +269,17 @@ async function main() {
   const tasks = new Tasks();
   server.decorate('tasks', tasks);
 
+  if (process.env.ZIPLINE_OUTPUT_OPENAPI === 'true') {
+    server.ready(async () => {
+      const openapi = server.swagger();
+      await writeFile('./openapi.json', JSON.stringify(openapi, null, 2), 'utf8');
+
+      logger.info('OpenAPI schema written to openapi.json');
+
+      process.exit(0);
+    });
+  }
+
   await server.listen({
     port: config.core.port,
     host: config.core.hostname,
