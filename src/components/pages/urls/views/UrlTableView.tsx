@@ -3,7 +3,7 @@ import { Response } from '@/lib/api/response';
 import { Url } from '@/lib/db/models/url';
 import { ActionIcon, Anchor, Box, Checkbox, Group, TextInput, Tooltip } from '@mantine/core';
 import { DataTable, DataTableSortStatus } from 'mantine-datatable';
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useState } from 'react';
 import useSWR from 'swr';
 import { copyUrl, deleteUrl } from '../actions';
 import { IconCopy, IconPencil, IconTrashFilled } from '@tabler/icons-react';
@@ -112,27 +112,23 @@ export default function UrlTableView() {
     columnAccessor: 'createdAt',
     direction: 'desc',
   });
-  const [sorted, setSorted] = useState<Url[]>(data ?? []);
 
   const [selectedUrl, setSelectedUrl] = useState<Url | null>(null);
 
-  useEffect(() => {
-    if (data) {
-      const sorted = data.sort((a, b) => {
-        const cl = sortStatus.columnAccessor as keyof Url;
+  const sorted = useMemo<Url[]>(() => {
+    if (!data) return [];
 
-        return sortStatus.direction === 'asc' ? (a[cl]! > b[cl]! ? 1 : -1) : a[cl]! < b[cl]! ? 1 : -1;
-      });
+    const { columnAccessor, direction } = sortStatus;
+    const key = columnAccessor as keyof Url;
 
-      setSorted(sorted);
-    }
-  }, [sortStatus]);
+    return [...data].sort((a, b) => {
+      const av = a[key]!;
+      const bv = b[key]!;
 
-  useEffect(() => {
-    if (data) {
-      setSorted(data);
-    }
-  }, [data]);
+      if (av === bv) return 0;
+      return direction === 'asc' ? (av > bv ? 1 : -1) : av < bv ? 1 : -1;
+    });
+  }, [data, sortStatus]);
 
   useEffect(() => {
     for (const field of ['code', 'vanity', 'destination'] as const) {

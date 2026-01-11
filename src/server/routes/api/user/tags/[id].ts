@@ -2,98 +2,119 @@ import { prisma } from '@/lib/db';
 import { Tag, tagSelect } from '@/lib/db/models/tag';
 import { log } from '@/lib/logger';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiUserTagsIdResponse = Tag;
 
-type Body = {
-  name?: string;
-  color?: string;
-};
-
-type Params = {
-  id: string;
-};
-
 const logger = log('api').c('user').c('tags').c('[id]');
 
+const paramsSchema = z.object({
+  id: z.string(),
+});
+
 export const PATH = '/api/user/tags/:id';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.route<{
-      Params: Params;
-      Body: Body;
-    }>({
-      url: PATH,
-      method: ['GET', 'DELETE', 'PATCH'],
-      preHandler: [userMiddleware],
-      handler: async (req, res) => {
+export default typedPlugin(
+  async (server) => {
+    server.get(PATH, { schema: { params: paramsSchema }, preHandler: [userMiddleware] }, async (req, res) => {
+      const { id } = req.params;
+
+      const tag = await prisma.tag.findFirst({
+        where: {
+          userId: req.user.id,
+          id,
+        },
+        select: tagSelect,
+      });
+      if (!tag) return res.notFound();
+
+      return res.send(tag);
+    });
+
+    server.delete(
+      PATH,
+      {
+        schema: { params: paramsSchema },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
         const { id } = req.params;
 
-        const tag = await prisma.tag.findFirst({
+        const tag = await prisma.tag.deleteMany({
           where: {
             userId: req.user.id,
             id,
           },
+        });
+
+        if (tag.count === 0) return res.notFound();
+
+        logger.info('tag deleted', {
+          id,
+          user: req.user.username,
+        });
+
+        return res.send({ success: true });
+      },
+    );
+
+    server.patch(
+      PATH,
+      {
+        schema: {
+          params: paramsSchema,
+          body: z.object({
+            name: z.string().min(1).optional(),
+            color: z
+              .string()
+              .regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/)
+              .optional(),
+          }),
+        },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        const { id } = req.params;
+        const { name, color } = req.body;
+
+        const existingTag = await prisma.tag.findFirst({
+          where: {
+            userId: req.user.id,
+            id,
+          },
+        });
+        if (!existingTag) return res.notFound();
+
+        if (name) {
+          const existing = await prisma.tag.findFirst({
+            where: {
+              name,
+            },
+          });
+
+          if (existing) return res.badRequest('tag name already exists');
+        }
+
+        const tag = await prisma.tag.update({
+          where: {
+            id: existingTag.id,
+          },
+          data: {
+            ...(name && { name }),
+            ...(color && { color }),
+          },
           select: tagSelect,
         });
-        if (!tag) return res.notFound();
 
-        if (req.method === 'DELETE') {
-          const tag = await prisma.tag.delete({
-            where: {
-              id,
-            },
-            select: tagSelect,
-          });
-
-          logger.info('tag deleted', {
-            id: tag.id,
-            name: tag.name,
-            user: req.user.username,
-          });
-
-          return res.send(tag);
-        }
-
-        if (req.method === 'PATCH') {
-          const { name, color } = req.body;
-
-          if (name) {
-            const existing = await prisma.tag.findFirst({
-              where: {
-                name,
-              },
-            });
-
-            if (existing) return res.badRequest('tag name already exists');
-          }
-
-          const tag = await prisma.tag.update({
-            where: {
-              id,
-            },
-            data: {
-              ...(name && { name }),
-              ...(color && { color }),
-            },
-            select: tagSelect,
-          });
-
-          logger.info('tag updated', {
-            id: tag.id,
-            name: tag.name,
-            user: req.user.username,
-          });
-
-          return res.send(tag);
-        }
+        logger.info('tag updated', {
+          id: tag.id,
+          name: tag.name,
+          user: req.user.username,
+        });
 
         return res.send(tag);
       },
-    });
-
-    done();
+    );
   },
   { name: PATH },
 );

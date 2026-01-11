@@ -47,7 +47,7 @@ import {
   IconTrashFilled,
   IconUpload,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import useSWR, { mutate } from 'swr';
 import DashboardFileType from '../DashboardFileType';
 import {
@@ -122,7 +122,9 @@ export default function FileModal({
   );
 
   const tagsCombobox = useCombobox();
-  const [value, setValue] = useState(file?.tags?.map((x) => x.id) ?? []);
+
+  const [value, setValue] = useState<string[]>(() => file?.tags?.map((x) => x.id) ?? []);
+
   const handleValueSelect = (val: string) => {
     setValue((current) => (current.includes(val) ? current.filter((v) => v !== val) : [...current, val]));
   };
@@ -171,14 +173,6 @@ export default function FileModal({
   };
 
   const values = value.map((tag) => <TagPill key={tag} tag={tags?.find((t) => t.id === tag) || null} />);
-
-  useEffect(() => {
-    if (file) {
-      setValue(file.tags?.map((x) => x.id) ?? []);
-    } else {
-      setValue([]);
-    }
-  }, [file]);
 
   return (
     <>

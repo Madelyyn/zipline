@@ -1,3 +1,4 @@
+import { useQueryState } from '@/lib/hooks/useQueryState';
 import {
   Button,
   Center,
@@ -11,11 +12,10 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { IconFileUpload, IconFilesOff } from '@tabler/icons-react';
-import { lazy, Suspense, useEffect, useState } from 'react';
-import { useApiPagination } from '../useApiPagination';
+import { IconFilesOff, IconFileUpload } from '@tabler/icons-react';
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQueryState } from '@/lib/hooks/useQueryState';
+import { useApiPagination } from '../useApiPagination';
 
 const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
 
@@ -24,7 +24,6 @@ const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45];
 export default function Files({ id }: { id?: string }) {
   const [page, setPage] = useQueryState('page', 1);
   const [perpage, setPerpage] = useState(15);
-  const [cachedPages, setCachedPages] = useState(1);
 
   const { data, isLoading } = useApiPagination({
     page,
@@ -32,15 +31,10 @@ export default function Files({ id }: { id?: string }) {
     id,
   });
 
-  useEffect(() => {
-    if (data?.pages) {
-      setCachedPages(data.pages);
-    }
-  }, [data?.pages]);
-
   const from = (page - 1) * perpage + 1;
   const to = Math.min(page * perpage, data?.total ?? 0);
   const totalRecords = data?.total ?? 0;
+  const cachedPages = data?.pages ?? 1;
 
   return (
     <>

@@ -3,20 +3,16 @@ import { Tag, tagSelect } from '@/lib/db/models/tag';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiUserTagsResponse = Tag | Tag[];
-
-type Body = {
-  name: string;
-  color: string;
-};
 
 const logger = log('api').c('user').c('tags');
 
 export const PATH = '/api/user/tags';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const tags = await prisma.tag.findMany({
         where: {
@@ -28,14 +24,20 @@ export default fastifyPlugin(
       return res.send(tags);
     });
 
-    server.post<{ Body: Body }>(
+    server.post(
       PATH,
-      { preHandler: [userMiddleware], ...secondlyRatelimit(1) },
+      {
+        schema: {
+          body: z.object({
+            name: z.string().min(1),
+            color: z.string().regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/),
+          }),
+        },
+        preHandler: [userMiddleware],
+        ...secondlyRatelimit(1),
+      },
       async (req, res) => {
         const { name, color } = req.body;
-
-        if (!name) return res.badRequest('Name is required');
-        if (!color) return res.badRequest('Color is required');
 
         const existingTag = await prisma.tag.findFirst({
           where: {
@@ -64,8 +66,6 @@ export default fastifyPlugin(
         return res.send(tag);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

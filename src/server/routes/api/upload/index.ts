@@ -1,4 +1,3 @@
-import { Prisma } from '@/prisma/client';
 import { bytes } from '@/lib/bytes';
 import { compressFile, CompressResult } from '@/lib/compress';
 import { config } from '@/lib/config';
@@ -6,17 +5,18 @@ import { hashPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { fileSelect } from '@/lib/db/models/file';
+import { sanitizeFilename } from '@/lib/fs';
 import { removeGps } from '@/lib/gps';
 import { log } from '@/lib/logger';
 import { guess } from '@/lib/mimes';
 import { formatFileName } from '@/lib/uploader/formatFileName';
-import { UploadHeaders, parseHeaders } from '@/lib/uploader/parseHeaders';
+import { parseHeaders, UploadHeaders } from '@/lib/uploader/parseHeaders';
 import { onUpload } from '@/lib/webhooks';
+import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 import { stat } from 'fs/promises';
 import { extname } from 'path';
-import { sanitizeFilename } from '@/lib/fs';
 
 const commonDoubleExts = [
   '.tar.gz',
@@ -57,8 +57,8 @@ export type ApiUploadResponse = {
 const logger = log('api').c('upload');
 
 export const PATH = '/api/upload';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     const rateLimit = server.rateLimit
       ? server.rateLimit()
       : (_req: any, _res: any, next: () => any) => next();
@@ -264,8 +264,6 @@ export default fastifyPlugin(
 
       return res.send(response);
     });
-
-    done();
   },
   { name: PATH },
 );

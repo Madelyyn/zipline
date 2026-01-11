@@ -4,28 +4,23 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { generateKey, totpQrcode, verifyTotpCode } from '@/lib/totp';
 import { userMiddleware } from '@/server/middleware/user';
+import typedPlugin from '@/server/typedPlugin';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import fastifyPlugin from 'fastify-plugin';
+import z from 'zod';
 
 export type ApiUserMfaTotpResponse = User | { secret: string } | { secret: string; qrcode: string };
-
-type Body = {
-  code?: string;
-  secret?: string;
-};
 
 const logger = log('api').c('user').c('mfa').c('totp');
 
 const totpEnabledMiddleware = (_: FastifyRequest, res: FastifyReply, next: () => void) => {
-  if (!config.mfa.totp.enabled) {
-    return res.badRequest('TOTP is disabled');
-  }
+  if (!config.mfa.totp.enabled) return res.badRequest('TOTP is disabled');
+
   next();
 };
 
 export const PATH = '/api/user/mfa/totp';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware, totpEnabledMiddleware] }, async (req, res) => {
       if (!req.user.totpSecret) {
         const secret = generateKey();
@@ -50,15 +45,19 @@ export default fastifyPlugin(
       });
     });
 
-    server.post<{ Body: Body }>(
+    server.post(
       PATH,
-      { preHandler: [userMiddleware, totpEnabledMiddleware] },
+      {
+        schema: {
+          body: z.object({
+            code: z.string().min(6).max(6),
+            secret: z.string(),
+          }),
+        },
+        preHandler: [userMiddleware, totpEnabledMiddleware],
+      },
       async (req, res) => {
         const { code, secret } = req.body;
-        if (!code) return res.badRequest('Missing code');
-        if (code.length !== 6) return res.badRequest('Invalid code');
-
-        if (!secret) return res.badRequest('Missing secret');
 
         const valid = verifyTotpCode(code, secret);
         if (!valid) return res.badRequest('Invalid code');
@@ -77,15 +76,20 @@ export default fastifyPlugin(
       },
     );
 
-    server.delete<{ Body: Body }>(
+    server.delete(
       PATH,
-      { preHandler: [userMiddleware, totpEnabledMiddleware] },
+      {
+        schema: {
+          body: z.object({
+            code: z.string().min(6).max(6),
+          }),
+        },
+        preHandler: [userMiddleware, totpEnabledMiddleware],
+      },
       async (req, res) => {
         if (!req.user.totpSecret) return res.badRequest("You don't have TOTP enabled");
 
         const { code } = req.body;
-        if (!code) return res.badRequest('Missing code');
-        if (code.length !== 6) return res.badRequest('Invalid code');
 
         const valid = verifyTotpCode(code, req.user.totpSecret);
         if (!valid) return res.badRequest('Invalid code');
@@ -103,8 +107,6 @@ export default fastifyPlugin(
         return res.send(user);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { userMiddleware } from '@/server/middleware/user';
 import { getSession } from '@/server/session';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 export type ApiLogoutResponse = {
   loggedOut?: boolean;
@@ -11,8 +11,8 @@ export type ApiLogoutResponse = {
 const logger = log('api').c('auth').c('logout');
 
 export const PATH = '/api/auth/logout';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const current = await getSession(req, res);
 
@@ -37,8 +37,6 @@ export default fastifyPlugin(
 
       return res.send({ loggedOut: true });
     });
-
-    done();
   },
   { name: PATH },
 );

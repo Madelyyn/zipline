@@ -1,12 +1,12 @@
 import { config } from '@/lib/config';
-import fastifyPlugin from 'fastify-plugin';
 import { join } from 'path';
+import typedPlugin from '../typedPlugin';
 
 export const FAVICON_SIZES = [16, 32, 64, 128, 512];
 
 export const PATH = '/favicon.ico';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, (_, res) => {
       return res.sendFile('favicon.ico', join(process.cwd(), 'public'));
     });
@@ -20,8 +20,6 @@ export default fastifyPlugin(
         return res.sendFile(`favicon-${str}.png`, join(process.cwd(), 'public'));
       });
     }
-
-    done();
   },
   { name: PATH },
 );

@@ -7,6 +7,7 @@ import { secondlyRatelimit } from '@/lib/ratelimits';
 import { TimedCache } from '@/lib/timedCache';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
+import typedPlugin from '@/server/typedPlugin';
 import {
   AuthenticatorTransportFuture,
   generateRegistrationOptions,
@@ -16,26 +17,17 @@ import {
   verifyRegistrationResponse,
 } from '@simplewebauthn/server';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import fastifyPlugin from 'fastify-plugin';
+import z from 'zod';
 
 export type ApiUserMfaPasskeyResponse = User | User['passkeys'];
-
-type Body = {
-  response: RegistrationResponseJSON;
-  name?: string;
-
-  id?: string;
-};
 
 const logger = log('api').c('user').c('mfa').c('passkey');
 
 const passkeysEnabled = (): boolean =>
   isTruthy(config.mfa.passkeys.enabled, config.mfa.passkeys.rpID, config.mfa.passkeys.origin);
 
-export const passkeysEnabledHandler = (_: FastifyRequest, res: FastifyReply, done: () => void) => {
+export const passkeysEnabledHandler = async (_: FastifyRequest, res: FastifyReply) => {
   if (!passkeysEnabled()) return res.notFound();
-
-  done();
 };
 
 export type PasskeyReg = {
@@ -53,8 +45,8 @@ export type PasskeyReg = {
 const OPTIONS_CACHE = new TimedCache<string, PublicKeyCredentialCreationOptionsJSON>(3 * 60_000); // 3 min ttl
 
 export const PATH = '/api/user/mfa/passkey';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware, passkeysEnabledHandler] }, async (req, res) => {
       const passkeys = await prisma.userPasskey.findMany({
         where: {
@@ -111,18 +103,20 @@ export default fastifyPlugin(
       },
     );
 
-    server.post<{ Body: Body }>(
+    server.post(
       PATH,
       {
+        schema: {
+          body: z.object({
+            response: z.custom<RegistrationResponseJSON>(),
+            name: z.string().trim().min(1),
+          }),
+        },
         preHandler: [userMiddleware, passkeysEnabledHandler],
         ...secondlyRatelimit(1),
       },
       async (req, res) => {
         const { response, name } = req.body;
-        if (!response) return res.badRequest('Missing webauthn response');
-
-        const normalizedName = (name ?? '').trim();
-        if (normalizedName.length === 0) return res.badRequest('Passkey name cannot be empty');
 
         const optionsCached = OPTIONS_CACHE.get(req.user.id);
         if (!optionsCached) return res.badRequest('passkey registration timed out, try again later');
@@ -150,7 +144,7 @@ export default fastifyPlugin(
           data: {
             passkeys: {
               create: {
-                name: normalizedName,
+                name,
                 reg: {
                   webauthn: {
                     webAuthnUserID: optionsCached.user.id,
@@ -177,12 +171,18 @@ export default fastifyPlugin(
       },
     );
 
-    server.delete<{ Body: Body }>(
+    server.delete(
       PATH,
-      { preHandler: [userMiddleware, passkeysEnabledHandler] },
+      {
+        schema: {
+          body: z.object({
+            id: z.string(),
+          }),
+        },
+        preHandler: [userMiddleware, passkeysEnabledHandler],
+      },
       async (req, res) => {
         const { id } = req.body;
-        if (!id) return res.badRequest('Missing id');
 
         const user = await prisma.user.update({
           where: { id: req.user.id },
@@ -201,8 +201,6 @@ export default fastifyPlugin(
         return res.send(user);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

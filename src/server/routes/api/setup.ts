@@ -4,23 +4,19 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { getZipline } from '@/lib/db/models/zipline';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiSetupResponse = {
   firstSetup?: boolean;
   user?: User;
 };
 
-type Body = {
-  username: string;
-  password: string;
-};
-
 const logger = log('api').c('setup');
 
 export const PATH = '/api/setup';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, async (_, res) => {
       const { firstSetup } = await getZipline();
       if (!firstSetup) return res.forbidden();
@@ -28,45 +24,53 @@ export default fastifyPlugin(
       return res.send({ firstSetup });
     });
 
-    server.post<{ Body: Body }>(PATH, secondlyRatelimit(5), async (req, res) => {
-      const { firstSetup, id } = await getZipline();
-
-      if (!firstSetup) return res.forbidden();
-
-      logger.info('first setup running');
-
-      const { username, password } = req.body;
-      if (!username) return res.badRequest('Username is required');
-      if (!password) return res.badRequest('Password is required');
-
-      const user = await prisma.user.create({
-        data: {
-          username,
-          password: await hashPassword(password),
-          role: 'SUPERADMIN',
-          token: createToken(),
+    server.post(
+      PATH,
+      {
+        schema: {
+          body: z.object({
+            username: z.string().min(1),
+            password: z.string().min(1),
+          }),
         },
-        select: userSelect,
-      });
+        ...secondlyRatelimit(5),
+      },
+      async (req, res) => {
+        const { firstSetup, id } = await getZipline();
 
-      logger.info('first setup complete');
+        if (!firstSetup) return res.forbidden();
 
-      await prisma.zipline.update({
-        where: {
-          id,
-        },
-        data: {
-          firstSetup: false,
-        },
-      });
+        logger.info('first setup running');
 
-      return res.send({
-        firstSetup,
-        user,
-      });
-    });
+        const { username, password } = req.body;
 
-    done();
+        const user = await prisma.user.create({
+          data: {
+            username,
+            password: await hashPassword(password),
+            role: 'SUPERADMIN',
+            token: createToken(),
+          },
+          select: userSelect,
+        });
+
+        logger.info('first setup complete');
+
+        await prisma.zipline.update({
+          where: {
+            id,
+          },
+          data: {
+            firstSetup: false,
+          },
+        });
+
+        return res.send({
+          firstSetup,
+          user,
+        });
+      },
+    );
   },
   { name: PATH },
 );

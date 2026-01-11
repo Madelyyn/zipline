@@ -1,51 +1,55 @@
 import { prisma } from '@/lib/db';
 import { fileSelect } from '@/lib/db/models/file';
 import { cleanFolder, Folder } from '@/lib/db/models/folder';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiServerFolderResponse = Partial<Folder>;
 
-type Params = {
-  id: string;
-};
-
-type Query = {
-  uploads?: boolean;
-};
-
 export const PATH = '/api/server/folder/:id';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Params: Params; Querystring: Query }>(PATH, async (req, res) => {
-      const { id } = req.params;
-      const { uploads } = req.query;
-
-      const folder = await prisma.folder.findUnique({
-        where: {
-          id: id,
+export default typedPlugin(
+  async (server) => {
+    server.get(
+      PATH,
+      {
+        schema: {
+          params: z.object({
+            id: z.string(),
+          }),
+          querystring: z.object({
+            uploads: z.string().optional(),
+          }),
         },
-        include: {
-          files: {
-            select: {
-              ...fileSelect,
-              password: true,
-              tags: false,
-            },
-            orderBy: {
-              createdAt: 'desc',
+      },
+      async (req, res) => {
+        const { id } = req.params;
+        const { uploads } = req.query;
+
+        const folder = await prisma.folder.findUnique({
+          where: {
+            id: id,
+          },
+          include: {
+            files: {
+              select: {
+                ...fileSelect,
+                password: true,
+                tags: false,
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
             },
           },
-        },
-      });
+        });
 
-      if (!folder) return res.notFound();
+        if (!folder) return res.notFound();
 
-      if ((uploads && !folder.allowUploads) || (!uploads && !folder.public)) return res.notFound();
+        if ((uploads && !folder.allowUploads) || (!uploads && !folder.public)) return res.notFound();
 
-      return res.send(cleanFolder(folder, true));
-    });
-
-    done();
+        return res.send(cleanFolder(folder, true));
+      },
+    );
   },
   { name: PATH },
 );

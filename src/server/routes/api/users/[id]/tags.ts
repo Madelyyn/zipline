@@ -3,22 +3,26 @@ import { Tag, tagSelect } from '@/lib/db/models/tag';
 import { canInteract } from '@/lib/role';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiUsersIdTagsResponse = Tag[];
-
-type Params = {
-  id: string;
-};
 
 // const logger = log('api').c('user').c('id').c('tags');
 
 export const PATH = '/api/users/:id/tags';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Params: Params }>(
+export default typedPlugin(
+  async (server) => {
+    server.get(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      {
+        schema: {
+          params: z.object({
+            id: z.string(),
+          }),
+        },
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
       async (req, res) => {
         const { id } = req.params;
 
@@ -41,8 +45,6 @@ export default fastifyPlugin(
         return res.send(tags);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

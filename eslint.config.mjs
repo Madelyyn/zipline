@@ -22,10 +22,6 @@ const gitignorePatterns = gitignoreContent
   .filter((line) => line.trim() && !line.startsWith('#'))
   .map((pattern) => pattern.trim());
 
-const reactRecommendedRules = reactPlugin.configs.recommended.rules;
-const reactHooksRecommendedRules = reactHooksPlugin.configs['recommended-latest'].rules;
-const reactRefreshRules = reactRefreshPlugin.configs.vite.rules;
-
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig(

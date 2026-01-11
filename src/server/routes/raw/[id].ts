@@ -5,8 +5,8 @@ import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { guess } from '@/lib/mimes';
+import typedPlugin from '@/server/typedPlugin';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import fastifyPlugin from 'fastify-plugin';
 
 const viewsCache = new Map<string, number>();
 const VIEW_WINDOW = 5 * 1000;
@@ -188,11 +188,9 @@ export const rawFileHandler = async (
 };
 
 export const PATH = '/raw/:id';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, rawFileHandler);
-
-    done();
   },
   { name: PATH },
 );

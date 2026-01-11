@@ -9,7 +9,7 @@ import { secondlyRatelimit } from '@/lib/ratelimits';
 import { readThemes } from '@/lib/theme/file';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 import { statSync } from 'fs';
 import ms, { StringValue } from 'ms';
 import { cpus } from 'os';
@@ -23,8 +23,6 @@ export type ApiServerSettingsWebResponse = {
   config: ReturnType<typeof safeConfig>;
   codeMap: { ext: string; mime: string; name: string }[];
 };
-type Body = Partial<Settings>;
-
 export const reservedRoutes = [
   '/dashboard',
   '/auth',
@@ -79,9 +77,9 @@ const discordEmbed = z
 const logger = log('api').c('server').c('settings');
 
 export const PATH = '/api/server/settings';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Body: Body }>(
+export default typedPlugin(
+  async (server) => {
+    server.get(
       PATH,
       {
         preHandler: [userMiddleware, administratorMiddleware],
@@ -102,9 +100,12 @@ export default fastifyPlugin(
       },
     );
 
-    server.patch<{ Body: Body }>(
+    server.patch(
       PATH,
       {
+        schema: {
+          body: z.custom<Partial<Settings>>(),
+        },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
       },
@@ -453,8 +454,6 @@ export default fastifyPlugin(
         return res.send({ settings: newSettings, tampered: global.__tamperedConfig__ || [] });
       },
     );
-
-    done();
   },
   { name: PATH },
 );

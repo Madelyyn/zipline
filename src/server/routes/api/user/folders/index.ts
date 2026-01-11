@@ -5,75 +5,85 @@ import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiUserFoldersResponse = Folder | Folder[];
-
-type Body = {
-  files?: string[];
-
-  name?: string;
-  isPublic?: boolean;
-};
-
-type Query = {
-  noincl?: boolean;
-  user?: string;
-};
 
 const logger = log('api').c('user').c('folders');
 
 export const PATH = '/api/user/folders';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      const { noincl, user } = req.query;
+export default typedPlugin(
+  async (server) => {
+    server.get(
+      PATH,
+      {
+        schema: {
+          querystring: z.object({
+            noincl: z.coerce.boolean().optional(),
+            user: z.string().optional(),
+          }),
+        },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        const { noincl, user } = req.query;
 
-      if (user) {
-        const user = await prisma.user.findUnique({
-          where: {
-            id: req.user.id,
-          },
-        });
+        if (user) {
+          const user = await prisma.user.findUnique({
+            where: {
+              id: req.user.id,
+            },
+          });
 
-        if (!user) return res.notFound();
-        if (req.user.id !== user.id) {
-          if (!canInteract(req.user.role, user.role)) return res.notFound();
+          if (!user) return res.notFound();
+          if (req.user.id !== user.id) {
+            if (!canInteract(req.user.role, user.role)) return res.notFound();
+          }
         }
-      }
 
-      const folders = await prisma.folder.findMany({
-        where: {
-          userId: user || req.user.id,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        ...(!noincl && {
-          include: {
-            files: {
-              select: {
-                ...fileSelect,
-                password: true,
-              },
-              orderBy: {
-                createdAt: 'desc',
+        const folders = await prisma.folder.findMany({
+          where: {
+            userId: user || req.user.id,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          ...(!noincl && {
+            include: {
+              files: {
+                select: {
+                  ...fileSelect,
+                  password: true,
+                },
+                orderBy: {
+                  createdAt: 'desc',
+                },
               },
             },
-          },
-        }),
-      });
+          }),
+        });
 
-      return res.send(cleanFolders(folders));
-    });
+        return res.send(cleanFolders(folders));
+      },
+    );
 
-    server.post<{ Body: Body }>(
+    server.post(
       PATH,
-      { preHandler: [userMiddleware], ...secondlyRatelimit(2) },
+      {
+        schema: {
+          body: z.object({
+            name: z.string().trim().min(1),
+            isPublic: z.boolean().optional(),
+            files: z.array(z.string()).optional(),
+          }),
+        },
+        preHandler: [userMiddleware],
+        ...secondlyRatelimit(2),
+      },
       async (req, res) => {
         const { name, isPublic } = req.body;
         let files = req.body.files;
-        if (!name) return res.badRequest('Name is required');
 
         if (files) {
           const filesAdd = await prisma.file.findMany({
@@ -122,8 +132,6 @@ export default fastifyPlugin(
         return res.send(cleanFolder(folder));
       },
     );
-
-    done();
   },
   { name: PATH },
 );

@@ -1,77 +1,94 @@
+import { bytes } from '@/lib/bytes';
 import { config } from '@/lib/config';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { Export } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 import archiver from 'archiver';
 import { createWriteStream } from 'fs';
 import { rm, stat } from 'fs/promises';
 import { join } from 'path';
-import { Export } from '@/prisma/client';
-import { bytes } from '@/lib/bytes';
+import z from 'zod';
 
 export type ApiUserExportResponse = {
   running?: boolean;
   deleted?: boolean;
 } & Export[];
 
-type Query = {
-  id?: string;
-};
-
 export const PATH = '/api/user/export';
+
+const querySchema = z.object({
+  id: z.string().optional(),
+});
 
 const logger = log('api').c('user').c('export');
 
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      const exports = await prisma.export.findMany({
-        where: { userId: req.user.id },
-      });
-
-      if (req.query.id) {
-        const file = exports.find((x) => x.id === req.query.id);
-        if (!file) return res.notFound();
-
-        if (!file.completed) return res.badRequest('Export is not completed');
-
-        return res.sendFile(file.path);
-      }
-
-      return res.send(exports);
-    });
-
-    server.delete<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      if (!req.query.id) return res.badRequest('No id provided');
-
-      const exportDb = await prisma.export.findFirst({
-        where: {
-          userId: req.user.id,
-          id: req.query.id,
+export default typedPlugin(
+  async (server) => {
+    server.get(
+      PATH,
+      {
+        schema: {
+          querystring: querySchema,
         },
-      });
-      if (!exportDb) return res.notFound();
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        const exports = await prisma.export.findMany({
+          where: { userId: req.user.id },
+        });
 
-      const path = join(config.core.tempDirectory, exportDb.path);
+        if (req.query.id) {
+          const file = exports.find((x) => x.id === req.query.id);
+          if (!file) return res.notFound();
 
-      try {
-        await rm(path);
-      } catch (e) {
-        logger.warn(
-          `failed to delete export file, it might already be deleted. ${exportDb.id}: ${exportDb.path}`,
-          { e },
-        );
-      }
+          if (!file.completed) return res.badRequest('Export is not completed');
 
-      await prisma.export.delete({ where: { id: req.query.id } });
+          return res.sendFile(file.path);
+        }
 
-      logger.info(`deleted export ${exportDb.id}: ${exportDb.path}`);
+        return res.send(exports);
+      },
+    );
 
-      return res.send({ deleted: true });
-    });
+    server.delete(
+      PATH,
+      {
+        schema: { querystring: querySchema },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        if (!req.query.id) return res.badRequest('No id provided');
+
+        const exportDb = await prisma.export.findFirst({
+          where: {
+            userId: req.user.id,
+            id: req.query.id,
+          },
+        });
+        if (!exportDb) return res.notFound();
+
+        const path = join(config.core.tempDirectory, exportDb.path);
+
+        try {
+          await rm(path);
+        } catch (e) {
+          logger.warn(
+            `failed to delete export file, it might already be deleted. ${exportDb.id}: ${exportDb.path}`,
+            { e },
+          );
+        }
+
+        await prisma.export.delete({ where: { id: req.query.id } });
+
+        logger.info(`deleted export ${exportDb.id}: ${exportDb.path}`);
+
+        return res.send({ deleted: true });
+      },
+    );
 
     server.post(PATH, { preHandler: [userMiddleware], ...secondlyRatelimit(5) }, async (req, res) => {
       const files = await prisma.file.findMany({
@@ -137,8 +154,6 @@ export default fastifyPlugin(
 
       return res.send({ running: true });
     });
-
-    done();
   },
   { name: PATH },
 );

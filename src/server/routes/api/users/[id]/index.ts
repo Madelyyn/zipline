@@ -5,43 +5,29 @@ import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
+import { Role, UserFilesQuota } from '@/prisma/client';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import { UserFilesQuota } from '@/prisma/client';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 import { z } from 'zod';
 
 export type ApiUsersIdResponse = User;
 
-type Body = {
-  username?: string;
-  password?: string;
-  avatar?: string;
-  role?: 'USER' | 'ADMIN' | 'SUPERADMIN';
-  quota?: {
-    filesType?: UserFilesQuota & 'NONE';
-    maxFiles?: number;
-    maxBytes?: string;
-
-    maxUrls?: number;
-  };
-
-  delete?: boolean;
-};
-
-type Params = {
-  id: string;
-};
-
 const logger = log('api').c('users').c('[id]');
-const zNumber = z.number();
+
+const paramsSchema = z.object({
+  id: z.string(),
+});
 
 export const PATH = '/api/users/:id';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Params: Params }>(
+export default typedPlugin(
+  async (server) => {
+    server.get(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      {
+        schema: { params: paramsSchema },
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
       async (req, res) => {
         const user = await prisma.user.findUnique({
           where: {
@@ -56,9 +42,28 @@ export default fastifyPlugin(
       },
     );
 
-    server.patch<{ Params: Params; Body: Body }>(
+    server.patch(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      {
+        schema: {
+          params: paramsSchema,
+          body: z.object({
+            username: z.string().min(1).optional(),
+            password: z.string().min(1).optional(),
+            avatar: z.url().optional(),
+            role: z.enum(Role).optional(),
+            quota: z
+              .object({
+                filesType: z.enum(UserFilesQuota).and(z.literal('NONE')).optional(),
+                maxFiles: z.number().min(1).optional(),
+                maxBytes: z.string().min(1).optional(),
+                maxUrls: z.number().min(1).optional(),
+              })
+              .optional(),
+          }),
+        },
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
       async (req, res) => {
         const user = await prisma.user.findUnique({
           where: {
@@ -66,14 +71,9 @@ export default fastifyPlugin(
           },
           select: userSelect,
         });
-
         if (!user) return res.notFound('User not found');
 
         const { username, password, avatar, role, quota } = req.body;
-
-        if (role && !z.enum(['USER', 'ADMIN']).safeParse(role).success)
-          return res.badRequest('Invalid role (USER, ADMIN)');
-
         if (role && !canInteract(req.user.role, role)) return res.forbidden('You cannot assign this role');
 
         let finalQuota:
@@ -85,14 +85,6 @@ export default fastifyPlugin(
             }
           | undefined = undefined;
         if (quota) {
-          if (quota.filesType && !z.enum(['BY_BYTES', 'BY_FILES', 'NONE']).safeParse(quota.filesType).success)
-            return res.badRequest('Invalid filesType (BY_BYTES, BY_FILES, NONE)');
-
-          if (quota.maxFiles && !zNumber.safeParse(quota.maxFiles).success)
-            return res.badRequest('Invalid maxFiles');
-          if (quota.maxUrls && !zNumber.safeParse(quota.maxUrls).success)
-            return res.badRequest('Invalid maxUrls');
-
           if (quota.filesType === 'BY_BYTES' && quota.maxBytes === undefined)
             return res.badRequest('maxBytes is required');
           if (quota.filesType === 'BY_FILES' && quota.maxFiles === undefined)
@@ -160,9 +152,17 @@ export default fastifyPlugin(
       },
     );
 
-    server.delete<{ Params: Params; Body: Body }>(
+    server.delete(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      {
+        schema: {
+          params: paramsSchema,
+          body: z.object({
+            delete: z.boolean().optional(),
+          }),
+        },
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
       async (req, res) => {
         const user = await prisma.user.findUnique({
           where: {
@@ -237,8 +237,6 @@ export default fastifyPlugin(
         return res.send(deletedUser);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

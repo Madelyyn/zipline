@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const FIELDS = ['name', 'originalName', 'tags', 'type', 'size', 'createdAt', 'favorite', 'views'] as const;
+type Field = 'name' | 'originalName' | 'tags' | 'type' | 'size' | 'createdAt' | 'favorite' | 'views';
 
 export const defaultFields: FieldSettings[] = [
   { field: 'name', visible: true },
@@ -15,7 +15,7 @@ export const defaultFields: FieldSettings[] = [
 ];
 
 export type FieldSettings = {
-  field: (typeof FIELDS)[number];
+  field: Field;
   visible: boolean;
 };
 

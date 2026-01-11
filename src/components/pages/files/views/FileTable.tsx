@@ -212,34 +212,22 @@ export default function FileTable({
     | 'favorite'
   >('createdAt');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [searchField, setSearchField] = useState<'name' | 'originalName' | 'type' | 'tags' | 'id'>('name');
   const [searchQuery, setSearchQuery] = useReducer(
-    (state: ReducerQuery['state'], action: ReducerQuery['action']) => {
-      return {
-        ...state,
-        [action.field]: action.query,
-      };
-    },
+    (
+      _state: { name: string; originalName: string; type: string; tags: string; id: string },
+      action: { field: keyof ReducerQuery['state']; query: string },
+    ) => ({
+      name: action.field === 'name' ? action.query : '',
+      originalName: action.field === 'originalName' ? action.query : '',
+      type: action.field === 'type' ? action.query : '',
+      tags: action.field === 'tags' ? action.query : '',
+      id: action.field === 'id' ? action.query : '',
+    }),
     { name: '', originalName: '', type: '', tags: '', id: '' },
   );
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
-
-  useEffect(() => {
-    if (idSearch.open) return;
-
-    setSearchQuery({
-      field: 'id',
-      query: '',
-    });
-  }, [idSearch.open]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedQuery(searchQuery), 300);
-
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -272,6 +260,11 @@ export default function FileTable({
       },
     }),
   });
+
+  const [selectedFileId, setSelectedFile] = useState<string | null>(null);
+  const selectedFile = selectedFileId
+    ? (data?.page.find((file) => file.id === selectedFileId) ?? null)
+    : null;
 
   const FIELDS = [
     {
@@ -367,28 +360,13 @@ export default function FileTable({
     return aIndex - bIndex;
   });
 
-  useEffect(() => {
-    if (data && selectedFile) {
-      const file = data.page.find((x) => x.id === selectedFile.id);
-
-      if (file) {
-        setSelectedFile(file);
-      }
-    }
-  }, [data]);
-
-  useEffect(() => {
-    for (const field of ['name', 'originalName', 'type', 'tags', 'id'] as const) {
-      if (field !== searchField) {
-        setSearchQuery({
-          field,
-          query: '',
-        });
-      }
-    }
-  }, [searchField]);
-
   const unfavoriteAll = selectedFiles.every((file) => file.favorite);
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   return (
     <>
@@ -594,7 +572,7 @@ export default function FileTable({
             setSort(data.columnAccessor as any);
             setOrder(data.direction);
           }}
-          onCellClick={({ record }) => setSelectedFile(record)}
+          onCellClick={({ record }) => setSelectedFile(record.id)}
           selectedRecords={selectedFiles}
           onSelectedRecordsChange={setSelectedFiles}
           paginationText={({ from, to, totalRecords }) => `${from} - ${to} / ${totalRecords} files`}

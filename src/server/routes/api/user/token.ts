@@ -5,7 +5,7 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 export type ApiUserTokenResponse = {
   user?: User;
@@ -15,8 +15,8 @@ export type ApiUserTokenResponse = {
 const logger = log('api').c('user').c('token');
 
 export const PATH = '/api/user/token';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const user = await prisma.user.findUnique({
         where: {
@@ -59,8 +59,6 @@ export default fastifyPlugin(
         token: encryptToken(user.token, config.core.secret),
       });
     });
-
-    done();
   },
   { name: PATH },
 );

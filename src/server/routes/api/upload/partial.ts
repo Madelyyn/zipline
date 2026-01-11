@@ -2,6 +2,7 @@ import { bytes } from '@/lib/bytes';
 import { config } from '@/lib/config';
 import { hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
+import { sanitizeFilename } from '@/lib/fs';
 import { log } from '@/lib/logger';
 import { guess } from '@/lib/mimes';
 import { randomCharacters } from '@/lib/random';
@@ -9,12 +10,11 @@ import { formatFileName } from '@/lib/uploader/formatFileName';
 import { UploadHeaders, UploadOptions, parseHeaders } from '@/lib/uploader/parseHeaders';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 import { readdir, rename, rm } from 'fs/promises';
 import { join } from 'path';
 import { Worker } from 'worker_threads';
 import { ApiUploadResponse, getExtension } from '.';
-import { sanitizeFilename } from '@/lib/fs';
 
 const logger = log('api').c('upload').c('partial');
 
@@ -26,8 +26,8 @@ export type ApiUploadPartialResponse = ApiUploadResponse & {
 };
 
 export const PATH = '/api/upload/partial';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     const rateLimit = server.rateLimit
       ? server.rateLimit()
       : (_req: any, _res: any, next: () => any) => next();
@@ -280,8 +280,6 @@ export default fastifyPlugin(
 
       return res.send(response);
     });
-
-    done();
   },
   { name: PATH },
 );

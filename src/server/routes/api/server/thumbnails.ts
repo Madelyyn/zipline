@@ -2,24 +2,26 @@ import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiServerThumbnailsResponse = {
   status: string;
 };
 
-type Body = {
-  rerun: boolean;
-};
-
 const logger = log('api').c('server').c('thumbnails');
 
 export const PATH = '/api/server/thumbnails';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.post<{ Body: Body }>(
+export default typedPlugin(
+  async (server) => {
+    server.post(
       PATH,
       {
+        schema: {
+          body: z.object({
+            rerun: z.boolean().optional(),
+          }),
+        },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
       },
@@ -43,8 +45,6 @@ export default fastifyPlugin(
         });
       },
     );
-
-    done();
   },
   { name: PATH },
 );

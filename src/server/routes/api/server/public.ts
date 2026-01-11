@@ -3,7 +3,7 @@ import { Config } from '@/lib/config/validate';
 import { getZipline } from '@/lib/db/models/zipline';
 import enabled from '@/lib/oauth/enabled';
 import { isTruthy } from '@/lib/primitive';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 export type ApiServerPublicResponse = {
   oauth: {
@@ -44,8 +44,8 @@ export type ApiServerPublicResponse = {
 };
 
 export const PATH = '/api/server/public';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get<{ Body: Body }>(PATH, async (_, res) => {
       const zipline = await getZipline();
 
@@ -92,8 +92,6 @@ export default fastifyPlugin(
 
       return res.send(response);
     });
-
-    done();
   },
   { name: PATH },
 );

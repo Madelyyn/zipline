@@ -20,6 +20,13 @@ import { fastifyRateLimit } from '@fastify/rate-limit';
 import { fastifySensible } from '@fastify/sensible';
 import { fastifyStatic } from '@fastify/static';
 import fastify from 'fastify';
+import {
+  hasZodFastifySchemaValidationErrors,
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  ZodTypeProvider,
+} from 'fastify-type-provider-zod';
 import { appendFile, mkdir, readFile, writeFile } from 'fs/promises';
 import ms, { StringValue } from 'ms';
 import { version } from '../../package.json';
@@ -29,6 +36,7 @@ import vitePlugin from './plugins/vite';
 import loadRoutes from './routes';
 import { filesRoute } from './routes/files.dy';
 import { urlsRoute } from './routes/urls.dy';
+import fastifySwagger from '@fastify/swagger';
 
 const MODE = process.env.NODE_ENV || 'production';
 const logger = log('server');
@@ -81,7 +89,7 @@ async function main() {
         }
       : null,
     trustProxy: config.core.trustProxy,
-  });
+  }).withTypeProvider<ZodTypeProvider>();
 
   if (process.env.DEBUG_EVENT_EMITTER) {
     server.addHook('onSend', async (req, res) => {
@@ -96,6 +104,21 @@ async function main() {
       logger.debug('event emitter counts', { path: req.url, ...counts });
     });
   }
+
+  server.setValidatorCompiler(validatorCompiler);
+  server.setSerializerCompiler(serializerCompiler);
+
+  await server.register(fastifySwagger, {
+    openapi: {
+      info: {
+        title: 'Zipline',
+        description: 'Zipline API',
+        version: version,
+      },
+      servers: [],
+    },
+    transform: jsonSchemaTransform,
+  });
 
   await server.register(fastifyCookie, {
     secret: config.core.secret,
@@ -223,15 +246,23 @@ async function main() {
     }
   });
 
-  server.setErrorHandler((error: { statusCode: number; message: string }, _, res) => {
+  server.setErrorHandler((error: any, _, res) => {
+    if (hasZodFastifySchemaValidationErrors(error)) {
+      return res.status(400).send({
+        error: error.message ?? 'Response Validation Error',
+        statusCode: 400,
+        issues: error.validation,
+      });
+    }
+
     if (error.statusCode) {
       res.status(error.statusCode);
       res.send({ error: error.message, statusCode: error.statusCode });
     } else {
-      if (process.env.DEBUG === 'zipline') console.error(error);
+      console.error(error);
 
       res.status(500);
-      res.send({ error: 'Internal Server Error', statusCode: 500, message: error.message });
+      res.send({ error: 'Internal Server Error', statusCode: 500 });
     }
   });
 

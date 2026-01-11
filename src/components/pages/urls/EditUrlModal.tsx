@@ -53,15 +53,21 @@ export default function EditUrlModal({
 
   const handleSave = async () => {
     const data: {
-      maxViews?: number;
+      maxViews?: number | null;
       password?: string;
       vanity?: string;
       destination?: string;
       enabled?: boolean;
     } = {};
 
-    if (maxViews !== null) data['maxViews'] = maxViews;
-    if (password !== null) data['password'] = password?.trim();
+    console.log(password);
+
+    if (maxViews === null) data['maxViews'] = null;
+    else data['maxViews'] = maxViews;
+
+    // dont include password if empty or null
+    if (password !== null && password.trim() !== '') data['password'] = password?.trim();
+
     if (vanity !== null && vanity !== url.vanity) data['vanity'] = vanity?.trim();
     if (destination !== null && destination !== url.destination) data['destination'] = destination?.trim();
     if (enabled !== url.enabled) data['enabled'] = enabled;

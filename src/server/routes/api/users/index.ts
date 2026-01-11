@@ -5,34 +5,32 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
+import { Role } from '@/prisma/client';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 import { readFile } from 'fs/promises';
 import { z } from 'zod';
-import { Role } from '@/prisma/client';
 
 export type ApiUsersResponse = User[] | User;
 
-type Query = {
-  noincl?: 'true' | 'false';
-};
-
-type Body = {
-  username?: string;
-  password?: string;
-  avatar?: string;
-  role?: Role;
-};
-
 const logger = log('api').c('users');
 
+const querySchema = z.object({
+  noincl: z.coerce.boolean().default(false),
+});
+
 export const PATH = '/api/users';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Querystring: Query }>(
+export default typedPlugin(
+  async (server) => {
+    server.get(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      {
+        schema: {
+          querystring: querySchema,
+        },
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
       async (req, res) => {
         const users = await prisma.user.findMany({
           select: {
@@ -40,7 +38,7 @@ export default fastifyPlugin(
             avatar: true,
           },
           where: {
-            ...(req.query.noincl === 'true' && { id: { not: req.user.id } }),
+            ...(req.query.noincl && { id: { not: req.user.id } }),
           },
         });
 
@@ -48,14 +46,23 @@ export default fastifyPlugin(
       },
     );
 
-    server.post<{ Querystring: Query; Body: Body }>(
+    server.post(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware], ...secondlyRatelimit(1) },
+      {
+        schema: {
+          querystring: querySchema,
+          body: z.object({
+            username: z.string().min(1),
+            password: z.string().min(1),
+            avatar: z.string().optional(),
+            role: z.enum(Role).default('USER').optional(),
+          }),
+        },
+        preHandler: [userMiddleware, administratorMiddleware],
+        ...secondlyRatelimit(1),
+      },
       async (req, res) => {
         const { username, password, avatar, role } = req.body;
-
-        if (!username) return res.badRequest('Username is required');
-        if (!password) return res.badRequest('Password is required');
 
         let avatar64 = null;
 
@@ -69,16 +76,13 @@ export default fastifyPlugin(
           logger.debug('failed to read default avatar', { path: config.website.defaultAvatar });
         }
 
-        if (role && !z.enum(['USER', 'ADMIN']).safeParse(role).success)
-          return res.badRequest('Invalid role (USER, ADMIN)');
-
         if (role && !canInteract(req.user.role, role)) return res.forbidden('You cannot create this role');
 
         const user = await prisma.user.create({
           data: {
             username,
             password: await hashPassword(password),
-            role: role ?? 'USER',
+            role: role,
             avatar: avatar64 ?? null,
             token: createToken(),
           },
@@ -97,8 +101,6 @@ export default fastifyPlugin(
         return res.send(user);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

@@ -2,9 +2,8 @@ import { prisma } from '@/lib/db';
 import { File, cleanFiles, fileSelect } from '@/lib/db/models/file';
 import { canInteract } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
-import { Prisma } from '@/prisma/client';
-import fastifyPlugin from 'fastify-plugin';
-import { z } from 'zod';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type FileSearchField = 'name' | 'originalName' | 'type' | 'tags' | 'id';
 
@@ -18,241 +17,222 @@ export type ApiUserFilesResponse = {
   pages?: number;
 };
 
-type Query = {
-  page?: string;
-  perpage?: string;
-  filter?: 'dashboard' | 'none' | 'all';
-  favorite?: 'true' | 'false';
-  sortBy: keyof Prisma.FileOrderByWithAggregationInput;
-  order: 'asc' | 'desc';
-  searchField?: FileSearchField;
-  searchQuery?: string;
-  id?: string;
-};
-
-const validateSearchField = z.enum(['name', 'originalName', 'type', 'tags', 'id']).default('name');
-
-const validateSortBy = z
-  .enum([
-    'id',
-    'createdAt',
-    'updatedAt',
-    'deletesAt',
-    'name',
-    'originalName',
-    'size',
-    'type',
-    'views',
-    'favorite',
-  ])
-  .default('createdAt');
-
-const validateOrder = z.enum(['asc', 'desc']).default('desc');
-
 export const PATH = '/api/user/files';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      const user = await prisma.user.findUnique({
-        where: {
-          id: req.query.id ?? req.user.id,
+export default typedPlugin(
+  async (server) => {
+    server.get(
+      PATH,
+      {
+        schema: {
+          querystring: z.object({
+            page: z.coerce.number().optional(),
+            perpage: z.coerce.number().default(15),
+            filter: z.enum(['dashboard', 'none', 'all']).optional().default('none'),
+            favorite: z.enum(['true', 'false']).optional(),
+            sortBy: z
+              .enum([
+                'id',
+                'createdAt',
+                'updatedAt',
+                'deletesAt',
+                'name',
+                'originalName',
+                'size',
+                'type',
+                'views',
+                'favorite',
+              ])
+              .optional()
+              .default('createdAt'),
+            order: z.enum(['asc', 'desc']).optional().default('desc'),
+            searchField: z.enum(['name', 'originalName', 'type', 'tags', 'id']).optional().default('name'),
+            searchQuery: z.string().optional(),
+            id: z.string().optional(),
+          }),
         },
-      });
-
-      if (user && user.id !== req.user.id && !canInteract(req.user.role, user.role))
-        return res.forbidden("You can't view this user's files.");
-
-      if (!user) return res.notFound('User not found');
-
-      const perpage = Number(req.query.perpage || '15');
-      if (isNaN(Number(perpage))) return res.badRequest('Perpage must be a number');
-
-      const searchQuery = req.query.searchQuery
-        ? (decodeURIComponent(req.query.searchQuery.trim()) ?? null)
-        : null;
-
-      const { page, filter, favorite } = req.query;
-      if (!page && !searchQuery) return res.badRequest('Page is required');
-      if (isNaN(Number(page)) && !searchQuery) return res.badRequest('Page must be a number');
-
-      const sortBy = validateSortBy.safeParse(req.query.sortBy || 'createdAt');
-      if (!sortBy.success) return res.badRequest('Invalid sortBy value');
-
-      const order = validateOrder.safeParse(req.query.order || 'desc');
-      if (!order.success) return res.badRequest('Invalid order value');
-
-      const searchField = validateSearchField.safeParse(req.query.searchField || 'name');
-      if (!searchField.success) return res.badRequest('Invalid searchField value');
-
-      const incompleteFiles = await prisma.incompleteFile.findMany({
-        where: {
-          userId: user.id,
-          status: {
-            not: 'COMPLETE',
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        const user = await prisma.user.findUnique({
+          where: {
+            id: req.query.id ?? req.user.id,
           },
-        },
-      });
+        });
 
-      if (searchQuery) {
-        let tagFiles: string[] = [];
+        if (user && user.id !== req.user.id && !canInteract(req.user.role, user.role)) return res.notFound();
 
-        if (searchField.data === 'tags') {
-          const parsedTags = searchQuery
-            .split(',')
-            .map((tag) => tag.trim())
-            .filter((tag) => tag);
+        if (!user) return res.notFound();
 
-          const foundTags = await prisma.tag.findMany({
-            where: {
-              userId: user.id,
-              id: {
-                in: searchQuery
-                  .split(',')
-                  .map((tag) => tag.trim())
-                  .filter((tag) => tag),
-              },
-            },
-            include: {
-              files: {
-                select: {
-                  id: true,
-                },
-              },
-            },
-          });
+        const { perpage, searchQuery, searchField, page, filter, favorite, sortBy, order } = req.query;
 
-          if (foundTags.length !== parsedTags.length) return res.badRequest('invalid tag somewhere');
-
-          tagFiles = foundTags
-            .map((tag) => tag.files.map((file) => file.id))
-            .reduce((a, b) => a.filter((c) => b.includes(c)));
-        }
-
-        const similarityResult = await prisma.file.findMany({
+        const incompleteFiles = await prisma.incompleteFile.findMany({
           where: {
             userId: user.id,
-            ...(filter === 'dashboard' && {
-              OR: [
-                {
-                  type: { startsWith: 'image/' },
-                },
-                {
-                  type: { startsWith: 'video/' },
-                },
-                {
-                  type: { startsWith: 'audio/' },
-                },
-                {
-                  type: { startsWith: 'text/' },
-                },
-              ],
-            }),
-            ...(favorite === 'true' &&
-              filter !== 'all' && {
-                favorite: true,
-              }),
-            ...(searchField.data === 'tags'
-              ? {
-                  id: {
-                    in: tagFiles,
-                    notIn: incompleteFiles.map((file) => file.metadata.file.id),
-                  },
-                }
-              : searchField.data === 'id'
-                ? {
-                    id: {
-                      contains: searchQuery,
-                      notIn: incompleteFiles.map((file) => file.metadata.file.id),
-                      mode: 'insensitive',
-                    },
-                  }
-                : {
-                    [searchField.data]: {
-                      contains: searchQuery,
-                      mode: 'insensitive',
-                    },
-                    id: {
-                      notIn: incompleteFiles.map((file) => file.metadata.file.id),
-                    },
-                  }),
+            status: {
+              not: 'COMPLETE',
+            },
           },
-          select: fileSelect,
-          orderBy: {
-            [sortBy.data]: order.data,
-          },
-          skip: (Number(page) - 1) * perpage,
-          take: perpage,
         });
 
-        return res.send({
-          page: cleanFiles(similarityResult),
-          search: {
-            field: searchField.data,
-            query:
-              searchField.data === 'tags'
-                ? searchQuery
+        if (searchQuery) {
+          let tagFiles: string[] = [];
+
+          if (searchField === 'tags') {
+            const parsedTags = searchQuery
+              .split(',')
+              .map((tag) => tag.trim())
+              .filter((tag) => tag);
+
+            const foundTags = await prisma.tag.findMany({
+              where: {
+                userId: user.id,
+                id: {
+                  in: searchQuery
                     .split(',')
                     .map((tag) => tag.trim())
-                    .filter((tag) => tag)
-                : searchQuery,
-          },
-        });
-      }
+                    .filter((tag) => tag),
+                },
+              },
+              include: {
+                files: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            });
 
-      const where = {
-        userId: user.id,
-        ...(filter === 'dashboard' && {
-          OR: [
-            {
-              type: { startsWith: 'image/' },
+            if (foundTags.length !== parsedTags.length) return res.badRequest('invalid tag somewhere');
+
+            tagFiles = foundTags
+              .map((tag) => tag.files.map((file) => file.id))
+              .reduce((a, b) => a.filter((c) => b.includes(c)));
+          }
+
+          const similarityResult = await prisma.file.findMany({
+            where: {
+              userId: user.id,
+              ...(filter === 'dashboard' && {
+                OR: [
+                  {
+                    type: { startsWith: 'image/' },
+                  },
+                  {
+                    type: { startsWith: 'video/' },
+                  },
+                  {
+                    type: { startsWith: 'audio/' },
+                  },
+                  {
+                    type: { startsWith: 'text/' },
+                  },
+                ],
+              }),
+              ...(favorite === 'true' &&
+                filter !== 'all' && {
+                  favorite: true,
+                }),
+              ...(searchField === 'tags'
+                ? {
+                    id: {
+                      in: tagFiles,
+                      notIn: incompleteFiles.map((file) => file.metadata.file.id),
+                    },
+                  }
+                : searchField === 'id'
+                  ? {
+                      id: {
+                        contains: searchQuery,
+                        notIn: incompleteFiles.map((file) => file.metadata.file.id),
+                        mode: 'insensitive',
+                      },
+                    }
+                  : {
+                      [searchField]: {
+                        contains: searchQuery,
+                        mode: 'insensitive',
+                      },
+                      id: {
+                        notIn: incompleteFiles.map((file) => file.metadata.file.id),
+                      },
+                    }),
             },
-            {
-              type: { startsWith: 'video/' },
+            select: fileSelect,
+            orderBy: {
+              [sortBy]: order,
             },
-            {
-              type: { startsWith: 'audio/' },
+            skip: (Number(page) - 1) * perpage,
+            take: perpage,
+          });
+
+          return res.send({
+            page: cleanFiles(similarityResult),
+            search: {
+              field: searchField,
+              query:
+                searchField === 'tags'
+                  ? searchQuery
+                      .split(',')
+                      .map((tag) => tag.trim())
+                      .filter((tag) => tag)
+                  : searchQuery,
             },
-            {
-              type: { startsWith: 'text/' },
-            },
-          ],
-        }),
-        ...(favorite === 'true' &&
-          filter !== 'all' && {
-            favorite: true,
+          });
+        }
+
+        const where = {
+          userId: user.id,
+          ...(filter === 'dashboard' && {
+            OR: [
+              {
+                type: { startsWith: 'image/' },
+              },
+              {
+                type: { startsWith: 'video/' },
+              },
+              {
+                type: { startsWith: 'audio/' },
+              },
+              {
+                type: { startsWith: 'text/' },
+              },
+            ],
           }),
-        id: {
-          notIn: incompleteFiles.map((file) => file.metadata.file.id),
-        },
-      };
+          ...(favorite === 'true' &&
+            filter !== 'all' && {
+              favorite: true,
+            }),
+          id: {
+            notIn: incompleteFiles.map((file) => file.metadata.file.id),
+          },
+        };
 
-      const count = await prisma.file.count({
-        where,
-      });
-
-      const files = cleanFiles(
-        await prisma.file.findMany({
+        const count = await prisma.file.count({
           where,
-          select: {
-            ...fileSelect,
-            password: true,
-          },
-          orderBy: {
-            [sortBy.data]: order.data,
-          },
-          skip: (Number(page) - 1) * perpage,
-          take: perpage,
-        }),
-      );
+        });
 
-      return res.send({
-        page: files,
-        total: count,
-        pages: Math.ceil(count / perpage),
-      });
-    });
+        const files = cleanFiles(
+          await prisma.file.findMany({
+            where,
+            select: {
+              ...fileSelect,
+              password: true,
+            },
+            orderBy: {
+              [sortBy]: order,
+            },
+            skip: (Number(page) - 1) * perpage,
+            take: perpage,
+          }),
+        );
 
-    done();
+        return res.send({
+          page: files,
+          total: count,
+          pages: Math.ceil(count / perpage),
+        });
+      },
+    );
   },
   { name: PATH },
 );

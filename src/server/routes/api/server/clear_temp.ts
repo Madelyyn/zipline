@@ -3,7 +3,7 @@ import { secondlyRatelimit } from '@/lib/ratelimits';
 import { clearTemp } from '@/lib/server-util/clearTemp';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 export type ApiServerClearTempResponse = {
   status?: string;
@@ -12,8 +12,8 @@ export type ApiServerClearTempResponse = {
 const logger = log('api').c('server').c('clear_temp');
 
 export const PATH = '/api/server/clear_temp';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.delete(
       PATH,
       {
@@ -31,8 +31,6 @@ export default fastifyPlugin(
         return res.send({ status });
       },
     );
-
-    done();
   },
   { name: PATH },
 );

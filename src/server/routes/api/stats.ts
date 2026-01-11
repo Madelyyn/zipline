@@ -3,64 +3,82 @@ import { prisma } from '@/lib/db';
 import { Metric } from '@/lib/db/models/metric';
 import { isAdministrator } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiStatsResponse = Metric[];
 
-type Query = {
-  from?: string;
-  to?: string;
-  all?: string;
-};
-
 export const PATH = '/api/stats';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      if (!config.features.metrics) return res.forbidden('metrics are disabled');
-
-      if (config.features.metrics.adminOnly && !isAdministrator(req.user.role))
-        return res.forbidden('admin only');
-
-      const { from, to, all } = req.query;
-
-      const fromDate = from ? new Date(from) : new Date(Date.now() - 86400000 * 7); // defaults to a week ago
-      const toDate = to ? new Date(to) : new Date();
-
-      if (!all) {
-        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return res.badRequest('invalid date(s)');
-
-        if (fromDate > toDate) return res.badRequest('from date must be before to date');
-        if (fromDate > new Date()) return res.badRequest('from date must be in the past');
-      }
-
-      const stats = await prisma.metric.findMany({
-        where: {
-          ...(!all && {
-            createdAt: {
-              gte: fromDate,
-              lte: toDate,
-            },
+export default typedPlugin(
+  async (server) => {
+    server.get(
+      PATH,
+      {
+        schema: {
+          querystring: z.object({
+            from: z
+              .string()
+              .optional()
+              .refine((val) => {
+                if (!val) return true;
+                const date = new Date(val);
+                return !isNaN(date.getTime());
+              }, 'Invalid date'),
+            to: z
+              .string()
+              .optional()
+              .refine((val) => {
+                if (!val) return true;
+                const date = new Date(val);
+                return !isNaN(date.getTime());
+              }, 'Invalid date'),
+            all: z.enum(['true', 'false']).default('false'),
           }),
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        if (!config.features.metrics) return res.forbidden('metrics are disabled');
 
-      if (!config.features.metrics.showUserSpecific) {
-        for (let i = 0; i !== stats.length; ++i) {
-          const stat = stats[i].data;
+        if (config.features.metrics.adminOnly && !isAdministrator(req.user.role))
+          return res.forbidden('admin only');
 
-          stat.filesUsers = [];
-          stat.urlsUsers = [];
+        const { from, to, all } = req.query;
+
+        const fromDate = from ? new Date(from) : new Date(Date.now() - 86400000 * 7); // defaults to a week ago
+        const toDate = to ? new Date(to) : new Date();
+
+        if (!all) {
+          if (fromDate > toDate) return res.badRequest('from date must be before to date');
+          if (fromDate > new Date()) return res.badRequest('from date must be in the past');
         }
-      }
 
-      return res.send(stats);
-    });
+        const stats = await prisma.metric.findMany({
+          where: {
+            ...(all === 'false' && {
+              createdAt: {
+                gte: fromDate,
+                lte: toDate,
+              },
+            }),
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
 
-    done();
+        if (!config.features.metrics.showUserSpecific) {
+          for (let i = 0; i !== stats.length; ++i) {
+            const stat = stats[i].data;
+
+            stat.filesUsers = [];
+            stat.urlsUsers = [];
+          }
+        }
+
+        return res.send(stats);
+      },
+    );
   },
   { name: PATH },
 );

@@ -5,7 +5,8 @@ import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiServerImportV4 = {
   imported: {
@@ -22,23 +23,23 @@ export type ApiServerImportV4 = {
   };
 };
 
-type Body = {
-  export4: Export4;
-
-  config: {
-    settings: boolean;
-    mergeCurrentUser: string | null;
-  };
-};
-
 const logger = log('api').c('server').c('import').c('v4');
 
 export const PATH = '/api/server/import/v4';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.post<{ Body: Body }>(
+export default typedPlugin(
+  async (server) => {
+    server.post(
       PATH,
       {
+        schema: {
+          body: z.object({
+            export4: z.custom<Export4>(),
+            config: z.object({
+              settings: z.boolean().optional().default(false),
+              mergeCurrentUser: z.string().nullable().optional().default(null),
+            }),
+          }),
+        },
         preHandler: [userMiddleware, administratorMiddleware],
         // 24gb, just in case
         bodyLimit: 24 * 1024 * 1024 * 1024,
@@ -523,8 +524,6 @@ export default fastifyPlugin(
         return res.send(response);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

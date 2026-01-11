@@ -5,21 +5,12 @@ import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
 import { Role } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiUserFilesTransactionResponse = {
   count: number;
   name?: string;
-};
-
-type Body = {
-  files: string[];
-
-  favorite?: boolean;
-
-  folder?: string;
-
-  delete_datasourceFiles?: boolean;
 };
 
 const logger = log('api').c('user').c('files').c('transaction');
@@ -42,15 +33,23 @@ function checkInteraction(
 }
 
 export const PATH = '/api/user/files/transaction';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.patch<{ Body: Body }>(
+export default typedPlugin(
+  async (server) => {
+    server.patch(
       PATH,
-      { preHandler: [userMiddleware], ...secondlyRatelimit(2) },
+      {
+        schema: {
+          body: z.object({
+            files: z.array(z.string()).min(1),
+            favorite: z.boolean().optional(),
+            folder: z.string().optional(),
+          }),
+        },
+        preHandler: [userMiddleware],
+        ...secondlyRatelimit(2),
+      },
       async (req, res) => {
         const { files, favorite, folder } = req.body;
-
-        if (!files || !files.length) return res.badRequest('Cannot process transaction without files');
 
         if (typeof favorite === 'boolean') {
           const toFavoriteFiles = await prisma.file.findMany({
@@ -127,13 +126,20 @@ export default fastifyPlugin(
       },
     );
 
-    server.delete<{ Body: Body }>(
+    server.delete(
       PATH,
-      { preHandler: [userMiddleware], ...secondlyRatelimit(2) },
+      {
+        schema: {
+          body: z.object({
+            files: z.array(z.string()).min(1),
+            delete_datasourceFiles: z.boolean().optional(),
+          }),
+        },
+        preHandler: [userMiddleware],
+        ...secondlyRatelimit(2),
+      },
       async (req, res) => {
         const { files } = req.body;
-
-        if (!files || !files.length) return res.badRequest('Cannot process transaction without files');
 
         const { delete_datasourceFiles } = req.body;
 
@@ -186,8 +192,6 @@ export default fastifyPlugin(
         return res.send(resp);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

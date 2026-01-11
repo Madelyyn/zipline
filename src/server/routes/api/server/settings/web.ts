@@ -2,7 +2,7 @@ import { config } from '@/lib/config';
 import { safeConfig } from '@/lib/config/safe';
 import { log } from '@/lib/logger';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -17,8 +17,8 @@ const codeJsonPath = join(process.cwd(), 'code.json');
 let codeMap: ApiServerSettingsWebResponse['codeMap'] = [];
 
 export const PATH = '/api/server/settings/web';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (_, res) => {
       const webConfig = safeConfig(config);
 
@@ -37,8 +37,6 @@ export default fastifyPlugin(
         codeMap: codeMap,
       } satisfies ApiServerSettingsWebResponse);
     });
-
-    done();
   },
   { name: PATH },
 );

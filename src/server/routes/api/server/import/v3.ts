@@ -5,7 +5,8 @@ import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiServerImportV3 = {
   users: Record<string, string>;
@@ -14,23 +15,22 @@ export type ApiServerImportV3 = {
   urls: Record<string, string>;
   settings: string[];
 };
-
-type Body = {
-  export3: Export3;
-
-  importFromUser?: string;
-};
-
 const parseDate = (date: string) => (isNaN(Date.parse(date)) ? new Date() : new Date(date));
 
 const logger = log('api').c('server').c('import').c('v3');
 
 export const PATH = '/api/server/import/v3';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.post<{ Body: Body }>(
+export default typedPlugin(
+  async (server) => {
+    server.post(
       PATH,
       {
+        schema: {
+          body: z.object({
+            export3: z.custom<Export3>(),
+            importFromUser: z.string().optional(),
+          }),
+        },
         preHandler: [userMiddleware, administratorMiddleware],
         // 24gb, just in case
         bodyLimit: 24 * 1024 * 1024 * 1024,
@@ -303,8 +303,6 @@ export default fastifyPlugin(
         });
       },
     );
-
-    done();
   },
   { name: PATH },
 );

@@ -3,7 +3,7 @@ import { secondlyRatelimit } from '@/lib/ratelimits';
 import { clearZeros, clearZerosFiles } from '@/lib/server-util/clearZeros';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 export type ApiServerClearZerosResponse = {
   status?: string;
@@ -13,8 +13,8 @@ export type ApiServerClearZerosResponse = {
 const logger = log('api').c('server').c('clear_zeros');
 
 export const PATH = '/api/server/clear_zeros';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(
       PATH,
       {
@@ -46,8 +46,6 @@ export default fastifyPlugin(
         return res.send({ status });
       },
     );
-
-    done();
   },
   { name: PATH },
 );

@@ -1,25 +1,30 @@
-import { Prisma } from '@/prisma/client';
 import { prisma } from '@/lib/db';
 import { Invite, inviteInviterSelect } from '@/lib/db/models/invite';
 import { log } from '@/lib/logger';
+import { Prisma } from '@/prisma/client';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiAuthInvitesIdResponse = Invite;
-
-type Params = {
-  id: string;
-};
-
 const logger = log('api').c('auth').c('invites').c('[id]');
 
+const paramsSchema = z.object({
+  id: z.string(),
+});
+
 export const PATH = '/api/auth/invites/:id';
-export default fastifyPlugin(
-  (server, _, done) => {
-    server.get<{ Params: Params }>(
+export default typedPlugin(
+  async (server) => {
+    server.get(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      {
+        schema: {
+          params: paramsSchema,
+        },
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
       async (req, res) => {
         const { id } = req.params;
 
@@ -37,9 +42,14 @@ export default fastifyPlugin(
       },
     );
 
-    server.delete<{ Params: Params }>(
+    server.delete(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      {
+        schema: {
+          params: paramsSchema,
+        },
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
       async (req, res) => {
         const { id } = req.params;
 
@@ -69,8 +79,6 @@ export default fastifyPlugin(
         }
       },
     );
-
-    done();
   },
   { name: PATH },
 );

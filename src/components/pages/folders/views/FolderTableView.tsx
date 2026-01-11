@@ -3,10 +3,6 @@ import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { ActionIcon, Anchor, Box, Checkbox, Group, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
-import { DataTable, DataTableSortStatus } from 'mantine-datatable';
-import { useEffect, useState } from 'react';
-import useSWR from 'swr';
-import { copyFolderUrl, deleteFolder, editFolderVisibility, editFolderUploads } from '../actions';
 import {
   IconCopy,
   IconFiles,
@@ -18,8 +14,12 @@ import {
   IconTrashFilled,
   IconZip,
 } from '@tabler/icons-react';
-import ViewFilesModal from '../ViewFilesModal';
+import { DataTable, DataTableSortStatus } from 'mantine-datatable';
+import { useMemo, useState } from 'react';
+import useSWR from 'swr';
+import { copyFolderUrl, deleteFolder, editFolderUploads, editFolderVisibility } from '../actions';
 import EditFolderNameModal from '../EditFolderNameModal';
+import ViewFilesModal from '../ViewFilesModal';
 
 export default function FolderTableView() {
   const clipboard = useClipboard();
@@ -30,28 +30,23 @@ export default function FolderTableView() {
     columnAccessor: 'createdAt',
     direction: 'desc',
   });
-  const [sorted, setSorted] = useState<Folder[]>(data ?? []);
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
-
   const [editNameOpen, setEditNameOpen] = useState<Folder | null>(null);
 
-  useEffect(() => {
-    if (data) {
-      const sorted = data.sort((a, b) => {
-        const cl = sortStatus.columnAccessor as keyof Folder;
+  const sorted = useMemo<Folder[]>(() => {
+    if (!data) return [];
 
-        return sortStatus.direction === 'asc' ? (a[cl]! > b[cl]! ? 1 : -1) : a[cl]! < b[cl]! ? 1 : -1;
-      });
+    const { columnAccessor, direction } = sortStatus;
+    const key = columnAccessor as keyof Folder;
 
-      setSorted(sorted);
-    }
-  }, [sortStatus]);
+    return [...data].sort((a, b) => {
+      const av = a[key]!;
+      const bv = b[key]!;
 
-  useEffect(() => {
-    if (data) {
-      setSorted(data);
-    }
-  }, [data]);
+      if (av === bv) return 0;
+      return direction === 'asc' ? (av > bv ? 1 : -1) : av < bv ? 1 : -1;
+    });
+  }, [data, sortStatus]);
 
   return (
     <>

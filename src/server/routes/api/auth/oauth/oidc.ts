@@ -5,7 +5,7 @@ import Logger from '@/lib/logger';
 import enabled from '@/lib/oauth/enabled';
 import { oidcAuth } from '@/lib/oauth/providerUtil';
 import { OAuthQuery, OAuthResponse } from '@/server/plugins/oauth';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 async function oidcOauth({ code, host, state }: OAuthQuery, logger: Logger): Promise<OAuthResponse> {
   if (!config.features.oauthRegistration)
@@ -88,13 +88,11 @@ async function oidcOauth({ code, host, state }: OAuthQuery, logger: Logger): Pro
 }
 
 export const PATH = '/api/auth/oauth/oidc';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, async (req, res) => {
       return req.oauthHandle(res, 'OIDC', oidcOauth);
     });
-
-    done();
   },
   { name: PATH },
 );

@@ -22,7 +22,6 @@ export default function PasskeyButton() {
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [namerShown, setNamerShown] = useState(false);
   const [savedKey, setSavedKey] = useState<RegistrationResponseJSON | null>(null);
-  const [options, setOptions] = useState<PublicKeyCredentialCreationOptionsJSON | null>(null);
   const [name, setName] = useState('');
 
   const handleRegisterPasskey = async () => {
@@ -36,7 +35,6 @@ export default function PasskeyButton() {
       const res = await startRegistration({ optionsJSON: data! });
       setNamerShown(true);
       setSavedKey(res);
-      setOptions(data);
     } catch (e: any) {
       setPasskeyError(e.message ?? 'An error occurred while creating a passkey');
       setPasskeyLoading(false);

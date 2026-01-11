@@ -6,6 +6,7 @@ import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { TimedCache } from '@/lib/timedCache';
 import { getSession, saveSession } from '@/server/session';
+import typedPlugin from '@/server/typedPlugin';
 import { JsonObject } from '@prisma/client/runtime/client';
 import { AuthenticationResponseJSON } from '@simplewebauthn/browser';
 import {
@@ -13,7 +14,7 @@ import {
   PublicKeyCredentialRequestOptionsJSON,
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
-import fastifyPlugin from 'fastify-plugin';
+import z from 'zod';
 import { PasskeyReg, passkeysEnabledHandler } from '../user/mfa/passkey';
 
 export type ApiAuthWebauthnResponse = {
@@ -25,17 +26,13 @@ export type ApiAuthWebauthnOptionsResponse = {
   options: PublicKeyCredentialRequestOptionsJSON;
 };
 
-type Body = {
-  response: AuthenticationResponseJSON;
-};
-
 const logger = log('api').c('auth').c('webauthn');
 
 const OPTIONS_CACHE = new TimedCache<string, PublicKeyCredentialRequestOptionsJSON>(2 * 60_000);
 
 export const PATH = '/api/auth/webauthn';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(
       PATH + '/options',
       { preHandler: [passkeysEnabledHandler], ...secondlyRatelimit(20) },
@@ -70,9 +67,17 @@ export default fastifyPlugin(
       },
     );
 
-    server.post<{ Body: Body }>(
+    server.post(
       PATH,
-      { preHandler: [passkeysEnabledHandler], ...secondlyRatelimit(10) },
+      {
+        schema: {
+          body: z.object({
+            response: z.custom<AuthenticationResponseJSON>(),
+          }),
+        },
+        preHandler: [passkeysEnabledHandler],
+        ...secondlyRatelimit(10),
+      },
       async (req, res) => {
         const session = await getSession(req, res);
 
@@ -181,8 +186,6 @@ export default fastifyPlugin(
         });
       },
     );
-
-    done();
   },
   { name: PATH },
 );

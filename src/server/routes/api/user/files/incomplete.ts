@@ -3,19 +3,16 @@ import { IncompleteFile } from '@/lib/db/models/incompleteFile';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiUserFilesIncompleteResponse = IncompleteFile[] | { count: number };
-
-type Body = {
-  id: string[];
-};
 
 const logger = log('api').c('user').c('files').c('incomplete');
 
 export const PATH = '/api/user/files/incomplete';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const incompleteFiles = await prisma.incompleteFile.findMany({
         where: {
@@ -26,9 +23,17 @@ export default fastifyPlugin(
       return res.send(incompleteFiles);
     });
 
-    server.delete<{ Body: Body }>(
+    server.delete(
       PATH,
-      { preHandler: [userMiddleware], ...secondlyRatelimit(1) },
+      {
+        schema: {
+          body: z.object({
+            id: z.array(z.string()),
+          }),
+        },
+        preHandler: [userMiddleware],
+        ...secondlyRatelimit(1),
+      },
       async (req, res) => {
         if (!req.body.id) return res.badRequest('no id array provided');
 
@@ -57,8 +62,6 @@ export default fastifyPlugin(
         return res.send(incompleteFiles);
       },
     );
-
-    done();
   },
   { name: PATH },
 );

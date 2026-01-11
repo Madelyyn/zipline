@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { User } from '@/lib/db/models/user';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 export type ApiUserTokenResponse = {
   user?: User;
@@ -9,8 +9,8 @@ export type ApiUserTokenResponse = {
 };
 
 export const PATH = '/api/user/avatar';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const u = await prisma.user.findFirstOrThrow({
         where: {
@@ -25,8 +25,6 @@ export default fastifyPlugin(
 
       return res.send(u.avatar);
     });
-
-    done();
   },
   { name: PATH },
 );

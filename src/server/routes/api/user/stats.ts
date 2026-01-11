@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
+import typedPlugin from '@/server/typedPlugin';
 
 export type ApiUserStatsResponse = {
   filesUploaded: number;
@@ -16,8 +16,8 @@ export type ApiUserStatsResponse = {
 };
 
 export const PATH = '/api/user/stats';
-export default fastifyPlugin(
-  (server, _, done) => {
+export default typedPlugin(
+  async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const aggFile = await prisma.file.aggregate({
         where: {
@@ -90,8 +90,6 @@ export default fastifyPlugin(
         sortTypeCount,
       });
     });
-
-    done();
   },
   { name: PATH },
 );

@@ -27,6 +27,7 @@ import {
   IconDeviceFloppy,
   IconFileX,
 } from '@tabler/icons-react';
+import { useEffect } from 'react';
 import { mutate } from 'swr';
 import { useShallow } from 'zustand/shallow';
 
@@ -93,6 +94,24 @@ export default function SettingsFileView() {
       icon: <IconCheck size='1rem' />,
     });
   };
+
+  useEffect(() => {
+    if (user) {
+      form.setValues({
+        enabled: user.view.enabled || false,
+        content: user.view.content || '',
+        embed: user.view.embed || false,
+        embedTitle: user.view.embedTitle || '',
+        embedDescription: user.view.embedDescription || '',
+        embedSiteName: user.view.embedSiteName || '',
+        embedColor: user.view.embedColor || '',
+        align: user.view.align || 'left',
+        showMimetype: user.view.showMimetype || false,
+        showTags: user.view.showTags || false,
+        showFolder: user.view.showFolder || false,
+      });
+    }
+  }, [user]);
 
   return (
     <Paper withBorder p='sm'>
