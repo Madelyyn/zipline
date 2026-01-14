@@ -17,3 +17,7 @@ export function zValidatePath(val: string | undefined, ctx: z.RefinementCtx) {
 
   return sanitized;
 }
+
+export const zStringTrimmed = z.string().trim().min(1);
+
+export const zQsBoolean = z.enum(['true', 'false']).transform((val) => val === 'true');

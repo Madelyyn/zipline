@@ -27,6 +27,11 @@ export default typedPlugin(
         },
       });
 
+      if (!user || !user.token) {
+        logger.warn('something went very wrong! user not found or token not found', { userId: req.user.id });
+        return res.internalServerError();
+      }
+
       const token = encryptToken(user!.token, config.core.secret);
 
       return res.send({

@@ -1,6 +1,6 @@
 import { createToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { Export4, validateExport } from '@/lib/import/version4/validateExport';
+import { export4Schema } from '@/lib/import/version4/validateExport';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { administratorMiddleware } from '@/server/middleware/administrator';
@@ -33,7 +33,7 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            export4: z.custom<Export4>(),
+            export4: export4Schema.required(),
             config: z.object({
               settings: z.boolean().optional().default(false),
               mergeCurrentUser: z.string().nullable().optional().default(null),
@@ -49,18 +49,6 @@ export default typedPlugin(
         if (req.user.role !== 'SUPERADMIN') return res.forbidden('not super admin');
 
         const { export4, config: importConfig } = req.body;
-        if (!export4) return res.badRequest('missing export4 in request body');
-
-        const validated = validateExport(export4);
-        if (!validated.success) {
-          logger.error('Failed to validate import data', { error: validated.error });
-
-          return res.status(400).send({
-            error: 'Failed to validate import data',
-            statusCode: 400,
-            details: validated.error.issues,
-          });
-        }
 
         // users
         const importedUsers: Record<string, string> = {};

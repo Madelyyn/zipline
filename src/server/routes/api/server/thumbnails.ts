@@ -19,7 +19,7 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            rerun: z.boolean().optional(),
+            rerun: z.boolean().default(false),
           }),
         },
         preHandler: [userMiddleware, administratorMiddleware],
@@ -31,7 +31,7 @@ export default typedPlugin(
 
         thumbnailTask.logger.debug('manually running thumbnails task');
 
-        await server.tasks.runJob(thumbnailTask.id, !!req.body.rerun);
+        await server.tasks.runJob(thumbnailTask.id, req.body.rerun);
 
         logger.info('thumbnails task manually run', {
           requester: req.user.username,

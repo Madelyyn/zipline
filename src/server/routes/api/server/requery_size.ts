@@ -20,8 +20,8 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            forceDelete: z.boolean().default(false).optional(),
-            forceUpdate: z.boolean().default(false).optional(),
+            forceDelete: z.boolean().default(false),
+            forceUpdate: z.boolean().default(false),
           }),
         },
         preHandler: [userMiddleware, administratorMiddleware],

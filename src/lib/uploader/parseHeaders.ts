@@ -120,7 +120,9 @@ export function humanTime(string: StringValue | string): Date | null {
 
 export function parseExpiry(header: string): Date | null {
   if (!header) return null;
-  header = header.toLowerCase();
+  header = header.trim().toLowerCase();
+
+  if (header === 'never') return null;
 
   if (header.startsWith('date=')) {
     const date = new Date(header.substring(5));

@@ -20,7 +20,7 @@ export default typedPlugin(
       {
         schema: {
           querystring: z.object({
-            noincl: z.coerce.boolean().optional(),
+            noincl: z.string().optional(),
             user: z.string().optional(),
           }),
         },

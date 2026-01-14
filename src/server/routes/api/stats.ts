@@ -2,6 +2,7 @@ import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { Metric } from '@/lib/db/models/metric';
 import { isAdministrator } from '@/lib/role';
+import { zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -32,7 +33,7 @@ export default typedPlugin(
                 const date = new Date(val);
                 return !isNaN(date.getTime());
               }, 'Invalid date'),
-            all: z.enum(['true', 'false']).default('false'),
+            all: zQsBoolean,
           }),
         },
         preHandler: [userMiddleware],
@@ -55,7 +56,7 @@ export default typedPlugin(
 
         const stats = await prisma.metric.findMany({
           where: {
-            ...(all === 'false' && {
+            ...(!all && {
               createdAt: {
                 gte: fromDate,
                 lte: toDate,

@@ -158,7 +158,7 @@ export default typedPlugin(
         schema: {
           params: paramsSchema,
           body: z.object({
-            delete: z.boolean().optional(),
+            delete: z.boolean().optional().describe('delete everything associated with the user'),
           }),
         },
         preHandler: [userMiddleware, administratorMiddleware],

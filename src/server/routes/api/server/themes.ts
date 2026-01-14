@@ -12,7 +12,7 @@ export type ApiServerThemesResponse = {
 export const PATH = '/api/server/themes';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, async (req, res) => {
+    server.get(PATH, async (_, res) => {
       const themes = await readThemes();
 
       return res.send({ themes, defaultTheme: config.website.theme });

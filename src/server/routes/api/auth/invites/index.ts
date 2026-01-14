@@ -22,7 +22,10 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            expiresAt: z.string().or(z.literal('never')),
+            expiresAt: z
+              .string()
+              .or(z.literal('never'))
+              .transform((val) => parseExpiry(val)),
             maxUses: z.number().min(1).optional(),
           }),
         },
@@ -32,14 +35,10 @@ export default typedPlugin(
       async (req, res) => {
         const { expiresAt, maxUses } = req.body;
 
-        let expires = null;
-
-        if (expiresAt !== 'never') expires = parseExpiry(expiresAt);
-
         const invite = await prisma.invite.create({
           data: {
             code: randomCharacters(config.invites.length),
-            expiresAt: expires,
+            expiresAt,
             maxUses: maxUses ?? null,
             inviterId: req.user.id,
           },

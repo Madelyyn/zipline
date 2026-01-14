@@ -35,7 +35,10 @@ export default typedPlugin(
           }),
           headers: z.object({
             'x-zipline-max-views': z.coerce.number().min(1).optional(),
-            'x-zipline-no-json': z.coerce.boolean().optional(),
+            'x-zipline-no-json': z
+              .enum(['false', 'true'])
+              .transform((val) => val.toLowerCase() === 'true')
+              .optional(),
             'x-zipline-domain': z.string().optional(),
             'x-zipline-password': z.string().optional(),
           }),

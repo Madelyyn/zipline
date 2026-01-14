@@ -35,8 +35,6 @@ export default typedPlugin(
         ...secondlyRatelimit(1),
       },
       async (req, res) => {
-        if (!req.body.id) return res.badRequest('no id array provided');
-
         const existingFiles = await prisma.incompleteFile.findMany({
           where: {
             id: {

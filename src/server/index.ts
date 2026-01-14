@@ -104,7 +104,6 @@ async function main() {
       logger.debug('event emitter counts', { path: req.url, ...counts });
     });
   }
-
   server.setValidatorCompiler(validatorCompiler);
   server.setSerializerCompiler(serializerCompiler);
 
@@ -270,7 +269,8 @@ async function main() {
   server.decorate('tasks', tasks);
 
   if (process.env.ZIPLINE_OUTPUT_OPENAPI === 'true') {
-    server.ready(async () => {
+    server.ready(async (a) => {
+      console.log(a);
       const openapi = server.swagger();
       await writeFile('./openapi.json', JSON.stringify(openapi, null, 2), 'utf8');
 

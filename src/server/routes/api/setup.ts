@@ -4,6 +4,7 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { getZipline } from '@/lib/db/models/zipline';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { zStringTrimmed } from '@/lib/validation';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
@@ -29,8 +30,8 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            username: z.string().min(1),
-            password: z.string().min(1),
+            username: zStringTrimmed,
+            password: zStringTrimmed,
           }),
         },
         ...secondlyRatelimit(5),

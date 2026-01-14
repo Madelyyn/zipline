@@ -16,7 +16,12 @@ export default typedPlugin(
   async (server) => {
     server.get(
       PATH,
-      { schema: { querystring: z.object({ code: z.string().optional() }) }, ...secondlyRatelimit(10) },
+      {
+        schema: {
+          querystring: z.object({ code: z.string().optional() }),
+        },
+        ...secondlyRatelimit(10),
+      },
       async (req, res) => {
         const { code } = req.query;
 

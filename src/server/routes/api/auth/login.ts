@@ -4,6 +4,7 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { verifyTotpCode } from '@/lib/totp';
+import { zStringTrimmed } from '@/lib/validation';
 import { getSession, saveSession } from '@/server/session';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -23,8 +24,8 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            username: z.string().min(1),
-            password: z.string().min(1),
+            username: zStringTrimmed,
+            password: zStringTrimmed,
             code: z.string().min(1).optional(),
           }),
         },

@@ -56,7 +56,13 @@ export default typedPlugin(
         const resp = await fetch(url);
 
         if (!resp.ok) {
-          return res.internalServerError('failed to fetch version details: ' + (await resp.text()));
+          logger.error('failed to fetch version details', {
+            status: resp.status,
+            statusText: resp.statusText,
+            text: await resp.text(),
+          });
+
+          return res.internalServerError('failed to fetch version details');
         }
 
         const data: VersionAPI = await resp.json();
@@ -71,7 +77,7 @@ export default typedPlugin(
         });
       } catch (e) {
         logger.error('failed to fetch version details').error(e as Error);
-        return res.internalServerError('failed to fetch version details: ' + (e as Error).message);
+        return res.internalServerError('failed to fetch version details');
       }
     });
   },

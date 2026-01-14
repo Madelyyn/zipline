@@ -16,6 +16,7 @@ export type ApiUserStatsResponse = {
 };
 
 export const PATH = '/api/user/stats';
+
 export default typedPlugin(
   async (server) => {
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {

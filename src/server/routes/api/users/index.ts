@@ -5,6 +5,7 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
+import { zQsBoolean } from '@/lib/validation';
 import { Role } from '@/prisma/client';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
@@ -17,7 +18,7 @@ export type ApiUsersResponse = User[] | User;
 const logger = log('api').c('users');
 
 const querySchema = z.object({
-  noincl: z.coerce.boolean().default(false),
+  noincl: zQsBoolean,
 });
 
 export const PATH = '/api/users';
