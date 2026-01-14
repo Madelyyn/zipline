@@ -140,6 +140,7 @@ export default typedPlugin(
             tasksMaxViewsInterval: zMs,
             tasksThumbnailsInterval: zMs,
             tasksMetricsInterval: zMs,
+            tasksCleanThumbnailsInterval: zMs,
 
             filesRoute: z
               .string()

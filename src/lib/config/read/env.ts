@@ -54,6 +54,7 @@ export const ENVS = [
   env('tasks.maxViewsInterval', 'TASKS_MAX_VIEWS_INTERVAL', 'string', true),
   env('tasks.thumbnailsInterval', 'TASKS_THUMBNAILS_INTERVAL', 'string', true),
   env('tasks.metricsInterval', 'TASKS_METRICS_INTERVAL', 'string', true),
+  env('tasks.cleanThumbnailsInterval', 'TASKS_CLEAN_THUMBNAILS_INTERVAL', 'string', true),
 
   env('files.route', 'FILES_ROUTE', 'string', true),
   env('files.length', 'FILES_LENGTH', 'number', true),

@@ -109,6 +109,7 @@ export const schema = z.object({
     maxViewsInterval: z.string().default('30min'),
     thumbnailsInterval: z.string().default('30min'),
     metricsInterval: z.string().default('30min'),
+    cleanThumbnailsInterval: z.string().default('1d'),
   }),
   files: z.object({
     route: z.string().startsWith('/').min(1).trim().toLowerCase().default('/u'),

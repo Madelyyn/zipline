@@ -33,6 +33,7 @@ export const rawConfig: any = {
     maxViewsInterval: undefined,
     thumbnailsInterval: undefined,
     metricsInterval: undefined,
+    cleanThumbnailsInterval: undefined,
   },
   files: {
     route: undefined,

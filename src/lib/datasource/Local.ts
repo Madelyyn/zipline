@@ -2,7 +2,7 @@ import { createReadStream, existsSync } from 'fs';
 import { access, constants, copyFile, readdir, rename, rm, stat, writeFile } from 'fs/promises';
 import { join, resolve, sep } from 'path';
 import { Readable } from 'stream';
-import { Datasource, PutOptions } from './Datasource';
+import { Datasource, ListOptions, PutOptions } from './Datasource';
 
 async function existsAndCanRW(path: string): Promise<boolean> {
   try {
@@ -112,5 +112,11 @@ export class LocalDatasource extends Datasource {
       throw new Error(`Something went very wrong! File ${from} does not exist in local datasource.`);
 
     return rename(fromPath, toPath);
+  }
+
+  public async list(options: ListOptions = { prefix: '' }): Promise<string[]> {
+    const files = await readdir(this.dir, { withFileTypes: true });
+
+    return files.filter((f) => f.isFile() && f.name.startsWith(options.prefix || '')).map((f) => f.name);
   }
 }

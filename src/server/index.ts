@@ -19,6 +19,7 @@ import { fastifyMultipart } from '@fastify/multipart';
 import { fastifyRateLimit } from '@fastify/rate-limit';
 import { fastifySensible } from '@fastify/sensible';
 import { fastifyStatic } from '@fastify/static';
+import fastifySwagger from '@fastify/swagger';
 import fastify from 'fastify';
 import {
   hasZodFastifySchemaValidationErrors,
@@ -36,7 +37,7 @@ import vitePlugin from './plugins/vite';
 import loadRoutes from './routes';
 import { filesRoute } from './routes/files.dy';
 import { urlsRoute } from './routes/urls.dy';
-import fastifySwagger from '@fastify/swagger';
+import cleanThumbnails from '@/lib/tasks/run/cleanThumbnails';
 
 const MODE = process.env.NODE_ENV || 'production';
 const logger = log('server');
@@ -291,6 +292,7 @@ async function main() {
   tasks.interval('deletefiles', ms(config.tasks.deleteInterval as StringValue), deleteFiles(prisma));
   tasks.interval('maxviews', ms(config.tasks.maxViewsInterval as StringValue), maxViews(prisma));
   tasks.interval('clearinvites', ms(config.tasks.clearInvitesInterval as StringValue), clearInvites(prisma));
+  tasks.interval('cleanthumbnails', ms(config.tasks.cleanThumbnailsInterval as StringValue), cleanThumbnails(prisma));
 
   if (config.features.metrics)
     tasks.interval('metrics', ms(config.tasks.metricsInterval as StringValue), metrics(prisma));

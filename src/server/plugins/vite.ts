@@ -9,10 +9,12 @@ import fastifyStatic from '@fastify/static';
 import { renderHtml } from '@/lib/ssr/renderHtml';
 import { readThemes } from '@/lib/theme/file';
 import { ZIPLINE_SSR_INSERT, ZIPLINE_SSR_META } from '@/lib/ssr/constants';
+import { log } from '@/lib/logger';
 
 export const ALL_METHODS: HTTPMethods[] = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT'];
 
 const MODE = process.env.NODE_ENV || 'development';
+const logger = log('server').c('plugin').c('vite');
 
 async function vitePlugin(fastify: FastifyInstance) {
   fastify.decorateReply('ssr', ssrRoute);
@@ -29,7 +31,7 @@ async function vitePlugin(fastify: FastifyInstance) {
   } else {
     const vite = await createServer();
 
-    console.log('Vite server created in development mode');
+    logger.info('Vite initialized', { mode: MODE });
 
     fastify.decorate('vite', vite);
     fastify.addHook('preHandler', async (req, reply) => {
