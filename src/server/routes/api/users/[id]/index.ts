@@ -54,7 +54,7 @@ export default typedPlugin(
             role: z.enum(Role).optional(),
             quota: z
               .object({
-                filesType: z.enum(UserFilesQuota).and(z.literal('NONE')).optional(),
+                filesType: z.enum(['BY_BYTES', 'BY_FILES', 'NONE']).optional(),
                 maxFiles: z.number().min(1).optional(),
                 maxBytes: z.string().min(1).optional(),
                 maxUrls: z.number().min(1).optional(),
