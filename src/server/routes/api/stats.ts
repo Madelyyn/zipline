@@ -33,7 +33,7 @@ export default typedPlugin(
                 const date = new Date(val);
                 return !isNaN(date.getTime());
               }, 'Invalid date'),
-            all: zQsBoolean,
+            all: zQsBoolean.default(false),
           }),
         },
         preHandler: [userMiddleware],
