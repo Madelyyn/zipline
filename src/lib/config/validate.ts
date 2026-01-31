@@ -353,18 +353,6 @@ export const schema = z.object({
     onUpload: z.url().nullable().default(null),
     onShorten: z.url().nullable().default(null),
   }),
-  ssl: z.object({
-    key: z
-      .string()
-      .transform((s) => resolve(s))
-      .nullable()
-      .default(null),
-    cert: z
-      .string()
-      .transform((s) => resolve(s))
-      .nullable()
-      .default(null),
-  }),
   pwa: z.object({
     enabled: z.boolean().default(true),
     title: z.string().default('Zipline'),

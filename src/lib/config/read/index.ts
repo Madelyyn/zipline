@@ -138,10 +138,6 @@ export const rawConfig: any = {
     onUpload: undefined,
     onShorten: undefined,
   },
-  ssl: {
-    key: undefined,
-    cert: undefined,
-  },
   pwa: {
     enabled: undefined,
     title: undefined,

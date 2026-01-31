@@ -36,9 +36,6 @@ export const ENVS = [
 
   env('datasource.local.directory', 'DATASOURCE_LOCAL_DIRECTORY', 'string'),
 
-  env('ssl.key', 'SSL_KEY', 'string'),
-  env('ssl.cert', 'SSL_CERT', 'string'),
-
   // database stuff
   env('core.trustProxy', 'CORE_TRUST_PROXY', 'boolean', true),
   env('core.returnHttpsUrls', 'CORE_RETURN_HTTPS_URLS', 'boolean', true),

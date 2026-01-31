@@ -78,17 +78,10 @@ async function main() {
   logger.debug('creating server', {
     port: config.core.port,
     hostname: config.core.hostname,
-    ssl: notNull(config.ssl.key, config.ssl.cert),
     trustProxy: config.core.trustProxy,
   });
 
   const server = fastify({
-    https: notNull(config.ssl.key, config.ssl.cert)
-      ? {
-          key: await readFile(config.ssl.key!, 'utf8'),
-          cert: await readFile(config.ssl.cert!, 'utf8'),
-        }
-      : null,
     trustProxy: config.core.trustProxy,
   }).withTypeProvider<ZodTypeProvider>();
 
