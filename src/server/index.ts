@@ -5,7 +5,6 @@ import { getDatasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { runMigrations } from '@/lib/db/migration';
 import { log } from '@/lib/logger';
-import { notNull } from '@/lib/primitive';
 import { isAdministrator } from '@/lib/role';
 import { Tasks } from '@/lib/tasks';
 import clearInvites from '@/lib/tasks/run/clearInvites';
@@ -28,7 +27,7 @@ import {
   validatorCompiler,
   ZodTypeProvider,
 } from 'fastify-type-provider-zod';
-import { appendFile, mkdir, readFile, writeFile } from 'fs/promises';
+import { appendFile, mkdir, writeFile } from 'fs/promises';
 import ms, { StringValue } from 'ms';
 import { version } from '../../package.json';
 import { checkRateLimit } from './plugins/checkRateLimit';
