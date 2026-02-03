@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
+import { zStringTrimmed } from '@/lib/validation';
 import { Role, UserFilesQuota } from '@/prisma/client';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
@@ -48,16 +49,16 @@ export default typedPlugin(
         schema: {
           params: paramsSchema,
           body: z.object({
-            username: z.string().min(1).optional(),
-            password: z.string().min(1).optional(),
+            username: zStringTrimmed.optional(),
+            password: zStringTrimmed.optional(),
             avatar: z.url().optional(),
             role: z.enum(Role).optional(),
             quota: z
               .object({
                 filesType: z.enum(['BY_BYTES', 'BY_FILES', 'NONE']).optional(),
-                maxFiles: z.number().min(1).optional().nullable(),
-                maxBytes: z.string().min(1).optional().nullable(),
-                maxUrls: z.number().min(1).optional().nullable(),
+                maxFiles: z.number().min(1).nullish(),
+                maxBytes: z.string().min(1).nullish(),
+                maxUrls: z.number().min(1).nullish(),
               })
               .optional(),
           }),
@@ -158,7 +159,7 @@ export default typedPlugin(
         schema: {
           params: paramsSchema,
           body: z.object({
-            delete: z.boolean().optional().describe('delete everything associated with the user'),
+            delete: z.boolean().optional(),
           }),
         },
         preHandler: [userMiddleware, administratorMiddleware],

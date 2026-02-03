@@ -5,6 +5,7 @@ import { log } from '@/lib/logger';
 import { isTruthy } from '@/lib/primitive';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { TimedCache } from '@/lib/timedCache';
+import { zStringTrimmed } from '@/lib/validation';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
@@ -109,7 +110,7 @@ export default typedPlugin(
         schema: {
           body: z.object({
             response: z.custom<RegistrationResponseJSON>(),
-            name: z.string().trim().min(1),
+            name: zStringTrimmed,
           }),
         },
         preHandler: [userMiddleware, passkeysEnabledHandler],

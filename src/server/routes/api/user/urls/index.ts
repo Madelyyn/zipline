@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { cleanUrlPasswords, Url } from '@/lib/db/models/url';
 import { log } from '@/lib/logger';
 import { randomCharacters } from '@/lib/random';
+import { zStringTrimmed } from '@/lib/validation';
 import { onShorten } from '@/lib/webhooks';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
@@ -29,7 +30,7 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            vanity: z.string().min(1).max(100).optional(),
+            vanity: zStringTrimmed.max(100).nullish(),
             destination: z.string().min(1),
             enabled: z.boolean().optional(),
           }),

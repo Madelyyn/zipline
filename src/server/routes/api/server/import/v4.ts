@@ -36,7 +36,7 @@ export default typedPlugin(
             export4: export4Schema.required(),
             config: z.object({
               settings: z.boolean().optional().default(false),
-              mergeCurrentUser: z.string().nullable().optional().default(null),
+              mergeCurrentUser: z.string().nullish().default(null),
             }),
           }),
         },

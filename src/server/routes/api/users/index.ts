@@ -5,7 +5,7 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
-import { zQsBoolean } from '@/lib/validation';
+import { zQsBoolean, zStringTrimmed } from '@/lib/validation';
 import { Role } from '@/prisma/client';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
@@ -53,8 +53,8 @@ export default typedPlugin(
         schema: {
           querystring: querySchema,
           body: z.object({
-            username: z.string().min(1),
-            password: z.string().min(1),
+            username: zStringTrimmed,
+            password: zStringTrimmed,
             avatar: z.string().optional(),
             role: z.enum(Role).default('USER').optional(),
           }),
@@ -64,6 +64,13 @@ export default typedPlugin(
       },
       async (req, res) => {
         const { username, password, avatar, role } = req.body;
+
+        const existing = await prisma.user.findUnique({
+          where: {
+            username,
+          },
+        });
+        if (existing) return res.badRequest('a user with this username already exists');
 
         let avatar64 = null;
 

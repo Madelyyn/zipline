@@ -2,6 +2,7 @@ import { hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { Url } from '@/lib/db/models/url';
 import { log } from '@/lib/logger';
+import { zStringTrimmed } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -47,9 +48,9 @@ export default typedPlugin(
         schema: {
           params: paramsSchema,
           body: z.object({
-            password: z.string().optional().nullable(),
-            vanity: z.string().min(1).optional(),
-            maxViews: z.number().min(0).optional().nullable(),
+            password: z.string().nullish(),
+            vanity: zStringTrimmed.nullish(),
+            maxViews: z.number().min(0).nullish(),
             destination: z.httpUrl().optional(),
             enabled: z.boolean().optional(),
           }),

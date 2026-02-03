@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { sanitizeFilename } from '@/lib/fs';
 import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
+import { zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -24,7 +25,7 @@ export default typedPlugin(
           }),
           querystring: z.object({
             pw: z.string().optional(),
-            download: z.string().optional(),
+            download: zQsBoolean.optional(),
           }),
         },
         preHandler: [userMiddleware],

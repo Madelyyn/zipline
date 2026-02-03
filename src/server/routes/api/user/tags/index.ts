@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { Tag, tagSelect } from '@/lib/db/models/tag';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { zStringTrimmed } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -29,7 +30,7 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            name: z.string().min(1),
+            name: zStringTrimmed,
             color: z.string().regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/),
           }),
         },

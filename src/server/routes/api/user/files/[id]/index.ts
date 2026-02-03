@@ -45,7 +45,7 @@ export default typedPlugin(
           body: z.object({
             favorite: z.boolean().optional(),
             maxViews: z.number().min(0).optional(),
-            password: z.string().optional().nullable(),
+            password: z.string().nullish(),
             originalName: z.string().trim().min(1).optional().transform(zValidatePath),
             type: z.string().min(1).optional(),
             tags: z.array(z.string()).optional(),

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { zStringTrimmed } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import { getSession, saveSession } from '@/server/session';
 import typedPlugin from '@/server/typedPlugin';
@@ -26,17 +27,17 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            username: z.string().min(1).optional(),
-            password: z.string().min(1).optional(),
-            avatar: z.string().nullable().optional(),
+            username: zStringTrimmed.optional(),
+            password: zStringTrimmed.optional(),
+            avatar: z.string().nullish(),
             view: z
               .object({
-                content: z.string().optional().nullable(),
+                content: z.string().nullish(),
                 embed: z.boolean().optional(),
-                embedTitle: z.string().optional().nullable(),
-                embedDescription: z.string().optional().nullable(),
-                embedColor: z.string().optional().nullable(),
-                embedSiteName: z.string().optional().nullable(),
+                embedTitle: z.string().nullish(),
+                embedDescription: z.string().nullish(),
+                embedColor: z.string().nullish(),
+                embedSiteName: z.string().nullish(),
                 enabled: z.boolean().optional(),
                 align: z.enum(['left', 'center', 'right']).optional(),
                 showMimetype: z.boolean().optional(),

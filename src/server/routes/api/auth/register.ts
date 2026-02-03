@@ -8,6 +8,7 @@ import { getSession, saveSession } from '@/server/session';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 import { ApiLoginResponse } from './login';
+import { zStringTrimmed } from '@/lib/validation';
 
 export type ApiAuthRegisterResponse = ApiLoginResponse;
 
@@ -21,8 +22,8 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            username: z.string().min(1),
-            password: z.string().min(1),
+            username: zStringTrimmed,
+            password: zStringTrimmed,
             code: z.string().min(1).optional(),
           }),
         },

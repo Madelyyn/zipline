@@ -2,6 +2,7 @@ import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { zStringTrimmed } from '@/lib/validation';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
@@ -22,7 +23,7 @@ export default typedPlugin(
             id: z.string(),
           }),
           body: z.object({
-            password: z.string().min(1),
+            password: zStringTrimmed,
           }),
         },
         ...secondlyRatelimit(2),

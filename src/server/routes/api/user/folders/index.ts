@@ -4,6 +4,7 @@ import { Folder, cleanFolder, cleanFolders } from '@/lib/db/models/folder';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
+import { zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -20,7 +21,7 @@ export default typedPlugin(
       {
         schema: {
           querystring: z.object({
-            noincl: z.string().optional(),
+            noincl: zQsBoolean.optional(),
             user: z.string().optional(),
           }),
         },

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { File, cleanFiles, fileSelect } from '@/lib/db/models/file';
 import { canInteract } from '@/lib/role';
+import { zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -28,7 +29,7 @@ export default typedPlugin(
             page: z.coerce.number().optional(),
             perpage: z.coerce.number().default(15),
             filter: z.enum(['dashboard', 'none', 'all']).optional().default('none'),
-            favorite: z.enum(['true', 'false']).optional(),
+            favorite: zQsBoolean.default(false).optional(),
             sortBy: z
               .enum([
                 'id',
@@ -128,7 +129,7 @@ export default typedPlugin(
                   },
                 ],
               }),
-              ...(favorite === 'true' &&
+              ...(favorite &&
                 filter !== 'all' && {
                   favorite: true,
                 }),
@@ -198,7 +199,7 @@ export default typedPlugin(
               },
             ],
           }),
-          ...(favorite === 'true' &&
+          ...(favorite &&
             filter !== 'all' && {
               favorite: true,
             }),
