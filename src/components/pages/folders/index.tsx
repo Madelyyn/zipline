@@ -3,19 +3,47 @@ import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
 import { useViewStore } from '@/lib/store/view';
-import { Button, Group, Modal, Stack, Switch, TextInput, Title } from '@mantine/core';
+import {
+  ActionIcon,
+  Anchor,
+  Breadcrumbs,
+  Button,
+  Group,
+  Modal,
+  Stack,
+  Switch,
+  TextInput,
+  Title,
+  Tooltip,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { IconFolderPlus } from '@tabler/icons-react';
-import { useState } from 'react';
+import { IconFolderPlus, IconHome, IconPlus } from '@tabler/icons-react';
+import { useState, useCallback, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { mutate } from 'swr';
+import useSWR from 'swr';
 import FolderGridView from './views/FolderGridView';
 import FolderTableView from './views/FolderTableView';
 
 export default function DashboardFolders() {
   const view = useViewStore((state) => state.folders);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
+
+  const folderPath = useMemo(() => {
+    const pathname = location.pathname.replace('/dashboard/folders', '');
+    if (!pathname || pathname === '/') return [];
+    return pathname.split('/').filter(Boolean);
+  }, [location.pathname]);
+
+  const currentFolderId = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
+
+  const { data: currentFolder } = useSWR<Folder>(
+    currentFolderId ? `/api/user/folders/${currentFolderId}` : null,
+  );
 
   const form = useForm({
     initialValues: {
@@ -34,6 +62,7 @@ export default function DashboardFolders() {
       {
         name: values.name,
         isPublic: values.isPublic,
+        parentId: currentFolderId ?? undefined,
       },
     );
 
@@ -43,15 +72,61 @@ export default function DashboardFolders() {
         color: 'red',
       });
     } else {
-      mutate('/api/user/folders');
+      mutate((key: string) => key.startsWith('/api/user/folders'));
       setOpen(false);
       form.reset();
     }
   };
 
+  const navigateToFolder = useCallback(
+    (folderId: string | null) => {
+      if (folderId === null) {
+        navigate('/dashboard/folders');
+      } else {
+        const newPath = [...folderPath, folderId];
+        navigate(`/dashboard/folders/${newPath.join('/')}`);
+      }
+    },
+    [navigate, folderPath],
+  );
+
+  const buildBreadcrumbs = () => {
+    const items: { id: string | null; name: string; path: string }[] = [
+      { id: null, name: 'Root', path: '/dashboard/folders' },
+    ];
+
+    if (currentFolder) {
+      const path: Partial<Folder>[] = [];
+      let folder: Partial<Folder> | undefined | null = currentFolder;
+      while (folder) {
+        path.unshift(folder);
+        folder = folder.parent;
+      }
+
+      const folderIds: string[] = [];
+      for (const f of path) {
+        folderIds.push(f.id!);
+        items.push({
+          id: f.id!,
+          name: f.name!,
+          path: `/dashboard/folders/${folderIds.join('/')}`,
+        });
+      }
+    }
+
+    return items;
+  };
+
+  const breadcrumbs = buildBreadcrumbs();
+
   return (
     <>
-      <Modal centered opened={open} onClose={() => setOpen(false)} title='Create a folder'>
+      <Modal
+        centered
+        opened={open}
+        onClose={() => setOpen(false)}
+        title={currentFolderId ? 'Create a subfolder' : 'Create a folder'}
+      >
         <form onSubmit={form.onSubmit(onSubmit)}>
           <Stack gap='sm'>
             <TextInput label='Name' placeholder='Enter a name...' {...form.getInputProps('name')} />
@@ -71,19 +146,35 @@ export default function DashboardFolders() {
       <Group>
         <Title>Folders</Title>
 
-        <Button
-          size='compact-sm'
-          variant='outline'
-          leftSection={<IconFolderPlus size='1rem' />}
-          onClick={() => setOpen(true)}
-        >
-          Create
-        </Button>
+        <Tooltip label={currentFolderId ? 'Create a subfolder' : 'Create a new folder'}>
+          <ActionIcon variant='outline' onClick={() => setOpen(true)}>
+            <IconPlus size='1rem' />
+          </ActionIcon>
+        </Tooltip>
 
         <GridTableSwitcher type='folders' />
       </Group>
 
-      {view === 'grid' ? <FolderGridView /> : <FolderTableView />}
+      {breadcrumbs.length > 1 && (
+        <Breadcrumbs my='sm'>
+          {breadcrumbs.map((item, index) => (
+            <Anchor
+              key={item.id ?? 'root'}
+              onClick={() => navigate(item.path)}
+              style={{ cursor: 'pointer' }}
+              fw={index === breadcrumbs.length - 1 ? 600 : 400}
+            >
+              {index === 0 ? <IconHome size='1rem' /> : item.name}
+            </Anchor>
+          ))}
+        </Breadcrumbs>
+      )}
+
+      {view === 'grid' ? (
+        <FolderGridView currentFolderId={currentFolderId} onNavigate={navigateToFolder} />
+      ) : (
+        <FolderTableView currentFolderId={currentFolderId} onNavigate={navigateToFolder} />
+      )}
     </>
   );
 }
