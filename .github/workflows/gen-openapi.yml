@@ -13,7 +13,7 @@ jobs:
       matrix:
         node: [24.x]
         arch: [amd64]
-    
+
     runs-on: ubuntu-24.04
 
     services:
@@ -57,7 +57,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.arch }}-${{ matrix.node }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
-      - name: Install 
+      - name: Install
         run: pnpm install
 
       - name: Build
@@ -83,7 +83,7 @@ jobs:
           DATABASE_URL: postgres://zipline:zipline@localhost:5432/zipline
           CORE_SECRET: ${{ steps.secret.outputs.secret }}
           ZIPLINE_OUTPUT_OPENAPI: true
-          
+
         run: pnpm start
 
       - name: Verify openapi.json exists

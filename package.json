@@ -2,7 +2,7 @@
   "name": "zipline",
   "private": true,
   "license": "MIT",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "scripts": {
     "build": "tsx scripts/build.ts",
     "dev": "cross-env NODE_ENV=development DEBUG=zipline tsx --require dotenv/config --enable-source-maps ./src/server",
@@ -15,10 +15,10 @@
     "db:prototype": "prisma db push --skip-generate && prisma generate --no-hints",
     "db:migrate": "prisma migrate dev --create-only",
     "docker:engine": "colima start --mount $PWD/themes:w --mount $PWD/uploads:w --mount $PWD/public:w",
-    "docker:compose:dev:build": "docker-compose --file docker-compose.dev.yml build --build-arg ZIPLINE_GIT_SHA=$(git rev-parse HEAD)",
-    "docker:compose:dev:up": "docker-compose --file docker-compose.dev.yml up -d",
-    "docker:compose:dev:down": "docker-compose --file docker-compose.dev.yml down",
-    "docker:compose:dev:logs": "docker-compose --file docker-compose.dev.yml logs -f"
+    "docker:compose:dev:build": "docker compose --file docker-compose.dev.yml build --build-arg ZIPLINE_GIT_SHA=$(git rev-parse HEAD)",
+    "docker:compose:dev:up": "docker compose --file docker-compose.dev.yml up -d",
+    "docker:compose:dev:down": "docker compose --file docker-compose.dev.yml down",
+    "docker:compose:dev:logs": "docker compose --file docker-compose.dev.yml logs -f"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.726.1",
