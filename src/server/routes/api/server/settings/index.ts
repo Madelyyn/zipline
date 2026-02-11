@@ -28,6 +28,7 @@ export const reservedRoutes = [
   '/auth',
   '/api',
   '/raw',
+  '/r',
   '/invite',
   '/view',
   '/robots.txt',
