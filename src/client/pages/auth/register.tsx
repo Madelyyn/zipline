@@ -64,8 +64,8 @@ export function Component() {
       tos: false,
     },
     validate: {
-      username: (value) => (value.length < 1 ? 'Username is required' : null),
-      password: (value) => (value.length < 1 ? 'Password is required' : null),
+      username: (value) => (value.length >= 1 ? null : 'Username is required'),
+      password: (value) => (value.length >= 1 ? null : 'Password is required'),
     },
     enhanceGetInputProps: ({ field }) => ({
       name: field,
