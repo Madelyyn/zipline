@@ -3,6 +3,7 @@ import { checkOutput, COMPRESS_TYPES } from '@/lib/compress';
 import { reloadSettings } from '@/lib/config';
 import type { readDatabaseSettings } from '@/lib/config/read/db';
 import { safeConfig } from '@/lib/config/safe';
+import { MAX_SAFE_TIMEOUT_MS } from '@/lib/config/validate';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
@@ -48,6 +49,11 @@ const jsonTransform = (value: any, ctx: z.RefinementCtx) => {
 
 const zMs = z.string().refine((value) => ms(value as StringValue) > 0, 'Value must be greater than 0');
 const zBytes = z.string().refine((value) => bytes(value) > 0, 'Value must be greater than 0');
+
+const zIntervalMs = zMs.refine(
+  (value) => ms(value as StringValue) <= MAX_SAFE_TIMEOUT_MS,
+  `Value must be less than or equal to ${MAX_SAFE_TIMEOUT_MS}ms`,
+);
 
 const discordEmbed = z
   .union([
@@ -136,12 +142,12 @@ export default typedPlugin(
             chunksMax: zBytes,
             chunksSize: zBytes,
 
-            tasksDeleteInterval: zMs,
-            tasksClearInvitesInterval: zMs,
-            tasksMaxViewsInterval: zMs,
-            tasksThumbnailsInterval: zMs,
-            tasksMetricsInterval: zMs,
-            tasksCleanThumbnailsInterval: zMs,
+            tasksDeleteInterval: zIntervalMs,
+            tasksClearInvitesInterval: zIntervalMs,
+            tasksMaxViewsInterval: zIntervalMs,
+            tasksThumbnailsInterval: zIntervalMs,
+            tasksMetricsInterval: zIntervalMs,
+            tasksCleanThumbnailsInterval: zIntervalMs,
 
             filesRoute: z
               .string()

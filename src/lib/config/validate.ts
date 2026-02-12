@@ -7,10 +7,6 @@ import { PROP_TO_ENV } from './read/env';
 import { checkOutput, COMPRESS_TYPES } from '../compress';
 import ms, { StringValue } from 'ms';
 
-// Maximum safe timeout value for JavaScript timers (32-bit signed integer limit)
-// Approximately 24.8 days
-const MAX_SAFE_TIMEOUT_MS = 2147483647;
-
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
@@ -22,22 +18,20 @@ declare global {
   }
 }
 
-// Helper function to validate interval strings
-function validateInterval(value: string): boolean {
+export const MAX_SAFE_TIMEOUT_MS = 2147483647;
+
+export function validateInterval(value: string): boolean {
   const intervalMs = ms(value as StringValue);
-  // ms() returns undefined for invalid strings, not throw
-  if (typeof intervalMs !== 'number') {
-    return false;
-  }
+  if (typeof intervalMs !== 'number') return false;
+
   return intervalMs <= MAX_SAFE_TIMEOUT_MS;
 }
 
-// Reusable interval schema with validation
 const intervalSchema = (defaultValue: string) =>
   z
     .string()
     .default(defaultValue)
-    .refine(validateInterval, 'Interval exceeds maximum safe timeout of ~24 days (2147483647ms)');
+    .refine(validateInterval, `Value must be less than or equal to ${MAX_SAFE_TIMEOUT_MS}ms`);
 
 export const discordContent = z
   .object({
