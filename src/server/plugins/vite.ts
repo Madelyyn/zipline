@@ -38,7 +38,7 @@ async function vitePlugin(fastify: FastifyInstance) {
       const url = req.raw.url || '';
 
       const reserved = [
-        ...reservedRoutes.filter((x) => x !== '/dashboard' && x !== '/auth'),
+        ...reservedRoutes.filter((x) => x !== '/dashboard' && x !== '/auth' && x !== '/r'),
         config.files.route,
         config.urls.route,
       ].some((route) => url.startsWith(route));
