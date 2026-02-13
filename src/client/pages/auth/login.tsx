@@ -225,6 +225,8 @@ export default function Login() {
 
   if (!config) return <LoadingOverlay visible />;
 
+  console.log(isHttps, config.returnHttps);
+
   return (
     <>
       {willRedirect && !showLocalLogin && <LoadingOverlay visible />}
@@ -275,13 +277,34 @@ export default function Login() {
 
       <Modal opened={secureModal} onClose={() => setSecureModal(false)} title='HTTPS Configuration' size='lg'>
         <Text>
-          It appears that you are accessing this instance through a secure context (HTTPS), but the server is
-          not configured to use HTTPS. This can lead issues when logging in.
+          {config.returnHttps ? (
+            <>
+              It appears that you are accessing this instance through an insecure context (HTTP), but the
+              server is configured to use HTTPS. This can lead to issues when logging in, as secure cookies
+              may not be sent by the browser.
+            </>
+          ) : (
+            <>
+              It appears that you are accessing this instance through a secure context (HTTPS), but the server
+              is not configured to use HTTPS. This can lead issues when logging in.
+            </>
+          )}
         </Text>
         <Text mt='md'>
-          To resolve this issue, it is recommended to have your server configured to use HTTPS. This can be
-          done by setting the <Code>CORE_RETURN_HTTPS_URLS</Code> environment variable to <Code>true</Code>{' '}
-          and ensuring that your server has a valid SSL setup through a reverse proxy like Nginx or Caddy.
+          {config.returnHttps ? (
+            <>
+              To resolve this issue, please access this instance through HTTPS. If that is currently not
+              possible, you can temporarily set the <Code>CORE_RETURN_HTTPS_URLS</Code> environment variable
+              to <Code>false</Code>.
+            </>
+          ) : (
+            <>
+              To resolve this issue, it is recommended to have your server configured to use HTTPS. This can
+              be done by setting the <Code>CORE_RETURN_HTTPS_URLS</Code> environment variable to{' '}
+              <Code>true</Code> and ensuring that your server has a valid SSL setup through a reverse proxy
+              like Nginx or Caddy.
+            </>
+          )}
         </Text>
 
         <Text mt='md'>
@@ -300,8 +323,18 @@ export default function Login() {
       {isHttps && !config.returnHttps && (
         <Box pos='absolute' top={10} left='50%' style={{ transform: 'translateX(-50%)' }}>
           <Text size='sm' c='red' ta='center'>
-            You are accessing this instance through a secure context but the server is not configured to use
-            HTTPS. Click <Anchor onClick={() => setSecureModal(true)}> here</Anchor> to learn more.
+            You are accessing this instance through a <b>secure</b> context but the server is not configured
+            to use HTTPS. Click <Anchor onClick={() => setSecureModal(true)}> here</Anchor> to learn more.
+          </Text>
+        </Box>
+      )}
+
+      {!isHttps && config.returnHttps && (
+        <Box pos='absolute' top={10} left='50%' style={{ transform: 'translateX(-50%)' }}>
+          <Text size='sm' c='red' ta='center'>
+            You are accessing this instance through an <b>insecure</b> context but the server is configured to
+            use HTTPS. This may cause issues when logging in. Click{' '}
+            <Anchor onClick={() => setSecureModal(true)}> here</Anchor> to learn more.
           </Text>
         </Box>
       )}
