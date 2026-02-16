@@ -1,3 +1,4 @@
+import { ziplineClientParseSchema } from '@/lib/api/detect';
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
@@ -27,6 +28,9 @@ export default typedPlugin(
             username: zStringTrimmed,
             password: zStringTrimmed,
             code: z.string().min(1).optional(),
+          }),
+          headers: z.object({
+            'x-zipline-client': ziplineClientParseSchema.optional(),
           }),
         },
         ...secondlyRatelimit(2),

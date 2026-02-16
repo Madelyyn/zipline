@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useSWR, { mutate } from 'swr';
 import GenericError from '../../error/GenericError';
+import { getWebClient } from '@/lib/api/detect';
 
 export function Component() {
   useTitle('Register');
@@ -99,11 +100,18 @@ export function Component() {
       return;
     }
 
-    const { data, error } = await fetchApi('/api/auth/register', 'POST', {
-      username,
-      password,
-      code,
-    });
+    const { data, error } = await fetchApi(
+      '/api/auth/register',
+      'POST',
+      {
+        username,
+        password,
+        code,
+      },
+      {
+        'x-zipline-client': JSON.stringify(getWebClient()),
+      },
+    );
 
     if (error) {
       if (error.error === 'Username is taken') {

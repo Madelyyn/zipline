@@ -1,4 +1,5 @@
 import ExternalAuthButton from '@/components/pages/login/ExternalAuthButton';
+import { getWebClient } from '@/lib/api/detect';
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
 import useLogin from '@/lib/hooks/useLogin';
@@ -50,6 +51,8 @@ export default function Login() {
   const navigate = useNavigate();
 
   const isHttps = window.location.protocol === 'https:';
+
+  const webClient = JSON.stringify(getWebClient());
 
   const {
     data: config,
@@ -104,11 +107,18 @@ export default function Login() {
 
     const { username, password } = values;
 
-    const { data, error } = await fetchApi<Response['/api/auth/login']>('/api/auth/login', 'POST', {
-      username,
-      password,
-      code,
-    });
+    const { data, error } = await fetchApi<Response['/api/auth/login']>(
+      '/api/auth/login',
+      'POST',
+      {
+        username,
+        password,
+        code,
+      },
+      {
+        'x-zipline-client': webClient,
+      },
+    );
 
     if (error) {
       if (error.error === 'Invalid username or password') {
@@ -154,9 +164,16 @@ export default function Login() {
       }
 
       const res = await startAuthentication({ optionsJSON: options!.options! });
-      const { data, error } = await fetchApi<Response['/api/auth/webauthn']>('/api/auth/webauthn', 'POST', {
-        response: res,
-      });
+      const { data, error } = await fetchApi<Response['/api/auth/webauthn']>(
+        '/api/auth/webauthn',
+        'POST',
+        {
+          response: res,
+        },
+        {
+          'x-zipline-client': webClient,
+        },
+      );
       if (error) {
         setPasskeyErrored(true);
         setPasskeyLoading(false);
@@ -224,8 +241,6 @@ export default function Login() {
     );
 
   if (!config) return <LoadingOverlay visible />;
-
-  console.log(isHttps, config.returnHttps);
 
   return (
     <>

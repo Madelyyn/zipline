@@ -16,14 +16,10 @@ export default typedPlugin(
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const current = await getSession(req, res);
 
-      await prisma.user.update({
+      await prisma.userSession.deleteMany({
         where: {
-          id: req.user.id,
-        },
-        data: {
-          sessions: {
-            set: req.user.sessions.filter((session) => session !== current.sessionId),
-          },
+          id: current.sessionId!,
+          userId: req.user.id,
         },
       });
 

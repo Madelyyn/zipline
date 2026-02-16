@@ -81,7 +81,9 @@ export async function userMiddleware(req: FastifyRequest, res: FastifyReply) {
   const user = await prisma.user.findFirst({
     where: {
       sessions: {
-        has: session.sessionId,
+        some: {
+          id: session.sessionId,
+        },
       },
     },
     select: userSelect,

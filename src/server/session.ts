@@ -1,3 +1,4 @@
+import { detectClient, ZiplineClient } from '@/lib/api/detect';
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { randomCharacters } from '@/lib/random';
@@ -18,6 +19,7 @@ const cookieOptions: NonNullable<SessionOptions['cookieOptions']> = {
 export type ZiplineSession = {
   id: string | null;
   sessionId: string | null;
+  client: ZiplineClient;
 };
 
 export async function getSession(
@@ -50,6 +52,8 @@ export async function getSession(
     },
   );
 
+  session.client = detectClient(<Record<string, string>>req.headers);
+
   return session;
 }
 
@@ -66,12 +70,37 @@ export async function saveSession(
     const sessionId = randomCharacters(32);
     session.sessionId = sessionId;
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        sessions: overwriteSessions ? { set: [sessionId] } : { push: sessionId },
-      },
-    });
+    if (overwriteSessions) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          sessions: {
+            set: [
+              {
+                id: sessionId,
+                client: session.client.client,
+                device: session.client.device,
+                ua: session.client.ua,
+              },
+            ],
+          },
+        },
+      });
+    } else {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          sessions: {
+            create: {
+              id: sessionId,
+              client: session.client.client,
+              device: session.client.device,
+              ua: session.client.ua,
+            },
+          },
+        },
+      });
+    }
   }
 
   await session.save();

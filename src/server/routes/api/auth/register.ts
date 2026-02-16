@@ -9,6 +9,7 @@ import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 import { ApiLoginResponse } from './login';
 import { zStringTrimmed } from '@/lib/validation';
+import { ziplineClientParseSchema } from '@/lib/api/detect';
 
 export type ApiAuthRegisterResponse = ApiLoginResponse;
 
@@ -25,6 +26,9 @@ export default typedPlugin(
             username: zStringTrimmed,
             password: zStringTrimmed,
             code: z.string().min(1).optional(),
+          }),
+          headers: z.object({
+            'x-zipline-client': ziplineClientParseSchema.optional(),
           }),
         },
         ...secondlyRatelimit(5),

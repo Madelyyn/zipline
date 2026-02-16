@@ -82,7 +82,9 @@ async function oauthPlugin(fastify: FastifyInstance) {
     const user = await prisma.user.findFirst({
       where: {
         sessions: {
-          has: session.sessionId ?? '',
+          some: {
+            id: session.sessionId ?? '',
+          },
         },
       },
       include: {

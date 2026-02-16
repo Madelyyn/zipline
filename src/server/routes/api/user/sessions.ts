@@ -1,13 +1,14 @@
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
+import type { UserSession } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import { getSession } from '@/server/session';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
 export type ApiUserSessionsResponse = {
-  current: string;
-  other: string[];
+  current: UserSession;
+  other: UserSession[];
 };
 const logger = log('api').c('user').c('sessions');
 
@@ -17,9 +18,13 @@ export default typedPlugin(
     server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       const currentSession = await getSession(req, res);
 
+      const currentDbSession = req.user.sessions.find((session) => session.id === currentSession.sessionId);
+
+      if (!currentDbSession) return res.unauthorized('invalid login session');
+
       return res.send({
-        current: currentSession.sessionId,
-        other: req.user.sessions.filter((session) => session !== currentSession.sessionId),
+        current: currentDbSession,
+        other: req.user.sessions.filter((session) => session.id !== currentSession.sessionId),
       });
     });
 
@@ -28,7 +33,7 @@ export default typedPlugin(
       {
         schema: {
           body: z.object({
-            sessionId: z.string(),
+            sessionId: z.string().optional(),
             all: z.boolean().optional(),
           }),
         },
@@ -38,14 +43,21 @@ export default typedPlugin(
         const currentSession = await getSession(req, res);
 
         if (req.body.all) {
-          await prisma.user.update({
+          const user = await prisma.user.update({
             where: {
               id: req.user.id,
             },
             data: {
               sessions: {
-                set: [currentSession.sessionId!],
+                deleteMany: {
+                  NOT: {
+                    id: currentSession.sessionId!,
+                  },
+                },
               },
+            },
+            include: {
+              sessions: true,
             },
           });
 
@@ -54,26 +66,29 @@ export default typedPlugin(
           });
 
           return res.send({
-            current: currentSession.sessionId,
+            current: user.sessions.find((session) => session.id === currentSession.sessionId)!,
             other: [],
           });
         }
 
         if (req.body.sessionId === currentSession.sessionId)
-          return res.badRequest('Cannot delete current session');
-        if (!req.user.sessions.includes(req.body.sessionId))
+          return res.badRequest('Cannot delete current session, use log out instead.');
+        if (!req.user.sessions.find((session) => session.id === req.body.sessionId))
           return res.badRequest('Session not found in logged in sessions');
 
-        const sessionsWithout = req.user.sessions.filter((session) => session !== req.body.sessionId);
-
-        await prisma.user.update({
+        const user = await prisma.user.update({
           where: {
             id: req.user.id,
           },
           data: {
             sessions: {
-              set: sessionsWithout,
+              delete: {
+                id: req.body.sessionId,
+              },
             },
+          },
+          include: {
+            sessions: true,
           },
         });
 
@@ -83,8 +98,8 @@ export default typedPlugin(
         });
 
         return res.send({
-          current: currentSession.sessionId,
-          other: sessionsWithout,
+          current: user.sessions.find((session) => session.id === currentSession.sessionId)!,
+          other: user.sessions.filter((session) => session.id !== currentSession.sessionId),
         });
       },
     );

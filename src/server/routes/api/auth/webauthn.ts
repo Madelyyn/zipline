@@ -16,6 +16,7 @@ import {
 } from '@simplewebauthn/server';
 import z from 'zod';
 import { PasskeyReg, passkeysEnabledHandler } from '../user/mfa/passkey';
+import { ziplineClientParseSchema } from '@/lib/api/detect';
 
 export type ApiAuthWebauthnResponse = {
   user: User;
@@ -73,6 +74,9 @@ export default typedPlugin(
         schema: {
           body: z.object({
             response: z.custom<AuthenticationResponseJSON>(),
+          }),
+          headers: z.object({
+            'x-zipline-client': ziplineClientParseSchema.optional(),
           }),
         },
         preHandler: [passkeysEnabledHandler],

@@ -163,7 +163,7 @@ model User {
 
   totpSecret String?
   passkeys   UserPasskey[]
-  sessions   String[]
+  sessions   UserSession[]
 
   quota UserQuota?
 
@@ -186,6 +186,18 @@ model Export {
   path      String
   files     Int
   size      String
+
+  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String
+}
+
+model UserSession {
+  id String @id 
+  createdAt DateTime @default(now())
+
+  ua String
+  client String
+  device String
 
   User   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String

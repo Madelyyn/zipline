@@ -1,4 +1,4 @@
-import { OAuthProvider, UserPasskey, UserQuota } from '@/prisma/client';
+import { OAuthProvider, UserPasskey, UserQuota, UserSession } from '@/prisma/client';
 import { z } from 'zod';
 
 export type User = {
@@ -9,7 +9,7 @@ export type User = {
   role: 'USER' | 'ADMIN' | 'SUPERADMIN';
   view: UserViewSettings;
 
-  sessions: string[];
+  sessions: UserSession[];
 
   oauthProviders: OAuthProvider[];
 
