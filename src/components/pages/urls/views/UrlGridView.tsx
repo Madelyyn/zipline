@@ -13,7 +13,7 @@ export default function UrlGridView() {
 
   return (
     <>
-      <EditUrlModal url={selectedUrl} onClose={() => setSelectedUrl(null)} open={!!selectedUrl} />
+      <EditUrlModal url={selectedUrl} onClose={() => setSelectedUrl(null)} />
 
       {isLoading ? (
         <SimpleGrid

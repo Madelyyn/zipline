@@ -143,7 +143,7 @@ export default function UrlTableView() {
 
   return (
     <>
-      <EditUrlModal url={selectedUrl} onClose={() => setSelectedUrl(null)} open={!!selectedUrl} />
+      <EditUrlModal url={selectedUrl} onClose={() => setSelectedUrl(null)} />
 
       <Box my='sm'>
         <DataTable

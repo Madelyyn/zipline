@@ -1,6 +1,6 @@
-import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import RelativeDate from '@/components/RelativeDate';
 import { addMultipleToFolder, copyFile, deleteFile, downloadFile } from '@/components/file/actions';
+import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
 import { type File } from '@/lib/db/models/file';
@@ -111,7 +111,7 @@ function TagsFilter({
   const combobox = useCombobox();
   const { data: tags } = useSWR<Extract<Response['/api/user/tags'], Tag[]>>('/api/user/tags');
 
-  const [value, setValue] = useState(searchQuery.tags.split(','));
+  const [value, setValue] = useState(() => searchQuery.tags.split(','));
   const handleValueSelect = (val: string) => {
     setValue((current) => (current.includes(val) ? current.filter((v) => v !== val) : [...current, val]));
   };

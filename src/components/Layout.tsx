@@ -51,6 +51,7 @@ import ConfigProvider from './ConfigProvider';
 import VersionBadge from './VersionBadge';
 import { Link, useLoaderData } from 'react-router-dom';
 import { dashboardLoader } from '../client/routes';
+import { useLogout } from '@/lib/hooks/useLogout';
 
 type NavLinks = {
   label: string;
@@ -158,6 +159,7 @@ export default function Layout() {
   const clipboard = useClipboard();
   const setUser = useUserStore((s) => s.setUser);
   const location = useLocation();
+  const logout = useLogout();
 
   const loaderData = useLoaderData<typeof dashboardLoader>();
   const config = loaderData.config;
@@ -304,12 +306,7 @@ export default function Layout() {
                 )}
 
                 <Menu.Divider />
-                <Menu.Item
-                  color='red'
-                  leftSection={<IconLogout size='1rem' />}
-                  component={Link}
-                  to='/auth/logout'
-                >
+                <Menu.Item color='red' leftSection={<IconLogout size='1rem' />} onClick={logout}>
                   Logout
                 </Menu.Item>
               </Menu.Dropdown>

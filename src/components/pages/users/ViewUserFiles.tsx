@@ -10,15 +10,16 @@ import { useState } from 'react';
 
 export default function ViewUserFiles() {
   const data = useLoaderData<typeof loader>();
-  if (!data) return null;
-
-  const { user } = data;
-  if (!user) return null;
 
   const view = useViewStore((state) => state.files);
 
   const [tableEditOpen, setTableEditOpen] = useState(false);
   const [idSearchOpen, setIdSearchOpen] = useState(false);
+
+  if (!data) return;
+
+  const { user } = data;
+  if (!user) return;
 
   return (
     <>

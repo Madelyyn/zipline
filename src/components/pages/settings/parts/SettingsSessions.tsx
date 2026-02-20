@@ -1,14 +1,16 @@
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
+import { useLogout } from '@/lib/hooks/useLogout';
 import { ActionIcon, Button, Modal, Paper, SimpleGrid, Skeleton, Table, Text, Title } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { showNotification } from '@mantine/notifications';
 import { IconLogout, IconTrashFilled, IconUsers } from '@tabler/icons-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 
 export default function SettingsSessions() {
+  const logout = useLogout();
+
   const { data, isLoading, mutate } = useSWR<Response['/api/user/sessions']>('/api/user/sessions');
 
   const [open, setOpen] = useState(false);
@@ -135,7 +137,7 @@ export default function SettingsSessions() {
             View sessions
           </Button>
 
-          <Button color='yellow' component={Link} to='/auth/logout' leftSection={<IconLogout size='1rem' />}>
+          <Button color='yellow' onClick={logout} leftSection={<IconLogout size='1rem' />}>
             Log out of this browser
           </Button>
         </SimpleGrid>

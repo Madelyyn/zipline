@@ -6,7 +6,6 @@ import DashboardErrorBoundary from './error/DashboardErrorBoundary';
 import RootErrorBoundary from './error/RootErrorBoundary';
 import FourOhFour from './pages/404';
 import Login from './pages/auth/login';
-import Logout from './pages/auth/logout';
 import Root from './Root';
 
 export async function dashboardLoader() {
@@ -38,7 +37,6 @@ export const router = createBrowserRouter([
             path: '/auth',
             children: [
               { path: 'login', Component: Login },
-              { path: 'logout', Component: Logout },
               { path: 'register', lazy: () => import('./pages/auth/register') },
               {
                 path: 'setup',
