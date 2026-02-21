@@ -10,7 +10,7 @@ import { IconTrashFilled } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 import { mutate } from 'swr';
 
-type ChildrenAction = 'moveToRoot' | 'moveToFolder' | 'cascade';
+type ChildrenAction = 'root' | 'folder' | 'cascade';
 
 export default function DeleteFolderModal({
   folder,
@@ -22,7 +22,7 @@ export default function DeleteFolderModal({
   onClose: () => void;
 }) {
   const [loading, setLoading] = useState(false);
-  const [childrenAction, setChildrenAction] = useState<ChildrenAction>('moveToRoot');
+  const [childrenAction, setChildrenAction] = useState<ChildrenAction>('root');
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const combobox = useCombobox();
@@ -56,7 +56,7 @@ export default function DeleteFolderModal({
 
     if (hasContent) {
       body.childrenAction = childrenAction;
-      if (childrenAction === 'moveToFolder') {
+      if (childrenAction === 'folder') {
         if (!targetFolderId) {
           notifications.show({
             title: 'No folder selected',
@@ -112,8 +112,8 @@ export default function DeleteFolderModal({
 
             <Radio.Group value={childrenAction} onChange={(v) => setChildrenAction(v as ChildrenAction)}>
               <Stack gap='xs'>
-                <Radio value='moveToRoot' label='Move contents to root folder' />
-                <Radio value='moveToFolder' label='Move contents to another folder' />
+                <Radio value='root' label='Move contents to root folder' />
+                <Radio value='folder' label='Move contents to another folder' />
                 <Radio
                   value='cascade'
                   label={
@@ -125,7 +125,7 @@ export default function DeleteFolderModal({
               </Stack>
             </Radio.Group>
 
-            {childrenAction === 'moveToFolder' && (
+            {childrenAction === 'folder' && (
               <Combobox
                 store={combobox}
                 withinPortal={true}
@@ -171,7 +171,8 @@ export default function DeleteFolderModal({
 
             {childrenAction === 'cascade' && (
               <Text size='sm' c='red' fw={500}>
-                Warning: This will permanently delete all subfolders and files within this folder.
+                Warning: This will permanently delete all contents within this folder (subfolders will be
+                deleted, and files will be unlinked from their folders).
               </Text>
             )}
           </>
