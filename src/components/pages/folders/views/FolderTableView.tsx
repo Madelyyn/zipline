@@ -16,7 +16,6 @@ import {
   IconShare,
   IconShareOff,
   IconTrashFilled,
-  IconZip,
 } from '@tabler/icons-react';
 import { DataTable, DataTableSortStatus } from 'mantine-datatable';
 import { useMemo, useState } from 'react';

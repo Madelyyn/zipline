@@ -1,23 +1,44 @@
 import GridTableSwitcher from '@/components/GridTableSwitcher';
+import useObjectState from '@/lib/hooks/useObjectState';
 import { useViewStore } from '@/lib/store/view';
-import { ActionIcon, Group, Title, Tooltip } from '@mantine/core';
-import FavoriteFiles from './views/FavoriteFiles';
-import FileTable from './views/FileTable';
-import Files from './views/Files';
-import TagsButton from './tags/TagsButton';
-import PendingFilesButton from './PendingFilesButton';
-import { IconFileUpload, IconGridPatternFilled, IconTableOptions } from '@tabler/icons-react';
+import { ActionIcon, Group, Menu, Title, Tooltip } from '@mantine/core';
+import {
+  IconDots,
+  IconFileDots,
+  IconFileUpload,
+  IconGridPatternFilled,
+  IconTableOptions,
+  IconTags,
+} from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import PendingFilesModal from './PendingFilesModal';
+import TagsModal from './tags/TagsModal';
+import FavoriteFiles from './views/FavoriteFiles';
+import Files from './views/FilesGridView';
+import FileTable from './views/FilesTableView';
+
+export type DashboardFilesModals = {
+  table: boolean;
+  idSearch: boolean;
+  tags: boolean;
+  pending: boolean;
+};
 
 export default function DashboardFiles() {
   const view = useViewStore((state) => state.files);
 
-  const [tableEditOpen, setTableEditOpen] = useState(false);
-  const [idSearchOpen, setIdSearchOpen] = useState(false);
+  const [modals, setModals] = useObjectState<DashboardFilesModals>({
+    table: false,
+    idSearch: false,
+    tags: false,
+    pending: false,
+  });
 
   return (
     <>
+      <TagsModal modals={modals} setModals={setModals} />
+      <PendingFilesModal modals={modals} setModals={setModals} />
+
       <Group>
         <Title>Files</Title>
 
@@ -29,29 +50,43 @@ export default function DashboardFiles() {
           </Link>
         </Tooltip>
 
-        <TagsButton />
-        <PendingFilesButton />
-
-        {view === 'table' && (
-          <>
-            <Tooltip label='Table Options'>
-              <ActionIcon variant='outline' onClick={() => setTableEditOpen((open) => !open)}>
-                <IconTableOptions size='1rem' />
+        <Menu>
+          <Menu.Target>
+            <Tooltip label='More actions'>
+              <ActionIcon variant='outline'>
+                <IconDots size='1rem' />
               </ActionIcon>
             </Tooltip>
-
-            <Tooltip label='Search by ID'>
-              <ActionIcon
-                variant='outline'
-                onClick={() => {
-                  setIdSearchOpen((open) => !open);
-                }}
-              >
-                <IconGridPatternFilled size='1rem' />
-              </ActionIcon>
-            </Tooltip>
-          </>
-        )}
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item leftSection={<IconTags size='1rem' />} onClick={() => setModals('tags', !modals.tags)}>
+              Manage Tags
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconFileDots size='1rem' />}
+              onClick={() => setModals('pending', !modals.pending)}
+            >
+              View Pending Files
+            </Menu.Item>
+            {view === 'table' && (
+              <>
+                <Menu.Label>Table Options</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconGridPatternFilled size='1rem' />}
+                  onClick={() => setModals('idSearch', !modals.idSearch)}
+                >
+                  Search by ID
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconTableOptions size='1rem' />}
+                  onClick={() => setModals('table', !modals.table)}
+                >
+                  Table Options
+                </Menu.Item>
+              </>
+            )}
+          </Menu.Dropdown>
+        </Menu>
 
         <GridTableSwitcher type='files' />
       </Group>
@@ -63,16 +98,7 @@ export default function DashboardFiles() {
           <Files />
         </>
       ) : (
-        <FileTable
-          idSearch={{
-            open: idSearchOpen,
-            setOpen: setIdSearchOpen,
-          }}
-          tableEdit={{
-            open: tableEditOpen,
-            setOpen: setTableEditOpen,
-          }}
-        />
+        <FileTable modals={modals} setModals={setModals} />
       )}
     </>
   );

@@ -29,8 +29,8 @@ import { IconFolderPlus, IconHome, IconPlus, IconShare } from '@tabler/icons-rea
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
-import Files from '../files/views/Files';
-import FileTable from '../files/views/FileTable';
+import FilesGridView from '../files/views/FilesGridView';
+import FilesTableView from '../files/views/FilesTableView';
 import { mutateFolder } from './actions';
 import FolderGridView from './views/FolderGridView';
 import FolderTableView from './views/FolderTableView';
@@ -239,10 +239,10 @@ export default function DashboardFolders() {
           <Collapse in={filesOpen}>
             {view === 'grid' ? (
               <Paper withBorder p='sm'>
-                <Files folderId={currentFolderId} />
+                <FilesGridView folderId={currentFolderId} />
               </Paper>
             ) : (
-              <FileTable folderId={currentFolderId} />
+              <FilesTableView folderId={currentFolderId} />
             )}
           </Collapse>
         </Box>

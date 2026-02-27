@@ -53,7 +53,7 @@ function SortableTableField({ item }: { item: FieldSettings }) {
   );
 }
 
-export default function TableEditModal({ opened, onCLose }: { opened: boolean; onCLose: () => void }) {
+export default function TableEditModal({ opened, onClose }: { opened: boolean; onClose: () => void }) {
   const [fields, setIndex, reset] = useFileTableSettingsStore(
     useShallow((state) => [state.fields, state.setIndex, state.reset]),
   );
@@ -73,7 +73,7 @@ export default function TableEditModal({ opened, onCLose }: { opened: boolean; o
   };
 
   return (
-    <Modal opened={opened} onClose={onCLose} title='Table Options' centered>
+    <Modal opened={opened} onClose={onClose} title='Table Options' centered>
       <Text mb='md' size='sm' c='dimmed'>
         Select and drag fields below to make them appear/disappear/reorder in the file table view.
       </Text>

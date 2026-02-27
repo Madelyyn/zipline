@@ -2,17 +2,24 @@ import { mutateFiles } from '@/components/file/actions';
 import { Response } from '@/lib/api/response';
 import { Tag } from '@/lib/db/models/tag';
 import { fetchApi } from '@/lib/fetchApi';
+import { UpdateFn } from '@/lib/hooks/useObjectState';
 import { ActionIcon, Group, Modal, Paper, Stack, Text, Title, Tooltip } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import { IconPencil, IconPlus, IconTagOff, IconTags, IconTrashFilled } from '@tabler/icons-react';
+import { IconPencil, IconPlus, IconTagOff, IconTrashFilled } from '@tabler/icons-react';
 import { useState } from 'react';
 import useSWR from 'swr';
+import { DashboardFilesModals } from '..';
 import CreateTagModal from './CreateTagModal';
 import EditTagModal from './EditTagModal';
 import TagPill from './TagPill';
 
-export default function TagsButton() {
-  const [open, setOpen] = useState(false);
+export default function TagsModals({
+  modals,
+  setModals,
+}: {
+  modals: DashboardFilesModals;
+  setModals: UpdateFn<DashboardFilesModals>;
+}) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
 
@@ -47,8 +54,8 @@ export default function TagsButton() {
       <EditTagModal open={!!selectedTag} onClose={() => setSelectedTag(null)} tag={selectedTag} />
 
       <Modal
-        opened={open}
-        onClose={() => setOpen(false)}
+        opened={modals.tags}
+        onClose={() => setModals('tags', false)}
         title={
           <Group>
             <Title>Tags</Title>
@@ -94,12 +101,6 @@ export default function TagsButton() {
           )}
         </Stack>
       </Modal>
-
-      <Tooltip label='View tags'>
-        <ActionIcon variant='outline' onClick={() => setOpen(true)}>
-          <IconTags size='1rem' />
-        </ActionIcon>
-      </Tooltip>
     </>
   );
 }

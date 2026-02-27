@@ -1,20 +1,22 @@
 import { type loader } from '@/client/pages/dashboard/admin/users/[id]/files';
 import GridTableSwitcher from '@/components/GridTableSwitcher';
+import useObjectState from '@/lib/hooks/useObjectState';
 import { useViewStore } from '@/lib/store/view';
 import { ActionIcon, Group, Title, Tooltip } from '@mantine/core';
 import { IconArrowBackUp, IconGridPatternFilled, IconTableOptions } from '@tabler/icons-react';
 import { Link, useLoaderData } from 'react-router-dom';
-import FileTable from '../files/views/FileTable';
-import Files from '../files/views/Files';
-import { useState } from 'react';
+import { DashboardFilesModals } from '../files';
+import FilesTableView from '../files/views/FilesTableView';
+import FilesGridView from '../files/views/FilesGridView';
 
 export default function ViewUserFiles() {
   const data = useLoaderData<typeof loader>();
 
   const view = useViewStore((state) => state.files);
-
-  const [tableEditOpen, setTableEditOpen] = useState(false);
-  const [idSearchOpen, setIdSearchOpen] = useState(false);
+  const [modals, setModals] = useObjectState<Partial<DashboardFilesModals>>({
+    table: false,
+    idSearch: false,
+  });
 
   if (!data) return;
 
@@ -32,18 +34,13 @@ export default function ViewUserFiles() {
         </Tooltip>
 
         <Tooltip label='Table Options'>
-          <ActionIcon variant='outline' onClick={() => setTableEditOpen((open) => !open)}>
+          <ActionIcon variant='outline' onClick={() => setModals('table', !modals.table)}>
             <IconTableOptions size='1rem' />
           </ActionIcon>
         </Tooltip>
 
         <Tooltip label='Search by ID'>
-          <ActionIcon
-            variant='outline'
-            onClick={() => {
-              setIdSearchOpen((open) => !open);
-            }}
-          >
+          <ActionIcon variant='outline' onClick={() => setModals('idSearch', !modals.idSearch)}>
             <IconGridPatternFilled size='1rem' />
           </ActionIcon>
         </Tooltip>
@@ -52,19 +49,9 @@ export default function ViewUserFiles() {
       </Group>
 
       {view === 'grid' ? (
-        <Files id={user.id} />
+        <FilesGridView id={user.id} />
       ) : (
-        <FileTable
-          id={user.id}
-          tableEdit={{
-            open: tableEditOpen,
-            setOpen: setTableEditOpen,
-          }}
-          idSearch={{
-            open: idSearchOpen,
-            setOpen: setIdSearchOpen,
-          }}
-        />
+        <FilesTableView id={user.id} modals={modals} setModals={setModals} />
       )}
     </>
   );

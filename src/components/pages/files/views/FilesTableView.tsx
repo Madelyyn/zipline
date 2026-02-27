@@ -44,6 +44,8 @@ import { lazy, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 
+import { UpdateFn } from '@/lib/hooks/useObjectState';
+import { DashboardFilesModals } from '..';
 import TableEditModal, { NAMES } from '../TableEditModal';
 import { bulkDelete, bulkFavorite } from '../bulk';
 import TagPill from '../tags/TagPill';
@@ -179,19 +181,13 @@ function TagsFilter({
 export default function FileTable({
   id,
   folderId,
-  tableEdit,
-  idSearch,
+  modals,
+  setModals,
 }: {
   id?: string;
   folderId?: string;
-  tableEdit?: {
-    open: boolean;
-    setOpen: (open: boolean) => void;
-  };
-  idSearch?: {
-    open: boolean;
-    setOpen: (open: boolean) => void;
-  };
+  modals?: Partial<DashboardFilesModals>;
+  setModals?: UpdateFn<DashboardFilesModals>;
 }) {
   const clipboard = useClipboard();
   const warnDeletion = useSettingsStore((state) => state.settings.warnDeletion);
@@ -388,7 +384,9 @@ export default function FileTable({
         user={id}
       />
 
-      {tableEdit && <TableEditModal opened={tableEdit.open} onCLose={() => tableEdit.setOpen(false)} />}
+      {modals && setModals && modals.table && (
+        <TableEditModal opened={modals.table} onClose={() => setModals('table', false)} />
+      )}
 
       <Box>
         <Collapse in={selectedFiles.length > 0}>
@@ -481,8 +479,8 @@ export default function FileTable({
           </Paper>
         </Collapse>
 
-        {idSearch && (
-          <Collapse in={idSearch.open}>
+        {modals && setModals && modals.idSearch && (
+          <Collapse in={modals.idSearch}>
             <Paper withBorder p='sm' mt='sm'>
               <TextInput
                 placeholder='Search by ID'
