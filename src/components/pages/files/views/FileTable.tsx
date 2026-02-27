@@ -178,15 +178,17 @@ function TagsFilter({
 
 export default function FileTable({
   id,
+  folderId,
   tableEdit,
   idSearch,
 }: {
   id?: string;
-  tableEdit: {
+  folderId?: string;
+  tableEdit?: {
     open: boolean;
     setOpen: (open: boolean) => void;
   };
-  idSearch: {
+  idSearch?: {
     open: boolean;
     setOpen: (open: boolean) => void;
   };
@@ -259,6 +261,7 @@ export default function FileTable({
     sort,
     order,
     id,
+    folderId,
     ...(searchQuery[searchField].trim() !== '' && {
       search: {
         field: searchField,
@@ -385,7 +388,7 @@ export default function FileTable({
         user={id}
       />
 
-      <TableEditModal opened={tableEdit.open} onCLose={() => tableEdit.setOpen(false)} />
+      {tableEdit && <TableEditModal opened={tableEdit.open} onCLose={() => tableEdit.setOpen(false)} />}
 
       <Box>
         <Collapse in={selectedFiles.length > 0}>
@@ -478,30 +481,33 @@ export default function FileTable({
           </Paper>
         </Collapse>
 
-        <Collapse in={idSearch.open}>
-          <Paper withBorder p='sm' mt='sm'>
-            <TextInput
-              placeholder='Search by ID'
-              value={searchQuery.id}
-              onChange={(e) => {
-                setSearchField('id');
-                setSearchQuery({
-                  field: 'id',
-                  query: e.target.value,
-                });
-              }}
-              size='sm'
-            />
-          </Paper>
-        </Collapse>
+        {idSearch && (
+          <Collapse in={idSearch.open}>
+            <Paper withBorder p='sm' mt='sm'>
+              <TextInput
+                placeholder='Search by ID'
+                value={searchQuery.id}
+                onChange={(e) => {
+                  setSearchField('id');
+                  setSearchQuery({
+                    field: 'id',
+                    query: e.target.value,
+                  });
+                }}
+                size='sm'
+              />
+            </Paper>
+          </Collapse>
+        )}
 
-        {/* @ts-ignore */}
+        {/*@ts-ignore*/}
         <DataTable
           mt='xs'
           borderRadius='sm'
           withTableBorder
           minHeight={200}
           records={data?.page ?? []}
+          noRecordsText='No files'
           columns={[
             ...columns,
             {

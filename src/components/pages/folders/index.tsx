@@ -3,14 +3,35 @@ import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
 import { FolderBreadcrumb } from '@/lib/folderHierarchy';
+import { SEPARATOR, useTitle } from '@/lib/hooks/useTitle';
 import { useViewStore } from '@/lib/store/view';
-import { Anchor, Breadcrumbs, Button, Group, Modal, Stack, Switch, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Box,
+  Breadcrumbs,
+  Button,
+  Collapse,
+  CopyButton,
+  Divider,
+  Group,
+  Modal,
+  Paper,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { IconFolderPlus, IconHome, IconPlus } from '@tabler/icons-react';
+import { IconFolderPlus, IconHome, IconPlus, IconShare } from '@tabler/icons-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
+import Files from '../files/views/Files';
+import FileTable from '../files/views/FileTable';
+import { mutateFolder } from './actions';
 import FolderGridView from './views/FolderGridView';
 import FolderTableView from './views/FolderTableView';
 
@@ -20,6 +41,7 @@ export default function DashboardFolders() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
+  const [filesOpen, setFilesOpen] = useState(true);
 
   const folderPath = useMemo(() => {
     const pathname = location.pathname.replace('/dashboard/folders', '');
@@ -62,7 +84,7 @@ export default function DashboardFolders() {
         color: 'red',
       });
     } else {
-      mutate((key: string) => key.startsWith('/api/user/folders'));
+      mutateFolder();
       setOpen(false);
       form.reset();
     }
@@ -107,6 +129,8 @@ export default function DashboardFolders() {
   };
 
   const breadcrumbs = buildBreadcrumbs();
+
+  useTitle(currentFolder ? `Folders ${SEPARATOR} ${currentFolder.name}` : 'Folders');
 
   useEffect(() => {
     if (!currentFolderId) return;
@@ -175,6 +199,53 @@ export default function DashboardFolders() {
         <FolderGridView currentFolderId={currentFolderId} onNavigate={navigateToFolder} />
       ) : (
         <FolderTableView currentFolderId={currentFolderId} onNavigate={navigateToFolder} />
+      )}
+
+      {currentFolderId && currentFolder && (
+        <Box>
+          <Divider mx='-xs' my='xs' />
+          {currentFolder?.allowUploads && (
+            <Alert
+              icon={<IconShare size='1rem' />}
+              variant='outline'
+              mb='sm'
+              styles={{ message: { marginTop: 0 } }}
+            >
+              This folder allows anonymous uploads. Share the link below to allow others to let others upload
+              files to this folder.
+              <br />
+              <Anchor href={`/folder/${currentFolder.id}/upload`} target='_blank'>
+                {`${window?.location?.origin ?? ''}/folder/${currentFolder.id}/upload`}
+              </Anchor>
+              <CopyButton value={`${window?.location?.origin ?? ''}/folder/${currentFolder.id}/upload`}>
+                {({ copied, copy }) => (
+                  <Button mx='sm' size='compact-xs' color={copied ? 'teal' : 'blue'} onClick={copy}>
+                    {copied ? 'Copied url' : 'Copy url'}
+                  </Button>
+                )}
+              </CopyButton>
+            </Alert>
+          )}
+          <Text
+            mt='sm'
+            c='dimmed'
+            size='sm'
+            onClick={() => setFilesOpen((o) => !o)}
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+          >
+            {filesOpen ? '▼' : '▶'} {currentFolder.name}&#39;s files{' '}
+            {currentFolder._count ? `(${currentFolder._count.files})` : ''}
+          </Text>
+          <Collapse in={filesOpen}>
+            {view === 'grid' ? (
+              <Paper withBorder p='sm'>
+                <Files folderId={currentFolderId} />
+              </Paper>
+            ) : (
+              <FileTable folderId={currentFolderId} />
+            )}
+          </Collapse>
+        </Box>
       )}
     </>
   );

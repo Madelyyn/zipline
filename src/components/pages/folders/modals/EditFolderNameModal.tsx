@@ -1,4 +1,3 @@
-import { mutateFolders } from '@/components/file/actions';
 import { Response } from '@/lib/api/response';
 import type { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
@@ -7,6 +6,7 @@ import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
 import { IconPencil } from '@tabler/icons-react';
 import { useEffect } from 'react';
+import { mutateFolder } from '../actions';
 
 export default function EditFolderNameModal({
   folder,
@@ -43,7 +43,7 @@ export default function EditFolderNameModal({
         message: error.error,
       });
     } else {
-      mutateFolders();
+      mutateFolder();
       showNotification({
         title: 'Folder name updated',
         message: 'Folder name has been updated successfully to ' + data?.name,

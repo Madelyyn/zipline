@@ -8,7 +8,7 @@ import { Button, Combobox, InputBase, Modal, Radio, Stack, Text, useCombobox } f
 import { notifications } from '@mantine/notifications';
 import { IconTrashFilled } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
-import { mutate } from 'swr';
+import { mutateFolder } from '../actions';
 
 type ChildrenAction = 'root' | 'folder' | 'cascade';
 
@@ -90,7 +90,7 @@ export default function DeleteFolderModal({
         message: `${folder.name} has been deleted`,
         color: 'green',
       });
-      mutate((key: string) => typeof key === 'string' && key.startsWith('/api/user/folders'));
+      mutateFolder();
       onClose();
     }
   };

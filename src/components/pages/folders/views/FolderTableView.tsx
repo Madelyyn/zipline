@@ -1,11 +1,12 @@
 import RelativeDate from '@/components/RelativeDate';
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
-import { ActionIcon, Badge, Box, Checkbox, Group, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Badge, Box, Checkbox, Group, Menu, Text, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import {
   IconCopy,
-  IconFiles,
+  IconDots,
+  IconFileZip,
   IconFolder,
   IconFolderOpen,
   IconFolderSymlink,
@@ -25,6 +26,90 @@ import DeleteFolderModal from '../modals/DeleteFolderModal';
 import EditFolderNameModal from '../modals/EditFolderNameModal';
 import MoveFolderModal from '../modals/MoveFolderModal';
 import ViewFilesModal from '../modals/ViewFilesModal';
+
+export const withoutPropagation = (fn: () => void) => (e: React.MouseEvent) => {
+  e.stopPropagation();
+  fn();
+};
+
+function FolderDotsMenu({
+  folder,
+  onNavigate,
+  setDeleteOpen,
+  setMoveOpen,
+  setEditNameOpen,
+}: {
+  folder: Folder;
+  onNavigate: (folderId: string) => void;
+  setDeleteOpen: (folder: Folder) => void;
+  setMoveOpen: (folder: Folder) => void;
+  setEditNameOpen: (folder: Folder) => void;
+}) {
+  const [opened, setOpened] = useState(false);
+
+  return (
+    <Menu shadow='md' width={200} opened={opened} onChange={setOpened}>
+      <Menu.Target>
+        <Tooltip label='More actions'>
+          <ActionIcon onClick={withoutPropagation(() => setOpened((o) => !o))}>
+            <IconDots size='1rem' />
+          </ActionIcon>
+        </Tooltip>
+      </Menu.Target>
+
+      <Menu.Dropdown>
+        {onNavigate && (
+          <Menu.Item
+            leftSection={<IconFolderOpen size='1rem' />}
+            onClick={withoutPropagation(() => onNavigate(folder.id!))}
+          >
+            Open Folder
+          </Menu.Item>
+        )}
+        <Menu.Item
+          leftSection={<IconFolderSymlink size='1rem' />}
+          onClick={withoutPropagation(() => setMoveOpen(folder))}
+        >
+          Move Folder
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconFileZip size='1rem' />}
+          component='a'
+          href={`/api/user/folders/${folder.id}/export`}
+          target='_blank'
+          onClick={withoutPropagation(() => {})}
+        >
+          Export as ZIP
+        </Menu.Item>
+        <Menu.Item
+          leftSection={folder.public ? <IconLock size='1rem' /> : <IconLockOpen size='1rem' />}
+          onClick={withoutPropagation(() => editFolderVisibility(folder, !folder.public))}
+        >
+          {folder.public ? 'Make Private' : 'Make Public'}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={folder.public ? <IconShareOff size='1rem' /> : <IconShare size='1rem' />}
+          onClick={withoutPropagation(() => editFolderUploads(folder, !folder.allowUploads))}
+        >
+          {folder.allowUploads ? 'Disallow anonymous uploads' : 'Allow anonymous uploads'}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconPencil size='1rem' />}
+          onClick={withoutPropagation(() => setEditNameOpen(folder))}
+        >
+          Edit Name
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconTrashFilled size='1rem' />}
+          color='red'
+          onClick={withoutPropagation(() => setDeleteOpen(folder))}
+        >
+          Delete
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
 
 export default function FolderTableView({
   currentFolderId,
@@ -90,6 +175,7 @@ export default function FolderTableView({
           records={sorted ?? []}
           onRowClick={({ record }) => onNavigate(record.id)}
           rowStyle={() => ({ cursor: 'pointer' })}
+          noRecordsText='No subfolders'
           columns={[
             {
               accessor: 'name',
@@ -134,38 +220,14 @@ export default function FolderTableView({
               textAlign: 'right',
               render: (folder) => (
                 <Group gap='sm' justify='right' wrap='nowrap'>
-                  {folder.public && (
-                    <Tooltip label='Open public link'>
-                      <ActionIcon
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(`/folder/${folder.id}`, '_blank');
-                        }}
-                      >
-                        <IconFolderOpen size='1rem' />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                  <Tooltip label='View files'>
-                    <ActionIcon
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedFolder(folder);
-                      }}
-                    >
-                      <IconFiles size='1rem' />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label='Move folder'>
-                    <ActionIcon
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMoveOpen(folder);
-                      }}
-                    >
-                      <IconFolderSymlink size='1rem' />
-                    </ActionIcon>
-                  </Tooltip>
+                  <FolderDotsMenu
+                    folder={folder}
+                    onNavigate={onNavigate}
+                    setDeleteOpen={setDeleteOpen}
+                    setMoveOpen={setMoveOpen}
+                    setEditNameOpen={setEditNameOpen}
+                  />
+
                   <Tooltip label='Copy folder link'>
                     <ActionIcon
                       onClick={(e) => {
@@ -175,52 +237,6 @@ export default function FolderTableView({
                       disabled={!folder.public}
                     >
                       <IconCopy size='1rem' />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label={folder.public ? 'Make private' : 'Make public'}>
-                    <ActionIcon
-                      color={folder.public ? 'blue' : 'gray'}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        editFolderVisibility(folder, !folder.public);
-                      }}
-                    >
-                      {folder.public ? <IconLockOpen size='1rem' /> : <IconLock size='1rem' />}
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip
-                    label={folder.allowUploads ? 'Disable anonymous uploads' : 'Allow anonymous uploads'}
-                  >
-                    <ActionIcon
-                      color={folder.allowUploads ? 'blue' : 'gray'}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        editFolderUploads(folder, !folder.allowUploads);
-                      }}
-                    >
-                      {folder.allowUploads ? <IconShareOff size='1rem' /> : <IconShare size='1rem' />}
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label='Edit Folder Name'>
-                    <ActionIcon
-                      color='blue'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditNameOpen(folder);
-                      }}
-                    >
-                      <IconPencil size='1rem' />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label='Export folder as ZIP'>
-                    <ActionIcon
-                      color='blue'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`/api/user/folders/${folder.id}/export`, '_blank');
-                      }}
-                    >
-                      <IconZip size='1rem' />
                     </ActionIcon>
                   </Tooltip>
                   <Tooltip label='Delete Folder'>

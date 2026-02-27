@@ -13,7 +13,7 @@ import z from 'zod';
 export type ApiUserFoldersIdResponse = Folder;
 
 // TODO: need to refactor interaction checks to use this function in the future
-function checkInteraction(current?: Partial<User> | null, owner?: Partial<User> | null) {
+export function checkInteraction(current?: Partial<User> | null, owner?: Partial<User> | null) {
   if (!current || !owner) return false;
   if (current.id === owner.id) return true;
 

@@ -5,6 +5,7 @@ import { zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
+import { checkInteraction } from '../folders/[id]';
 
 export type FileSearchField = 'name' | 'originalName' | 'type' | 'tags' | 'id';
 
@@ -26,7 +27,7 @@ export default typedPlugin(
       {
         schema: {
           querystring: z.object({
-            page: z.coerce.number().optional(),
+            page: z.coerce.number(),
             perpage: z.coerce.number().default(15),
             filter: z.enum(['dashboard', 'none', 'all']).optional().default('none'),
             favorite: zQsBoolean.default(false).optional(),
@@ -49,6 +50,7 @@ export default typedPlugin(
             searchField: z.enum(['name', 'originalName', 'type', 'tags', 'id']).optional().default('name'),
             searchQuery: z.string().optional(),
             id: z.string().optional(),
+            folder: z.string().optional(),
           }),
         },
         preHandler: [userMiddleware],
@@ -61,10 +63,26 @@ export default typedPlugin(
         });
 
         if (user && user.id !== req.user.id && !canInteract(req.user.role, user.role)) return res.notFound();
-
         if (!user) return res.notFound();
 
-        const { perpage, searchQuery, searchField, page, filter, favorite, sortBy, order } = req.query;
+        const { perpage, searchQuery, searchField, page, filter, favorite, sortBy, order, folder } =
+          req.query;
+
+        let folderId: string | null = null;
+        if (folder) {
+          const f = await prisma.folder.findFirst({
+            where: {
+              id: folder,
+            },
+            include: {
+              User: true,
+            },
+          });
+          if (!f) return res.notFound();
+          if (!checkInteraction(req.user, f?.User)) return res.notFound();
+
+          folderId = f.id;
+        }
 
         const incompleteFiles = await prisma.incompleteFile.findMany({
           where: {
@@ -157,6 +175,9 @@ export default typedPlugin(
                         notIn: incompleteFiles.map((file) => file.metadata.file.id),
                       },
                     }),
+              ...(folderId && {
+                folderId,
+              }),
             },
             select: fileSelect,
             orderBy: {
@@ -206,6 +227,9 @@ export default typedPlugin(
           id: {
             notIn: incompleteFiles.map((file) => file.metadata.file.id),
           },
+          ...(folderId && {
+            folderId,
+          }),
         };
 
         const count = await prisma.file.count({

@@ -8,7 +8,7 @@ import { Button, Combobox, InputBase, Modal, Stack, Text, useCombobox } from '@m
 import { notifications } from '@mantine/notifications';
 import { IconFolderSymlink } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
-import { mutate } from 'swr';
+import { mutateFolder } from '../actions';
 
 export default function MoveFolderModal({
   folder,
@@ -73,7 +73,7 @@ export default function MoveFolderModal({
         message: `${folder.name} has been moved`,
         color: 'green',
       });
-      mutate((key: string) => typeof key === 'string' && key.startsWith('/api/user/folders'));
+      mutateFolder();
       onClose();
     }
   };

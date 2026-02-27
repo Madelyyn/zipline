@@ -5,7 +5,7 @@ import { useClipboard } from '@mantine/hooks';
 import {
   IconCopy,
   IconDots,
-  IconFiles,
+  IconFileZip,
   IconFolder,
   IconFolderOpen,
   IconFolderSymlink,
@@ -22,6 +22,7 @@ import DeleteFolderModal from './modals/DeleteFolderModal';
 import EditFolderNameModal from './modals/EditFolderNameModal';
 import MoveFolderModal from './modals/MoveFolderModal';
 import ViewFilesModal from './modals/ViewFilesModal';
+import { withoutPropagation } from './views/FolderTableView';
 
 export default function FolderCard({
   folder,
@@ -81,38 +82,50 @@ export default function FolderCard({
                     Open Folder
                   </Menu.Item>
                 )}
-                <Menu.Item leftSection={<IconFiles size='1rem' />} onClick={() => setViewOpen(true)}>
-                  View Files
-                </Menu.Item>
-                <Menu.Item leftSection={<IconFolderSymlink size='1rem' />} onClick={() => setMoveOpen(true)}>
+                <Menu.Item
+                  leftSection={<IconFolderSymlink size='1rem' />}
+                  onClick={withoutPropagation(() => setMoveOpen(true))}
+                >
                   Move Folder
                 </Menu.Item>
                 <Menu.Item
+                  leftSection={<IconFileZip size='1rem' />}
+                  component='a'
+                  href={`/api/user/folders/${folder.id}/export`}
+                  target='_blank'
+                  onClick={withoutPropagation(() => {})}
+                >
+                  Export as ZIP
+                </Menu.Item>
+                <Menu.Item
                   leftSection={folder.public ? <IconLock size='1rem' /> : <IconLockOpen size='1rem' />}
-                  onClick={() => editFolderVisibility(folder, !folder.public)}
+                  onClick={withoutPropagation(() => editFolderVisibility(folder, !folder.public))}
                 >
                   {folder.public ? 'Make Private' : 'Make Public'}
                 </Menu.Item>
                 <Menu.Item
                   leftSection={folder.public ? <IconShareOff size='1rem' /> : <IconShare size='1rem' />}
-                  onClick={() => editFolderUploads(folder, !folder.allowUploads)}
+                  onClick={withoutPropagation(() => editFolderUploads(folder, !folder.allowUploads))}
                 >
                   {folder.allowUploads ? 'Disallow anonymous uploads' : 'Allow anonymous uploads'}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconPencil size='1rem' />} onClick={() => setEditOpen(true)}>
+                <Menu.Item
+                  leftSection={<IconPencil size='1rem' />}
+                  onClick={withoutPropagation(() => setEditOpen(true))}
+                >
                   Edit Name
                 </Menu.Item>
                 <Menu.Item
                   leftSection={<IconCopy size='1rem' />}
                   disabled={!folder.public}
-                  onClick={() => copyFolderUrl(folder, clipboard)}
+                  onClick={withoutPropagation(() => copyFolderUrl(folder, clipboard))}
                 >
                   Copy URL
                 </Menu.Item>
                 <Menu.Item
                   leftSection={<IconTrashFilled size='1rem' />}
                   color='red'
-                  onClick={() => setDeleteOpen(true)}
+                  onClick={withoutPropagation(() => setDeleteOpen(true))}
                 >
                   Delete
                 </Menu.Item>

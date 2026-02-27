@@ -1,3 +1,4 @@
+import { mutateFolder } from '@/components/pages/folders/actions';
 import { Response } from '@/lib/api/response';
 import type { File } from '@/lib/db/models/file';
 import { Folder } from '@/lib/db/models/folder';
@@ -135,7 +136,7 @@ export async function createFolderAndAdd(file: File, folderName: string | null) 
     });
   }
 
-  mutateFolders();
+  mutateFolder();
   mutateFiles();
 }
 
@@ -165,7 +166,7 @@ export async function removeFromFolder(file: File) {
     });
   }
 
-  mutateFolders();
+  mutateFolder();
   mutateFiles();
 }
 
@@ -196,7 +197,7 @@ export async function addToFolder(file: File, folderId: string | null) {
     });
   }
 
-  mutateFolders();
+  mutateFolder();
   mutateFiles();
 }
 
@@ -228,16 +229,11 @@ export async function addMultipleToFolder(files: File[], folderId: string | null
     });
   }
 
-  mutateFolders();
+  mutateFolder();
   mutateFiles();
 }
 
 export function mutateFiles() {
   mutate('/api/user/recent');
   mutate((key) => (key as Record<any, any>)?.key === '/api/user/files'); // paged files
-}
-
-export function mutateFolders() {
-  mutate('/api/user/folders');
-  mutate('/api/user/folders?noincl=true');
 }

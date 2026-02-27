@@ -48,7 +48,7 @@ export async function editFolderVisibility(folder: Folder, isPublic: boolean) {
     });
   }
 
-  mutate('/api/user/folders');
+  mutateFolder(folder.id);
 }
 
 export async function editFolderUploads(folder: Folder, allowUploads: boolean) {
@@ -76,5 +76,11 @@ export async function editFolderUploads(folder: Folder, allowUploads: boolean) {
     });
   }
 
-  mutate('/api/user/folders');
+  mutateFolder(folder.id);
+}
+
+export async function mutateFolder(folderId?: string) {
+  if (!folderId) return mutate(`/api/user/folders/${folderId}`);
+
+  return mutate((key) => typeof key === 'string' && key.startsWith('/api/user/folders'));
 }

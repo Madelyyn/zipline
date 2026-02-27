@@ -21,7 +21,7 @@ const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
 
 const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45];
 
-export default function Files({ id }: { id?: string }) {
+export default function Files({ id, folderId }: { id?: string; folderId?: string }) {
   const [page, setPage] = useQueryState('page', 1);
   const [perpage, setPerpage] = useState(15);
 
@@ -29,6 +29,7 @@ export default function Files({ id }: { id?: string }) {
     page,
     perpage,
     id,
+    folderId,
   });
 
   const from = (page - 1) * perpage + 1;
