@@ -38,6 +38,7 @@ export default typedPlugin(
           response: {
             200: serverImportSchema,
           },
+          tags: ['auth', 'superadmin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
         // 24gb, just in case

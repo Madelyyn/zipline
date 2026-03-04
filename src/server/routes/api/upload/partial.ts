@@ -68,6 +68,7 @@ export default typedPlugin(
           response: {
             200: z.custom<ApiUploadPartialResponse>(),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, rateLimit],
       },

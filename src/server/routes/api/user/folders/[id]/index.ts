@@ -57,6 +57,7 @@ export default typedPlugin(
           response: {
             200: folderSchema.partial(),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, folderExistsAndEditable],
       },
@@ -113,6 +114,7 @@ export default typedPlugin(
           response: {
             200: folderSchema.partial(),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, folderExistsAndEditable],
       },
@@ -182,6 +184,7 @@ export default typedPlugin(
           response: {
             200: folderSchema.partial(),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, folderExistsAndEditable],
       },
@@ -269,21 +272,15 @@ export default typedPlugin(
           }),
           params: paramsSchema,
           response: {
-            200: z.union([
-              z.any().describe('if deleting a file from the folder, returns the updated folder'),
-              z.any().describe('if deleting the folder, return success status'),
-            ]),
-            // 200: z.union([
-            //   folderSchema
-            //     .partial()
-            //     .describe('if deleting a file from the folder, returns the updated folder'),
-            //   z
-            //     .object({
-            //       success: z.boolean(),
-            //     })
-            //     .describe('if deleting the folder, return success status'),
-            // ]),
+            200: z.object({
+              success: z.boolean().nullish().describe('if deleting the folder, return success status'),
+              folder: folderSchema
+                .partial()
+                .nullish()
+                .describe('if deleting a file from the folder, returns the updated folder'),
+            }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, folderExistsAndEditable],
       },
@@ -393,7 +390,7 @@ export default typedPlugin(
             });
 
             logger.info('file removed from folder', { folder: nFolder.id, file: id });
-            return res.send(cleanFolder(nFolder));
+            return res.send({ folder: cleanFolder(nFolder) });
           } catch (error: any) {
             if (error.code === 'P2025') throw new ApiError(4002);
             throw error;

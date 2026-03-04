@@ -3,6 +3,7 @@ import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { User, userSchema, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { generateKey, totpQrcode, verifyTotpCode } from '@/lib/totp';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
@@ -28,21 +29,21 @@ export default typedPlugin(
         schema: {
           description: 'Get your current TOTP secret, generating one (and a QR code) if not yet enabled.',
           response: {
-            200: z.union([
-              z
-                .object({
-                  secret: z.string(),
-                })
-                .describe('TOTP is enabled, returning the existing secret'),
-              z
-                .object({
-                  secret: z.string(),
-                  qrcode: z.string(),
-                })
-                .describe('TOTP is not yet enabled, returning a new secret and QR code data URL'),
-            ]),
+            200: z.object({
+              secret: z
+                .string()
+                .describe('the TOTP secret key, used to generate codes in an authenticator app'),
+              qrcode: z
+                .string()
+                .nullish()
+                .describe(
+                  "if the user hasn't enabled TOTP yet, a data URL for a QR code encoding the secret and account info",
+                ),
+            }),
           },
+          tags: ['auth'],
         },
+        ...secondlyRatelimit(5),
         preHandler: [userMiddleware, totpEnabledMiddleware],
       },
       async (req, res) => {
@@ -82,6 +83,7 @@ export default typedPlugin(
           response: {
             200: userSchema,
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, totpEnabledMiddleware],
       },

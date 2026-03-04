@@ -27,6 +27,7 @@ export default typedPlugin(
           response: {
             200: urlSchema.omit({ password: true }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -63,6 +64,7 @@ export default typedPlugin(
           response: {
             200: urlSchema.omit({ password: true }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -131,6 +133,7 @@ export default typedPlugin(
           response: {
             200: urlSchema.omit({ password: true }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

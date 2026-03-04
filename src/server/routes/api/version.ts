@@ -60,6 +60,7 @@ export default typedPlugin(
               cached: z.boolean(),
             }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

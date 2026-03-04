@@ -33,6 +33,7 @@ export default typedPlugin(
           response: {
             200: fileSchema,
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -71,6 +72,7 @@ export default typedPlugin(
           response: {
             200: fileSchema,
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -162,7 +164,13 @@ export default typedPlugin(
     server.delete(
       PATH,
       {
-        schema: { params: paramsSchema },
+        schema: {
+          params: paramsSchema,
+          response: {
+            200: fileSchema,
+          },
+          tags: ['auth'],
+        },
         preHandler: [userMiddleware],
       },
       async (req, res) => {

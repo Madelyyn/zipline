@@ -82,6 +82,7 @@ export default typedPlugin(
         schema: {
           description: 'Download a ZIP archive of all files contained in a folder and its subfolders.',
           params: z.object({ id: z.string() }),
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

@@ -52,6 +52,7 @@ export default typedPlugin(
               name: z.string().optional(),
             }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(2),

@@ -30,6 +30,7 @@ export default typedPlugin(
             pw: z.string().optional(),
             download: zQsBoolean.optional(),
           }),
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

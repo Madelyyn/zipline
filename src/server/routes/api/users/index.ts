@@ -35,6 +35,7 @@ export default typedPlugin(
           response: {
             200: z.array(userSchema),
           },
+          tags: ['auth', 'admin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },
@@ -68,6 +69,7 @@ export default typedPlugin(
           response: {
             200: userSchema,
           },
+          tags: ['auth', 'admin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),

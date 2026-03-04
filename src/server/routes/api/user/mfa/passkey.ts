@@ -1,7 +1,7 @@
 import { ApiError } from '@/lib/api/errors';
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
-import { User } from '@/lib/db/models/user';
+import { User, userPasskeySchema, userSchema, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { isTruthy } from '@/lib/primitive';
 import { secondlyRatelimit } from '@/lib/ratelimits';
@@ -49,24 +49,38 @@ const OPTIONS_CACHE = new TimedCache<string, PublicKeyCredentialCreationOptionsJ
 export const PATH = '/api/user/mfa/passkey';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, { preHandler: [userMiddleware, passkeysEnabledHandler] }, async (req, res) => {
-      const passkeys = await prisma.userPasskey.findMany({
-        where: {
-          userId: req.user.id,
+    server.get(
+      PATH,
+      {
+        schema: {
+          description: 'List all registered passkey credentials for the authenticated user.',
+          response: {
+            200: z.array(userPasskeySchema.omit({ reg: true })),
+          },
+          tags: ['auth'],
         },
-        omit: {
-          reg: true,
-        },
-      });
+        preHandler: [userMiddleware, passkeysEnabledHandler],
+      },
+      async (req, res) => {
+        const passkeys = await prisma.userPasskey.findMany({
+          where: {
+            userId: req.user.id,
+          },
+          omit: {
+            reg: true,
+          },
+        });
 
-      return res.send(passkeys);
-    });
+        return res.send(passkeys);
+      },
+    );
 
     server.get(
       PATH + '/options',
       {
         schema: {
           description: 'Generate WebAuthn registration options for creating a new passkey.',
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, passkeysEnabledHandler],
         ...secondlyRatelimit(1),
@@ -122,6 +136,10 @@ export default typedPlugin(
               .describe('The registration response from the client, containing the new passkey credential.'),
             name: zStringTrimmed,
           }),
+          response: {
+            200: userSchema,
+          },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, passkeysEnabledHandler],
         ...secondlyRatelimit(1),
@@ -171,6 +189,7 @@ export default typedPlugin(
               },
             },
           },
+          select: userSelect,
         });
 
         logger.info('user created a new passkey', {
@@ -190,6 +209,10 @@ export default typedPlugin(
           body: z.object({
             id: z.string(),
           }),
+          response: {
+            200: userSchema,
+          },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware, passkeysEnabledHandler],
       },
@@ -203,6 +226,7 @@ export default typedPlugin(
               delete: { id },
             },
           },
+          select: userSelect,
         });
 
         logger.info('user deleted a passkey', {

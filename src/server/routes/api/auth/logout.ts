@@ -24,6 +24,7 @@ export default typedPlugin(
               loggedOut: z.boolean().optional(),
             }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

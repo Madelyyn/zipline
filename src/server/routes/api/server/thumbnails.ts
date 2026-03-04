@@ -29,6 +29,7 @@ export default typedPlugin(
               status: z.string(),
             }),
           },
+          tags: ['auth', 'admin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),

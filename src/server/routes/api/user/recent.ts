@@ -20,6 +20,7 @@ export default typedPlugin(
           response: {
             200: z.array(fileSchema),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

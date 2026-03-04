@@ -41,6 +41,7 @@ export default typedPlugin(
           response: {
             200: z.array(metricSchema),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

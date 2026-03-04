@@ -29,6 +29,7 @@ export default typedPlugin(
               token: z.string().optional(),
             }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -72,6 +73,7 @@ export default typedPlugin(
               token: z.string().optional(),
             }),
           },
+          tags: ['auth'],
         },
       },
       async (req, res) => {

@@ -23,6 +23,7 @@ export default typedPlugin(
           response: {
             200: z.array(tagSchema),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -50,6 +51,7 @@ export default typedPlugin(
           response: {
             200: tagSchema,
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(1),

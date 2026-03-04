@@ -103,6 +103,7 @@ export default typedPlugin(
               tampered: z.array(z.string()),
             }),
           },
+          tags: ['auth', 'admin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },
@@ -132,6 +133,7 @@ export default typedPlugin(
           response: {
             200: z.custom<ApiServerSettingsResponse>(),
           },
+          tags: ['auth', 'admin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),

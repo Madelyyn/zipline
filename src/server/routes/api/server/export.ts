@@ -1,5 +1,5 @@
 import { ApiError } from '@/lib/api/errors';
-import { Export4 } from '@/lib/import/version4/validateExport';
+import { Export4, export4Schema } from '@/lib/import/version4/validateExport';
 import { log } from '@/lib/logger';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
@@ -62,11 +62,8 @@ export default typedPlugin(
           }),
           response: {
             200: z.union([
-              // TODO: fix later
-              // exportCountsSchema.describe('if ?counts=true'),
-              // export4Schema.describe('if ?counts is not true or not there'),
-              z.any().describe('if ?counts=true'),
-              z.any().describe('if ?counts is not true or not there'),
+              exportCountsSchema.describe('if ?counts=true'),
+              export4Schema.describe('if ?counts is not true or not there'),
             ]),
           },
         },
@@ -84,6 +81,12 @@ export default typedPlugin(
         const settingsTable = await prisma.zipline.findFirst();
         if (!settingsTable) throw new ApiError(1023);
 
+        const env = Object.fromEntries(
+          Object.entries(process.env).filter(
+            (entry): entry is [string, string] => typeof entry[1] === 'string',
+          ),
+        );
+
         const export4: Export4 = {
           versions: {
             export: '4',
@@ -92,7 +95,7 @@ export default typedPlugin(
           },
           request: {
             date: new Date().toISOString(),
-            env: process.env as Record<string, string>,
+            env,
             user: `${req.user.id}:${req.user.username}`,
             os: {
               arch: process.arch,
@@ -298,7 +301,7 @@ export default typedPlugin(
         }
 
         return res
-          .header('Content-Disposition', `attachment; filename='zipline4_export_${Date.now()}.json'`)
+          .header('Content-Disposition', `attachment; filename=zipline4_export_${Date.now()}.json`)
           .type('application/json')
           .send(export4 satisfies Export4);
       },

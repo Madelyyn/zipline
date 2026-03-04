@@ -68,6 +68,7 @@ export default typedPlugin(
               pages: z.number().optional(),
             }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

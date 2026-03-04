@@ -23,6 +23,7 @@ export default typedPlugin(
           params: z.object({
             id: z.string(),
           }),
+          tags: ['auth', 'admin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },

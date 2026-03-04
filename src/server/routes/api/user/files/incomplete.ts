@@ -21,6 +21,7 @@ export default typedPlugin(
           response: {
             200: z.array(incompleteFileSchema),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -48,6 +49,7 @@ export default typedPlugin(
               count: z.number(),
             }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(1),

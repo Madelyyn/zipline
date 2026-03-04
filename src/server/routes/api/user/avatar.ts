@@ -17,6 +17,7 @@ export default typedPlugin(
           response: {
             200: z.string().describe('data URL with base64'),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

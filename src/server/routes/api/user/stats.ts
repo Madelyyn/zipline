@@ -38,6 +38,7 @@ export default typedPlugin(
               sortTypeCount: z.record(z.string(), z.number()),
             }),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },

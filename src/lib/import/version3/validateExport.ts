@@ -194,7 +194,7 @@ export const export3Schema = z.object({
       totp_secret: z.string().optional().nullable(),
       oauth: z.array(
         z.object({
-          provider: z.union([z.literal('DISCORD'), z.literal('GITHUB'), z.literal('GOOGLE')]),
+          provider: z.enum(['DISCORD', 'GITHUB', 'GOOGLE']),
           username: z.string(),
           oauth_id: z.string().nullable(),
           access_token: z.string().nullable(),

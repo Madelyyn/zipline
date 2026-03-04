@@ -1,7 +1,7 @@
 import { ApiError } from '@/lib/api/errors';
 import { checkQuota, getDomain, getExtension, getFilename, getMimetype } from '@/lib/api/upload';
 import { bytes } from '@/lib/bytes';
-import { compressFile, CompressResult } from '@/lib/compress';
+import { COMPRESS_TYPES, compressFile, CompressResult } from '@/lib/compress';
 import { config } from '@/lib/config';
 import { hashPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
@@ -54,38 +54,31 @@ export default typedPlugin(
           consumes: ['multipart/form-data'],
           response: {
             200: z.union([
-              z.any().describe('if the noJson option is true, returns a comma-separated list of URLs'),
-              z
-                .any()
-                .describe(
-                  'if the noJson option is not true or not there, returns a JSON object with file details',
+              z.string().describe('if the noJson option is true, returns a comma-separated list of URLs'),
+              z.object({
+                files: z.array(
+                  z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    type: z.string(),
+                    url: z.string(),
+                    pending: z.boolean().optional(),
+                    removedGps: z.boolean().optional(),
+                    compressed: z
+                      .object({
+                        mimetype: z.string(),
+                        ext: z.enum(COMPRESS_TYPES),
+                        failed: z.boolean().optional(),
+                      })
+                      .optional(),
+                  }),
                 ),
+                deletesAt: z.string().optional(),
+                assumedMimetypes: z.array(z.boolean()).optional(),
+              }),
             ]),
-            // 200: z.union([
-            //   z.string().describe('if the noJson option is true, returns a comma-separated list of URLs'),
-            //   z.object({
-            //     files: z.array(
-            //       z.object({
-            //         id: z.string(),
-            //         name: z.string(),
-            //         type: z.string(),
-            //         url: z.string(),
-            //         pending: z.boolean().optional(),
-            //         removedGps: z.boolean().optional(),
-            //         compressed: z
-            //           .object({
-            //             mimetype: z.string(),
-            //             ext: z.enum(COMPRESS_TYPES),
-            //             failed: z.boolean().optional(),
-            //           })
-            //           .optional(),
-            //       }),
-            //     ),
-            //     deletesAt: z.string().optional(),
-            //     assumedMimetypes: z.array(z.boolean()).optional(),
-            //   }),
-            // ]),
           },
+          tags: ['auth'],
         },
       },
       async (req, res) => {

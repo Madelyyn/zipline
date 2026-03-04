@@ -32,6 +32,7 @@ export default typedPlugin(
           response: {
             200: z.array(folderSchema),
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
       },
@@ -107,6 +108,7 @@ export default typedPlugin(
           response: {
             200: folderSchema,
           },
+          tags: ['auth'],
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(2),

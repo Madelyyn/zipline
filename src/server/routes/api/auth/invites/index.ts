@@ -33,6 +33,7 @@ export default typedPlugin(
           response: {
             200: inviteSchema,
           },
+          tags: ['auth', 'admin'],
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
