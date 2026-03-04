@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { bytes } from '@/lib/bytes';
 import { reloadSettings } from '@/lib/config';
 import { checkDbVars, REQUIRED_DB_VARS } from '@/lib/config/read/env';
@@ -7,6 +8,7 @@ import { runMigrations } from '@/lib/db/migration';
 import { log } from '@/lib/logger';
 import { isAdministrator } from '@/lib/role';
 import { Tasks } from '@/lib/tasks';
+import cleanThumbnails from '@/lib/tasks/run/cleanThumbnails';
 import clearInvites from '@/lib/tasks/run/clearInvites';
 import deleteFiles from '@/lib/tasks/run/deleteFiles';
 import maxViews from '@/lib/tasks/run/maxViews';
@@ -22,6 +24,7 @@ import fastifySwagger from '@fastify/swagger';
 import fastify from 'fastify';
 import {
   hasZodFastifySchemaValidationErrors,
+  isResponseSerializationError,
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
@@ -36,8 +39,6 @@ import vitePlugin from './plugins/vite';
 import loadRoutes from './routes';
 import { filesRoute } from './routes/files.dy';
 import { urlsRoute } from './routes/urls.dy';
-import cleanThumbnails from '@/lib/tasks/run/cleanThumbnails';
-import { API_ERRORS, ApiError } from '@/lib/api/errors';
 
 const MODE = process.env.NODE_ENV || 'production';
 const logger = log('server');
@@ -242,10 +243,21 @@ async function main() {
   server.setErrorHandler((error: any, _, res) => {
     if (hasZodFastifySchemaValidationErrors(error)) {
       return res.status(400).send({
-        error: error.message ?? '1000: Invalid response schema',
+        error: error.message ?? 'E1000: Invalid response schema',
         statusCode: 400,
-        code: API_ERRORS[1000],
+        code: 1000,
         issues: error.validation,
+      });
+    }
+
+    if (isResponseSerializationError(error)) {
+      console.log(error);
+
+      return res.status(500).send({
+        error: 'E1000: Response serialization error',
+        statusCode: 500,
+        code: 1000,
+        details: error.message,
       });
     }
 
@@ -259,7 +271,11 @@ async function main() {
     } else {
       console.error(error);
 
-      return res.status(500).send({ error: 'Internal Server Error', statusCode: 500 });
+      return res.status(500).send({
+        code: 9000,
+        error: 'E9000: Internal Server Error',
+        statusCode: 500,
+      });
     }
   });
 

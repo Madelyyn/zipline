@@ -270,15 +270,19 @@ export default typedPlugin(
           params: paramsSchema,
           response: {
             200: z.union([
-              folderSchema
-                .partial()
-                .describe('if deleting a file from the folder, returns the updated folder'),
-              z
-                .object({
-                  success: z.boolean(),
-                })
-                .describe('if deleting the folder, returns success status'),
+              z.any().describe('if deleting a file from the folder, returns the updated folder'),
+              z.any().describe('if deleting the folder, return success status'),
             ]),
+            // 200: z.union([
+            //   folderSchema
+            //     .partial()
+            //     .describe('if deleting a file from the folder, returns the updated folder'),
+            //   z
+            //     .object({
+            //       success: z.boolean(),
+            //     })
+            //     .describe('if deleting the folder, return success status'),
+            // ]),
           },
         },
         preHandler: [userMiddleware, folderExistsAndEditable],

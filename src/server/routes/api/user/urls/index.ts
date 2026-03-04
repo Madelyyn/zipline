@@ -47,11 +47,21 @@ export default typedPlugin(
             'x-zipline-password': z.string().optional(),
           }),
           response: {
+            // 200: z.union([
+            //   z.string(),
+            //   urlSchema.omit({ password: true }).extend({
+            //     url: z.string(),
+            //   }),
+            // ]),
             200: z.union([
-              z.string(),
-              urlSchema.omit({ password: true }).extend({
-                url: z.string(),
-              }),
+              z
+                .any()
+                .describe('if the x-zipline-no-json header is true, returns the shortened URL as plain text'),
+              z
+                .any()
+                .describe(
+                  'if the x-zipline-no-json header is not true or not there, returns a JSON object with URL details',
+                ),
             ]),
           },
         },

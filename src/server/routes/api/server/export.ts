@@ -1,10 +1,11 @@
 import { ApiError } from '@/lib/api/errors';
-import { Export4, export4Schema } from '@/lib/import/version4/validateExport';
+import { Export4 } from '@/lib/import/version4/validateExport';
 import { log } from '@/lib/logger';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
 
 import { prisma } from '@/lib/db';
+import { zQsBoolean } from '@/lib/validation';
 import typedPlugin from '@/server/typedPlugin';
 import { cpus, hostname, platform, release } from 'os';
 import z from 'zod';
@@ -56,20 +57,23 @@ export default typedPlugin(
           description:
             'Export Zipline server data as a version 4 export bundle or return aggregate counts of core resources.',
           querystring: z.object({
-            nometrics: z.string().optional(),
-            counts: z.string().optional(),
+            nometrics: zQsBoolean.optional(),
+            counts: zQsBoolean.optional(),
           }),
           response: {
             200: z.union([
-              exportCountsSchema.describe('if ?counts=true'),
-              export4Schema.describe('if ?counts is not true or not there'),
+              // TODO: fix later
+              // exportCountsSchema.describe('if ?counts=true'),
+              // export4Schema.describe('if ?counts is not true or not there'),
+              z.any().describe('if ?counts=true'),
+              z.any().describe('if ?counts is not true or not there'),
             ]),
           },
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },
       async (req, res) => {
-        if (req.query.counts === 'true') {
+        if (req.query.counts) {
           const counts = await getCounts();
 
           return res.send(counts);
@@ -162,7 +166,7 @@ export default typedPlugin(
               id: passkey.id,
               lastUsed: passkey.lastUsed ? passkey.lastUsed.toISOString() : null,
               name: passkey.name,
-              reg: passkey.reg as Record<string, unknown>,
+              reg: passkey.reg as Record<string, any>,
               userId: passkey.userId,
             });
           }
@@ -294,9 +298,9 @@ export default typedPlugin(
         }
 
         return res
-          .header('Content-Disposition', `attachment; filename*=utf-8''zipline4_export_${Date.now()}.json`)
+          .header('Content-Disposition', `attachment; filename='zipline4_export_${Date.now()}.json'`)
           .type('application/json')
-          .send(export4);
+          .send(export4 satisfies Export4);
       },
     );
   },

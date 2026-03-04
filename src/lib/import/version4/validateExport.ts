@@ -61,11 +61,11 @@ export const export4Schema = z.object({
         id: z.string(),
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
         username: z.string(),
-        password: z.string().nullable().optional(),
-        avatar: z.string().nullable().optional(),
+        password: z.string().nullish(),
+        avatar: z.string().nullish(),
         role: z.enum(Role),
-        view: z.record(z.string(), z.unknown()),
-        totpSecret: z.string().nullable().optional(),
+        view: z.record(z.string(), z.any()),
+        totpSecret: z.string().nullish(),
       }),
     ),
     userPasskeys: z.array(
@@ -74,11 +74,10 @@ export const export4Schema = z.object({
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
         lastUsed: z
           .string()
-          .nullable()
-          .optional()
+          .nullish()
           .refine((date) => (date ? !isNaN(Date.parse(date)) : true), 'Invalid date'),
         name: z.string(),
-        reg: z.record(z.string(), z.unknown()),
+        reg: z.record(z.string(), z.any()),
         userId: z.string(),
       }),
     ),
@@ -87,10 +86,10 @@ export const export4Schema = z.object({
         id: z.string(),
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
         filesQuota: z.enum(UserFilesQuota),
-        maxBytes: z.string().nullable().optional(),
-        maxFiles: z.number().nullable().optional(),
-        maxUrls: z.number().nullable().optional(),
-        userId: z.string().nullable().optional(),
+        maxBytes: z.string().nullish(),
+        maxFiles: z.number().nullish(),
+        maxUrls: z.number().nullish(),
+        userId: z.string().nullish(),
       }),
     ),
     userOauthProviders: z.array(
@@ -100,8 +99,8 @@ export const export4Schema = z.object({
         provider: z.enum(OAuthProviderType),
         username: z.string(),
         accessToken: z.string(),
-        refreshToken: z.string().nullable().optional(),
-        oauthId: z.string().nullable().optional(),
+        refreshToken: z.string().nullish(),
+        oauthId: z.string().nullish(),
         userId: z.string(),
       }),
     ),
@@ -110,7 +109,7 @@ export const export4Schema = z.object({
         id: z.string(),
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
         name: z.string(),
-        color: z.string().nullable().optional(),
+        color: z.string().nullish(),
         files: z.array(z.string()),
         userId: z.string(),
       }),
@@ -121,12 +120,11 @@ export const export4Schema = z.object({
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
         expiresAt: z
           .string()
-          .nullable()
-          .optional()
+          .nullish()
           .refine((date) => (date ? !isNaN(Date.parse(date)) : true), 'Invalid date'),
         code: z.string(),
         uses: z.number(),
-        maxUses: z.number().nullable().optional(),
+        maxUses: z.number().nullish(),
         inviterId: z.string(),
       }),
     ),
@@ -139,7 +137,7 @@ export const export4Schema = z.object({
         allowUploads: z.boolean(),
         files: z.array(z.string()),
         userId: z.string(),
-        parentId: z.string().nullable().optional(),
+        parentId: z.string().nullish(),
       }),
     ),
     urls: z.array(
@@ -147,13 +145,13 @@ export const export4Schema = z.object({
         id: z.string(),
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
         code: z.string(),
-        vanity: z.string().nullable().optional(),
+        vanity: z.string().nullish(),
         destination: z.string(),
         views: z.number(),
-        maxViews: z.number().nullable().optional(),
-        password: z.string().nullable().optional(),
+        maxViews: z.number().nullish(),
+        password: z.string().nullish(),
         enabled: z.boolean(),
-        userId: z.string().nullable().optional(),
+        userId: z.string().nullish(),
       }),
     ),
     files: z.array(
@@ -162,19 +160,18 @@ export const export4Schema = z.object({
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
         deletesAt: z
           .string()
-          .nullable()
-          .optional()
+          .nullish()
           .refine((date) => (date ? !isNaN(Date.parse(date)) : true), 'Invalid date'),
         name: z.string(),
-        originalName: z.string().nullable().optional(),
+        originalName: z.string().nullish(),
         size: z.number(),
         type: z.string(),
         views: z.number(),
-        maxViews: z.number().nullable().optional(),
+        maxViews: z.number().nullish(),
         favorite: z.boolean(),
-        password: z.string().nullable().optional(),
+        password: z.string().nullish(),
         userId: z.string().nullable(),
-        folderId: z.string().nullable().optional(),
+        folderId: z.string().nullish(),
       }),
     ),
     thumbnails: z.array(
@@ -189,7 +186,7 @@ export const export4Schema = z.object({
       z.object({
         id: z.string(),
         createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
-        data: z.record(z.string(), z.unknown()),
+        data: z.record(z.string(), z.any()),
       }),
     ),
   }),
