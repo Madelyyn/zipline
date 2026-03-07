@@ -3,7 +3,7 @@ import type { SafeConfig } from '@/lib/config/safe';
 import { fetchApi } from '@/lib/fetchApi';
 import useAvatar from '@/lib/hooks/useAvatar';
 import useLogin from '@/lib/hooks/useLogin';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLogout } from '@/lib/hooks/useLogout';
 import { isAdministrator } from '@/lib/role';
 import { useUserStore } from '@/lib/store/user';
 import {
@@ -46,12 +46,11 @@ import {
   IconUpload,
   IconUsersGroup,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { Link, Outlet, useLoaderData, useLocation } from 'react-router-dom';
+import { dashboardLoader } from '../client/routes';
 import ConfigProvider from './ConfigProvider';
 import VersionBadge from './VersionBadge';
-import { Link, useLoaderData } from 'react-router-dom';
-import { dashboardLoader } from '../client/routes';
-import { useLogout } from '@/lib/hooks/useLogout';
 
 type NavLinks = {
   label: string;

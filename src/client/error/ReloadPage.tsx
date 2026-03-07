@@ -12,7 +12,12 @@ export default function ReloadPage() {
 
       <Text size='lg'>A new version of the app is available. Please reload the page to update.</Text>
 
-      <Button leftSection={<IconReload size='1rem' />} mr='sm' mt='md' onClick={() => window.location.reload()}>
+      <Button
+        leftSection={<IconReload size='1rem' />}
+        mr='sm'
+        mt='md'
+        onClick={() => window.location.reload()}
+      >
         Reload Page
       </Button>
 
