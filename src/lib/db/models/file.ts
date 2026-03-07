@@ -40,9 +40,9 @@ export function cleanFiles(files: File[], stringifyDates = false) {
     if (file.password) file.password = true;
 
     if (stringifyDates) {
-      (file as any).createdAt = file.createdAt.toISOString();
-      (file as any).updatedAt = file.updatedAt.toISOString();
-      (file as any).deletesAt = file.deletesAt?.toISOString() || null;
+      if (file.createdAt instanceof Date) file.createdAt = file.createdAt.toISOString();
+      if (file.updatedAt instanceof Date) file.updatedAt = file.updatedAt.toISOString();
+      if (file.deletesAt && file.deletesAt instanceof Date) file.deletesAt = file.deletesAt.toISOString();
     }
 
     file.url = formatRootUrl(config.files.route, file.name);
@@ -52,9 +52,9 @@ export function cleanFiles(files: File[], stringifyDates = false) {
 }
 
 export const fileSchema = z.object({
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletesAt: z.date().nullable(),
+  createdAt: z.union([z.date(), z.string()]),
+  updatedAt: z.union([z.date(), z.string()]),
+  deletesAt: z.union([z.date(), z.string()]).nullable(),
   favorite: z.boolean(),
   id: z.string(),
   originalName: z.string().nullable(),

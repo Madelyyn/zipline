@@ -72,7 +72,7 @@ export default typedPlugin(
         if (!uploads && !folder.public) throw new ApiError(9002);
 
         if (folder.parentId) {
-          (folder as any).parent = await buildPublicParentChain(folder.parentId);
+          folder.parent = await buildPublicParentChain(folder.parentId);
         }
 
         return res.send(cleanFolder(folder, true));

@@ -42,8 +42,10 @@ export function cleanFolder<T extends Partial<Folder>>(folder: T, stringifyDates
   if (folder.files && Array.isArray(folder.files)) cleanFiles(folder.files as any, stringifyDates);
 
   if (stringifyDates) {
-    if (folder.createdAt) (folder.createdAt as unknown) = (folder.createdAt as Date).toISOString();
-    if (folder.updatedAt) (folder.updatedAt as unknown) = (folder.updatedAt as Date).toISOString();
+    if (folder.createdAt && folder.createdAt instanceof Date)
+      folder.createdAt = folder.createdAt.toISOString();
+    if (folder.updatedAt && folder.updatedAt instanceof Date)
+      folder.updatedAt = folder.updatedAt.toISOString();
   }
 
   if (folder.children && Array.isArray(folder.children)) {
@@ -69,8 +71,8 @@ export function cleanFolders<T extends Partial<Folder>>(folders: T[], stringifyD
 
 export const folderSchema = z.object({
   id: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.union([z.string(), z.date()]),
+  updatedAt: z.union([z.string(), z.date()]),
 
   name: z.string(),
   public: z.boolean(),
@@ -82,6 +84,7 @@ export const folderSchema = z.object({
   files: z.array(fileSchema).optional(),
   parent: z.any().nullable().optional(),
   children: z.array(z.any()).optional(),
+
   _count: z
     .object({
       children: z.number().optional(),
