@@ -43,7 +43,9 @@ export default function DropzoneFile({
           <Center h='100%'>
             <Group justify='center' gap='xl'>
               <IconFileUpload size={48} />
-              <Text size='md' ff='monospace'>{file.name}</Text>
+              <Text size='md' ff='monospace'>
+                {file.name}
+              </Text>
             </Group>
           </Center>
         </Paper>
