@@ -47,7 +47,7 @@ Visit [the docs](https://zipline.diced.sh/docs/get-started/docker) for a more in
 
 This is the recommended way to run Zipline:
 
-```yml
+```yaml
 services:
   postgresql:
     image: postgres:16
