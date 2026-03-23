@@ -4,11 +4,12 @@ import { Invite } from '@/lib/db/models/invite';
 import { useSettingsStore } from '@/lib/store/settings';
 import { ActionIcon, Anchor, Box, Group, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
-import { IconCopy, IconTrashFilled } from '@tabler/icons-react';
+import { IconCopy, IconQrcode, IconTrashFilled } from '@tabler/icons-react';
 import { DataTable, DataTableSortStatus } from 'mantine-datatable';
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { copyInviteUrl, deleteInvite } from '../actions';
+import QRCodeModal from '@/components/QRCodeModal';
 
 export default function InviteTableView() {
   const clipboard = useClipboard();
@@ -36,8 +37,16 @@ export default function InviteTableView() {
     });
   }, [data, sortStatus]);
 
+  const [qrOpen, setQrOpen] = useState<Invite | null>(null);
+
   return (
     <>
+      <QRCodeModal
+        opened={!!qrOpen}
+        onClose={() => setQrOpen(null)}
+        url={qrOpen ? `/invite/${qrOpen.code}` : ''}
+      />
+
       <Box my='sm'>
         <DataTable
           borderRadius='sm'
@@ -99,6 +108,16 @@ export default function InviteTableView() {
                       }}
                     >
                       <IconCopy size='1rem' />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label='Show QR code'>
+                    <ActionIcon
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setQrOpen(invite);
+                      }}
+                    >
+                      <IconQrcode size='1rem' />
                     </ActionIcon>
                   </Tooltip>
                   <Tooltip label='Delete invite'>
