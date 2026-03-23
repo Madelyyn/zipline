@@ -28,6 +28,7 @@ export const router = createBrowserRouter([
   {
     Component: Root,
     path: '/',
+    HydrateFallback: () => null,
     children: [
       {
         ErrorBoundary: RootErrorBoundary,

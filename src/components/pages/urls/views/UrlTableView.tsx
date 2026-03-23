@@ -6,12 +6,13 @@ import { DataTable, DataTableSortStatus } from 'mantine-datatable';
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import useSWR from 'swr';
 import { copyUrl, deleteUrl } from '../actions';
-import { IconCopy, IconPencil, IconTrashFilled } from '@tabler/icons-react';
+import { IconCopy, IconPencil, IconQrcode, IconTrashFilled } from '@tabler/icons-react';
 import { useConfig } from '@/components/ConfigProvider';
 import { useClipboard } from '@mantine/hooks';
 import { useSettingsStore } from '@/lib/store/settings';
 import { formatRootUrl, trimUrl } from '@/lib/url';
 import EditUrlModal from '../EditUrlModal';
+import QRCodeModal from '@/components/QRCodeModal';
 
 const NAMES = {
   code: 'Code',
@@ -141,9 +142,16 @@ export default function UrlTableView() {
     }
   }, [searchField]);
 
+  const [qrOpen, setQrOpen] = useState<Url | null>(null);
+
   return (
     <>
       <EditUrlModal url={selectedUrl} onClose={() => setSelectedUrl(null)} />
+      <QRCodeModal
+        url={qrOpen ? formatRootUrl(config.urls.route, qrOpen.vanity ?? qrOpen.code) : ''}
+        opened={!!qrOpen}
+        onClose={() => setQrOpen(null)}
+      />
 
       <Box my='sm'>
         <DataTable
@@ -250,6 +258,16 @@ export default function UrlTableView() {
                       }}
                     >
                       <IconCopy size='1rem' />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label='Show QR Code'>
+                    <ActionIcon
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setQrOpen(url);
+                      }}
+                    >
+                      <IconQrcode size='1rem' />
                     </ActionIcon>
                   </Tooltip>
                   <Tooltip label='Edit URL'>
