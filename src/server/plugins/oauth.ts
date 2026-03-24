@@ -184,8 +184,7 @@ async function oauthPlugin(fastify: FastifyInstance) {
         },
       });
 
-      if (session?.sessionId) 
-        session.destroy();
+      if (session?.sessionId) session.destroy();
 
       await saveSession(session, <User>login.user!, false);
 
