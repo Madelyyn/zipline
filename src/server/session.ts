@@ -28,23 +28,12 @@ export async function getSession(
 ) {
   cookieOptions.secure = config.core.returnHttpsUrls;
 
-  if (!(req as any).raw || !(req as any).raw) {
-    const session = await getIronSession<ZiplineSession>(
-      req as IncomingMessage,
-      reply as ServerResponse<IncomingMessage>,
-      {
-        password: config.core.secret,
-        cookieName: 'zipline_session',
-        cookieOptions,
-      },
-    );
-
-    return session;
-  }
+  const rawReq = (req as FastifyRequest).raw || req;
+  const rawRes = (reply as FastifyReply).raw || reply;
 
   const session = await getIronSession<ZiplineSession>(
-    (req as FastifyRequest).raw,
-    (reply as FastifyReply).raw,
+    rawReq as IncomingMessage,
+    rawRes as ServerResponse<IncomingMessage>,
     {
       password: config.core.secret,
       cookieName: 'zipline_session',
@@ -52,7 +41,8 @@ export async function getSession(
     },
   );
 
-  session.client = detectClient(<Record<string, string>>req.headers);
+  const headers = (req as FastifyRequest).headers || (req as IncomingMessage).headers;
+  session.client = detectClient(<Record<string, string>>headers);
 
   return session;
 }
