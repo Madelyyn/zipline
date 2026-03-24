@@ -1,10 +1,12 @@
 import { getDomain } from '@/lib/webDomain';
-import { Button, Group, Image, Modal, Select, Text } from '@mantine/core';
+import { Button, Group, Image, Modal, Select, Text, Tooltip } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { IconClipboardCheck, IconClipboardX, IconCopy, IconDownload } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 
 type Type = 'image/png' | 'image/jpeg' | 'image/webp';
+
+const UNSUPPORTED_COPY = ['image/jpeg', 'image/webp'];
 
 export default function QRCodeModal({
   opened,
@@ -90,9 +92,22 @@ export default function QRCodeModal({
 
       {dataUrl && (
         <Group gap='xs' mt='md' grow>
-          <Button onClick={copyImageToClipboard} leftSection={<IconCopy size='1rem' />}>
-            Copy Image
-          </Button>
+          <Tooltip
+            label={
+              UNSUPPORTED_COPY.includes(type)
+                ? 'Copying this format is not supported in some browsers. You can copy the image normally via right-click or holding it.'
+                : ''
+            }
+            hidden={!UNSUPPORTED_COPY.includes(type)}
+          >
+            <Button
+              onClick={copyImageToClipboard}
+              leftSection={<IconCopy size='1rem' />}
+              disabled={UNSUPPORTED_COPY.includes(type)}
+            >
+              Copy Image
+            </Button>
+          </Tooltip>
           <Button onClick={downloadImage} leftSection={<IconDownload size='1rem' />}>
             Download
           </Button>
