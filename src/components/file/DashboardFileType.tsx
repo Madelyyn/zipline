@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { Icon, IconFileUnknown, IconPlayerPlay, IconShieldLockFilled } from '@tabler/icons-react';
 import { useCallback, useEffect, useState } from 'react';
-import { renderMode } from '../pages/upload/renderMode';
+import { renderMode } from '../render/renderMode';
 import Asciinema from '../render/Asciinema';
 import Pdf from '../render/Pdf';
 import Render from '../render/Render';

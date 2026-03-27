@@ -1,14 +1,12 @@
 import { useConfig } from '@/components/ConfigProvider';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
-import { UploadOptionsStore } from '@/lib/store/uploadOptions';
-import { ActionIcon, Anchor, Group, Stack, Text, Tooltip } from '@mantine/core';
-import { useClipboard } from '@mantine/hooks';
-import { modals } from '@mantine/modals';
+import { Anchor, Text } from '@mantine/core';
 import { hideNotification, notifications } from '@mantine/notifications';
-import { IconClipboardCopy, IconExternalLink, IconFileUpload, IconFileXFilled } from '@tabler/icons-react';
+import { IconFileUpload, IconFileXFilled } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { handleResponse } from './uploadFiles';
+import { UploadProgress } from './useProgress';
+import { applyUploadHeaders, handleUploadResponse, UploadHeadersOptions, UploadHandlers } from './shared';
 
 export function progressTracker(size: number) {
   const alpha = 0.2;
@@ -18,7 +16,7 @@ export function progressTracker(size: number) {
   const startTime = Date.now();
 
   return {
-    update: (loaded: number) => {
+    update: (loaded: number): UploadProgress => {
       const now = Date.now();
       const lastLoaded = totalBytes + loaded;
 
@@ -49,64 +47,6 @@ export function progressTracker(size: number) {
   };
 }
 
-export function filesModal(
-  files: Response['/api/upload']['files'],
-  {
-    clipboard,
-    clearEphemeral,
-  }: {
-    clipboard: ReturnType<typeof useClipboard>;
-    clearEphemeral: () => void;
-  },
-) {
-  const open = (idx: number) => window.open(files[idx].url, '_blank');
-  const copy = (idx: number) => {
-    clipboard.copy(files[idx].url);
-    notifications.show({
-      title: 'Copied URL to clipboard',
-      message: (
-        <Anchor component={Link} to={files[idx].url} target='_blank'>
-          {files[idx].url}
-        </Anchor>
-      ),
-      color: 'blue',
-      icon: <IconClipboardCopy size='1rem' />,
-    });
-  };
-
-  modals.open({
-    title: 'Uploaded files',
-    size: 'auto',
-    children: (
-      <Stack>
-        {files.map((file, idx) => (
-          <Group key={idx} justify='space-between'>
-            <Group justify='left'>
-              <Anchor component={Link} to={file.url} target='_blank'>
-                {file.url}
-              </Anchor>
-            </Group>
-            <Group justify='right'>
-              <Tooltip label='Open link in a new tab'>
-                <ActionIcon onClick={() => open(idx)} variant='filled' color='primary'>
-                  <IconExternalLink size='1rem' />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label='Copy link to clipboard'>
-                <ActionIcon onClick={() => copy(idx)} variant='filled' color='primary'>
-                  <IconClipboardCopy size='1rem' />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-          </Group>
-        ))}
-      </Stack>
-    ),
-  });
-
-  clearEphemeral();
-}
-
 export async function uploadPartialFiles(
   files: File[],
   {
@@ -118,17 +58,12 @@ export async function uploadPartialFiles(
     ephemeral,
     config,
     folder,
-  }: {
-    setProgress: (o: { percent: number; remaining: number; speed: number }) => void;
-    setLoading: (loading: boolean) => void;
-    setFiles: (files: File[]) => void;
-    clipboard: ReturnType<typeof useClipboard>;
-    clearEphemeral: () => void;
-    options: UploadOptionsStore['options'];
-    ephemeral: UploadOptionsStore['ephemeral'];
-    config: ReturnType<typeof useConfig>;
-    folder?: string;
-  },
+  }: UploadHandlers &
+    UploadHeadersOptions & {
+      clipboard: { copy: (text: string) => void };
+      clearEphemeral?: () => void;
+      config: ReturnType<typeof useConfig>;
+    },
 ) {
   setLoading(true);
   setProgress({ percent: 0, remaining: 0, speed: 0 });
@@ -195,7 +130,7 @@ export async function uploadPartialFiles(
       req.addEventListener(
         'load',
         () => {
-          const { data: res, error } = handleResponse<Response['/api/upload/partial']>(req);
+          const { data: res, error } = handleUploadResponse<Response['/api/upload/partial']>(req);
 
           if (error || !res) {
             notifications.update({
@@ -278,29 +213,7 @@ export async function uploadPartialFiles(
       );
 
       req.open('POST', '/api/upload/partial');
-      options.deletesAt !== 'default' && req.setRequestHeader('x-zipline-deletes-at', options.deletesAt);
-      options.format !== 'default' && req.setRequestHeader('x-zipline-format', options.format);
-      options.imageCompressionPercent &&
-        req.setRequestHeader(
-          'x-zipline-image-compression-percent',
-          options.imageCompressionPercent.toString(),
-        );
-      options.imageCompressionFormat !== 'default' &&
-        req.setRequestHeader('x-zipline-image-compression-type', options.imageCompressionFormat);
-      options.maxViews && req.setRequestHeader('x-zipline-max-views', options.maxViews.toString());
-      options.addOriginalName && req.setRequestHeader('x-zipline-original-name', 'true');
-      options.overrides_returnDomain &&
-        req.setRequestHeader('x-zipline-domain', options.overrides_returnDomain);
-
-      ephemeral.password && req.setRequestHeader('x-zipline-password', ephemeral.password);
-      ephemeral.filename &&
-        req.setRequestHeader('x-zipline-filename', encodeURIComponent(ephemeral.filename));
-
-      if (folder) {
-        req.setRequestHeader('x-zipline-folder', folder);
-      } else if (ephemeral.folderId) {
-        req.setRequestHeader('x-zipline-folder', ephemeral.folderId);
-      }
+      applyUploadHeaders(req, { options, ephemeral, folder });
 
       identifier && req.setRequestHeader('x-zipline-p-identifier', identifier);
       req.setRequestHeader('x-zipline-p-filename', encodeURIComponent(file.name));

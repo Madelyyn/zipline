@@ -1,6 +1,9 @@
 import { useCodeMap } from '@/components/ConfigProvider';
 import Render from '@/components/render/Render';
+import { renderMode } from '@/components/render/renderMode';
 import { bytes } from '@/lib/bytes';
+import { uploadFiles } from '@/lib/client/upload/files';
+import useMultiTextFiles from '@/lib/client/upload/useMultiTextFiles';
 import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
 import { ActionIcon, Button, Group, Select, Tabs, Textarea, Title } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
@@ -15,10 +18,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/shallow';
-import { renderMode } from '../renderMode';
-import { uploadFiles } from '../uploadFiles';
 import UploadOptionsButton from '../UploadOptionsButton';
-import useMultiTextFiles from '../useMultiTextFiles';
 import styles from './index.module.css';
 
 export default function UploadText() {
@@ -66,7 +66,7 @@ export default function UploadText() {
     [files],
   );
 
-  const upload = () => {
+  const upload = async () => {
     const fileBlobs = files.map((file) => {
       const blob = new Blob([file.text], {
         type: codeMap.find((meta) => meta.ext === file.lang)?.mime,
@@ -78,7 +78,7 @@ export default function UploadText() {
       });
     });
 
-    uploadFiles(fileBlobs, {
+    await uploadFiles(fileBlobs, {
       clipboard,
       setFiles: () => {},
       setLoading,
