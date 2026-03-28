@@ -1,5 +1,5 @@
 import GridTableSwitcher from '@/components/GridTableSwitcher';
-import useObjectState from '@/lib/client/hooks/useObjectState';
+import useObjectState, { type UpdateFn } from '@/lib/client/hooks/useObjectState';
 import { useViewStore } from '@/lib/client/store/view';
 import { ActionIcon, Group, Menu, Title, Tooltip } from '@mantine/core';
 import {
@@ -10,7 +10,7 @@ import {
   IconTableOptions,
   IconTags,
 } from '@tabler/icons-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import PendingFilesModal from './PendingFilesModal';
 import TagsModal from './tags/TagsModal';
 import FavoriteFiles from './views/FavoriteFiles';
@@ -26,13 +26,46 @@ export type DashboardFilesModals = {
 
 export default function DashboardFiles() {
   const view = useViewStore((state) => state.files);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modalKeys: Array<keyof DashboardFilesModals> = ['table', 'idSearch', 'tags', 'pending'];
 
-  const [modals, setModals] = useObjectState<DashboardFilesModals>({
-    table: false,
-    idSearch: false,
-    tags: false,
-    pending: false,
+  const modalQS = (key: keyof DashboardFilesModals) => searchParams.get(key) === 'true';
+
+  const [modals, setModalState] = useObjectState<DashboardFilesModals>({
+    table: modalQS('table'),
+    idSearch: modalQS('idSearch'),
+    tags: modalQS('tags'),
+    pending: modalQS('pending'),
   });
+
+  const updateModalQuery = (updates: Partial<DashboardFilesModals>) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+
+        for (const key of modalKeys) {
+          if (!(key in updates)) continue;
+
+          if (updates[key]) next.set(key, 'true');
+          else next.delete(key);
+        }
+
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  const setModals: UpdateFn<DashboardFilesModals> = (keyOrObj: any, value?: any) => {
+    if (typeof keyOrObj === 'object' && value === undefined) {
+      setModalState(keyOrObj);
+      updateModalQuery(keyOrObj);
+      return;
+    }
+
+    setModalState(keyOrObj, value);
+    updateModalQuery({ [keyOrObj]: value });
+  };
 
   return (
     <>

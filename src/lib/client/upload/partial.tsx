@@ -187,7 +187,7 @@ export async function uploadPartialFiles(
                     Click here to copy the URL to clipboard while it&apos;s being processed.
                   </Anchor>
                   <br />
-                  <Anchor component={Link} to='/dashboard/files?popen=true'>
+                  <Anchor component={Link} to='/dashboard/files?pending=true'>
                     View processing files
                   </Anchor>
                 </Text>
