@@ -41,7 +41,9 @@ async function vitePlugin(fastify: FastifyInstance) {
         ...reservedRoutes.filter((x) => x !== '/dashboard' && x !== '/auth' && x !== '/r'),
         config.files.route,
         config.urls.route,
-      ].some((route) => url.startsWith(route));
+      ]
+        .filter((url) => url.trim() !== '/')
+        .some((route) => url.startsWith(route));
 
       if (reserved) return;
 

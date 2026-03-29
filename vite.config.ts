@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
         },
         output: {
           format: isSSR ? 'cjs' : 'esm',
-          entryFileNames: isSSR ? `${mode}.js` : '[name]-[hash].js',
+          entryFileNames: isSSR ? `${mode}.js` : 'assets/[name]-[hash].js',
         },
       },
       target: 'esnext',
