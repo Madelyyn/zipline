@@ -69,10 +69,11 @@ export async function uploadFiles(
 
   notifications.show({
     id: 'upload',
-    title: 'Uploading files',
-    message: `Uploading ${files.length} file${files.length === 1 ? '' : 's'} in ${batches} request${
-      batches === 1 ? '' : 's'
-    }`,
+    title: `Preparing file${files.length > 1 ? 's' : ''}`,
+    message:
+      batches > 1
+        ? `Uploading ${files.length} file${files.length > 1 ? 's' : ''} in ${batches} batche${batches > 1 ? 's' : ''}`
+        : `Uploading ${files.length} file${files.length > 1 ? 's' : ''}`,
     loading: true,
     autoClose: false,
   });
@@ -132,13 +133,14 @@ export async function uploadFiles(
       const batchBytes = batchFiles.reduce((acc, file) => acc + file.size, 0);
 
       notifications.update({
-        id: 'upload',
-        title: 'Uploading files',
-        message: `Uploading batch ${batchIndex + 1}/${batches} (${batchFiles.length} file${
-          batchFiles.length === 1 ? '' : 's'
-        })`,
+        title:
+          batches > 1
+            ? `Uploading batch ${batchIndex + 1}/${batches}`
+            : `Uploading file${batchFiles.length > 1 ? 's' : ''}`,
+        message: `${batchFiles.length} file${batchFiles.length > 1 ? 's' : ''}`,
         loading: true,
         autoClose: false,
+        id: 'upload',
       });
 
       const res = await uploadBatch(batchFiles, completedBytes);
@@ -150,7 +152,7 @@ export async function uploadFiles(
 
     notifications.update({
       id: 'upload',
-      title: 'Uploaded files',
+      title: 'Upload complete',
       message: `Uploaded ${files.length} file${files.length === 1 ? '' : 's'}`,
       color: 'green',
       icon: <IconFileUpload size='1rem' />,

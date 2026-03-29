@@ -121,7 +121,7 @@ export function showUploadModal(
   };
 
   modals.open({
-    title: 'Uploaded files',
+    title: `Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`,
     size: 'auto',
     children: (
       <>

@@ -15,6 +15,7 @@ import {
   Progress,
   Text,
   Title,
+  Tooltip,
   rem,
   useMantineTheme,
 } from '@mantine/core';
@@ -244,14 +245,16 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
           >
             Show more
           </Button>
-          <Button
-            size='compact-sm'
-            variant='subtle'
-            disabled={dropLoading}
-            onClick={() => setVisibleCount(files.length)}
-          >
-            Show all
-          </Button>
+          <Tooltip label='This may cause performance issues if there are a lot of files' hidden={dropLoading}>
+            <Button
+              size='compact-sm'
+              variant='subtle'
+              disabled={dropLoading}
+              onClick={() => setVisibleCount(files.length)}
+            >
+              Show all
+            </Button>
+          </Tooltip>
         </Group>
       )}
 
