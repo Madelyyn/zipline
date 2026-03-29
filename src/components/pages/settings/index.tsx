@@ -41,7 +41,7 @@ export default function DashboardSettings() {
           config.oauthEnabled.oidc,
         ) && <SettingsOAuth />}
 
-        {eitherTrue(config.mfa.totp.enabled, config.mfa.passkeys) && <SettingsMfa />}
+        {eitherTrue(config.mfa.totp.enabled, config.mfa.passkeys.enabled) && <SettingsMfa />}
 
         <SettingsExports />
         <SettingsGenerators />
