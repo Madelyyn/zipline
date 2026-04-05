@@ -39,7 +39,7 @@ export default typedPlugin(
               .refine((str) => !str.startsWith('/'), 'Vanity cannot start with a slash.')
               .refine(
                 (str) =>
-                  !reservedRoutes.some((roure) => {
+                  !reservedRoutes.some((route) => {
                     const nStr = `/${str}`.toLowerCase();
                     const nRoute = route.toLowerCase();
 
