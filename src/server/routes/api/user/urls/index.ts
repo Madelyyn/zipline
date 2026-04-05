@@ -10,6 +10,7 @@ import { onShorten } from '@/lib/webhooks';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import { z } from 'zod';
+import { reservedRoutes } from '../../server/settings';
 
 export type ApiUserUrlsResponse =
   | Url[]
@@ -33,7 +34,21 @@ export default typedPlugin(
           description:
             'Create a new shortened URL for the authenticated user, with optional vanity, password, and max-views settings.',
           body: z.object({
-            vanity: zStringTrimmed.max(100).nullish(),
+            vanity: zStringTrimmed
+              .max(100)
+              .refine((str) => !str.startsWith('/'), 'Vanity cannot start with a slash.')
+              .refine(
+                (str) =>
+                  !reservedRoutes.some((roure) => {
+                    const nStr = `/${str}`.toLowerCase();
+                    const nRoute = route.toLowerCase();
+
+                    return nStr === nRoute || nStr.startsWith(`${nRoute}/`);
+                  }),
+                'Vanity cannot start with a reserved route.',
+              )
+              .optional()
+              .nullish(),
             destination: z.httpUrl().min(1),
             enabled: z.boolean().optional(),
           }),
