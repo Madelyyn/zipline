@@ -1,5 +1,30 @@
 import { IntervalTask, WorkerTask } from '..';
 
+export function runThumbnailWorkers(workers: WorkerTask[], files: string[]) {
+  const thumbToWorker: { id: string; worker: number }[] = [];
+
+  let workerIndex = 0;
+  for (const file of files) {
+    thumbToWorker.push({
+      id: file,
+      worker: workerIndex,
+    });
+
+    workerIndex = (workerIndex + 1) % workers.length;
+  }
+
+  const ids = workers.map((_, i) => thumbToWorker.filter((x) => x.worker === i).map((x) => x.id));
+
+  for (let i = 0; i !== workers.length; ++i) {
+    if (!ids[i].length) continue;
+
+    workers[i].worker!.postMessage({
+      type: 0,
+      data: ids[i],
+    });
+  }
+}
+
 export default function thumbnails(prisma: typeof globalThis.__db__) {
   return async function (this: IntervalTask, rerun = false) {
     const thumbnailWorkers = this.tasks.tasks.filter(
@@ -23,27 +48,9 @@ export default function thumbnails(prisma: typeof globalThis.__db__) {
 
     this.logger.debug(`found ${thumbnailNeeded.length} files that need thumbnails`);
 
-    const thumbToWorker: { id: string; worker: number }[] = [];
-
-    let workerIndex = 0;
-    for (const file of thumbnailNeeded) {
-      thumbToWorker.push({
-        id: file.id,
-        worker: workerIndex,
-      });
-
-      workerIndex = (workerIndex + 1) % thumbnailWorkers.length;
-    }
-
-    const ids = thumbnailWorkers.map((_, i) => thumbToWorker.filter((x) => x.worker === i).map((x) => x.id));
-
-    for (let i = 0; i !== thumbnailWorkers.length; ++i) {
-      if (!ids[i].length) continue;
-
-      thumbnailWorkers[i].worker!.postMessage({
-        type: 0,
-        data: ids[i],
-      });
-    }
+    runThumbnailWorkers(
+      thumbnailWorkers,
+      thumbnailNeeded.map((x) => x.id),
+    );
   };
 }

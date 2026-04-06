@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, LoadingOverlay, Paper, SimpleGrid, Text, TextInput, Title } from '@mantine/core';
+import { Button, Code, LoadingOverlay, Paper, SimpleGrid, Text, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -49,7 +49,7 @@ export default function Tasks({
       <Title order={2}>Tasks</Title>
 
       <Text c='dimmed' size='sm'>
-        All options require a restart to take effect.
+        All options require a restart to take effect. Setting a value of <Code>0</Code> will disable the task.
       </Text>
 
       <form onSubmit={form.onSubmit(onSubmit)}>

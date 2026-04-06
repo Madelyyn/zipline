@@ -80,6 +80,7 @@ export const ENVS = [
   env('features.thumbnails.enabled', 'FEATURES_THUMBNAILS_ENABLED', 'boolean', true),
   env('features.thumbnails.num_threads', 'FEATURES_THUMBNAILS_NUM_THREADS', 'number', true),
   env('features.thumbnails.format', 'FEATURES_THUMBNAILS_FORMAT', 'string', true),
+  env('features.thumbnails.instantaneous', 'FEATURES_THUMBNAILS_INSTANTANEOUS', 'boolean', true),
 
   env('features.metrics.enabled', 'FEATURES_METRICS_ENABLED', 'boolean', true),
   env('features.metrics.adminOnly', 'FEATURES_METRICS_ADMIN_ONLY', 'boolean', true),

@@ -169,4 +169,8 @@ export class Tasks {
 
     return this.tasks[len - 1] as WorkerTask<Data>;
   }
+
+  public workersBy(starting: string): WorkerTask[] {
+    return this.tasks.filter((x) => 'worker' in x && x.id.startsWith(starting)) as WorkerTask[];
+  }
 }

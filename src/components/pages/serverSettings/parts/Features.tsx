@@ -2,11 +2,13 @@ import { Response } from '@/lib/api/response';
 import {
   Anchor,
   Button,
+  Divider,
   LoadingOverlay,
   NumberInput,
   Paper,
   Select,
   SimpleGrid,
+  Stack,
   Switch,
   TextInput,
   Title,
@@ -35,6 +37,7 @@ export default function Features({
       featuresThumbnailsEnabled: true,
       featuresThumbnailsNumberThreads: 4,
       featuresThumbnailsFormat: 'jpg',
+      featuresThumbnailsInstantaneous: false,
       featuresMetricsEnabled: true,
       featuresMetricsAdminOnly: false,
       featuresMetricsShowUserSpecific: true,
@@ -61,6 +64,7 @@ export default function Features({
       featuresThumbnailsEnabled: data.settings.featuresThumbnailsEnabled ?? true,
       featuresThumbnailsNumberThreads: data.settings.featuresThumbnailsNumberThreads ?? 4,
       featuresThumbnailsFormat: data.settings.featuresThumbnailsFormat ?? 'jpg',
+      featuresThumbnailsInstantaneous: data.settings.featuresThumbnailsInstantaneous ?? false,
       featuresMetricsEnabled: data.settings.featuresMetricsEnabled ?? true,
       featuresMetricsAdminOnly: data.settings.featuresMetricsAdminOnly ?? false,
       featuresMetricsShowUserSpecific: data.settings.featuresMetricsShowUserSpecific ?? true,
@@ -76,7 +80,7 @@ export default function Features({
       <Title order={2}>Features</Title>
 
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='xs' mt='xs'>
           <Switch
             label='Image Compression'
             description='Allows the ability for users to compress images.'
@@ -130,12 +134,21 @@ export default function Features({
             description='Shows metrics specific to each user, for all users.'
             {...form.getInputProps('featuresMetricsShowUserSpecific', { type: 'checkbox' })}
           />
-          <div />
-          <Switch
-            label='Enable Thumbnails'
-            description='Enables thumbnail generation for images. Requires a server restart.'
-            {...form.getInputProps('featuresThumbnailsEnabled', { type: 'checkbox' })}
-          />
+
+          <Divider />
+
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing='lg'>
+            <Switch
+              label='Enable Thumbnails'
+              description='Enables thumbnail generation for images. Requires a server restart.'
+              {...form.getInputProps('featuresThumbnailsEnabled', { type: 'checkbox' })}
+            />
+            <Switch
+              label='Instantaneous Thumbnails'
+              description='Generates thumbnails immediately after a file is uploaded, instead of waiting for the task to run.'
+              {...form.getInputProps('featuresThumbnailsInstantaneous', { type: 'checkbox' })}
+            />
+          </SimpleGrid>
 
           <NumberInput
             label='Thumbnails Number Threads'
@@ -157,13 +170,14 @@ export default function Features({
             {...form.getInputProps('featuresThumbnailsFormat')}
           />
 
-          <div />
+          <Divider />
 
           <Switch
             label='Version Checking'
             description='Enable version checking for the server. This will check for updates and display the status on the sidebar to all users.'
             {...form.getInputProps('featuresVersionChecking', { type: 'checkbox' })}
           />
+
           <TextInput
             label='Version API URL'
             description={
@@ -182,7 +196,7 @@ export default function Features({
             placeholder='https://zipline-version.diced.sh/'
             {...form.getInputProps('featuresVersionAPI')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save

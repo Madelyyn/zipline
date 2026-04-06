@@ -10,6 +10,7 @@ import { fileSelect } from '@/lib/db/models/file';
 import { sanitizeFilename } from '@/lib/fs';
 import { removeGps } from '@/lib/gps';
 import { log } from '@/lib/logger';
+import { runThumbnailWorkers } from '@/lib/tasks/run/thumbnails';
 import { parseHeaders, UploadHeaders } from '@/lib/uploader/parseHeaders';
 import { onUpload } from '@/lib/webhooks';
 import { Prisma } from '@/prisma/client';
@@ -250,6 +251,19 @@ export default typedPlugin(
             .status(200)
             .type('text/plain')
             .send(response.files.map((x) => x.url).join(','));
+
+        if (config.features.thumbnails.instantaneous) {
+          logger.debug('running thumbnail workers immediately due to configuration', {
+            files: response.files.length,
+          });
+
+          const fileIds = response.files.map((x) => x.id);
+
+          const thumbnailWorkers = server.tasks.workersBy('thumbnail');
+          if (!thumbnailWorkers.length) return;
+
+          runThumbnailWorkers(thumbnailWorkers, fileIds);
+        }
 
         return res.send(response);
       },

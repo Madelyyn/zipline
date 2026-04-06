@@ -47,6 +47,7 @@ export const DATABASE_TO_PROP = {
   featuresThumbnailsEnabled: 'features.thumbnails.enabled',
   featuresThumbnailsNumberThreads: 'features.thumbnails.num_threads',
   featuresThumbnailsFormat: 'features.thumbnails.format',
+  featuresThumbnailsInstantaneous: 'features.thumbnails.instantaneous',
 
   featuresMetricsEnabled: 'features.metrics.enabled',
   featuresMetricsAdminOnly: 'features.metrics.adminOnly',

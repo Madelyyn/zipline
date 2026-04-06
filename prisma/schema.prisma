@@ -58,9 +58,10 @@ model Zipline {
   featuresOauthRegistration Boolean @default(false)
   featuresDeleteOnMaxViews  Boolean @default(true)
 
-  featuresThumbnailsEnabled       Boolean @default(true)
-  featuresThumbnailsNumberThreads Int     @default(4)
-  featuresThumbnailsFormat        String  @default("jpg")
+  featuresThumbnailsEnabled        Boolean  @default(true)
+  featuresThumbnailsNumberThreads  Int      @default(4)
+  featuresThumbnailsFormat         String   @default("jpg")
+  featuresThumbnailsInstantaneous  Boolean  @default(false)
 
   featuresMetricsEnabled          Boolean @default(true)
   featuresMetricsAdminOnly        Boolean @default(false)

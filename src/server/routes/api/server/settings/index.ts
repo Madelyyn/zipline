@@ -55,10 +55,12 @@ const zMs = zStringTrimmed.refine(
 );
 const zBytes = zStringTrimmed.refine((value) => bytes(value) > 0, 'Value must be greater than 0');
 
-const zIntervalMs = zMs.refine(
-  (value) => ms(value as StringValue) <= MAX_SAFE_TIMEOUT_MS,
-  `Value must be less than or equal to ${MAX_SAFE_TIMEOUT_MS}ms`,
-);
+const zIntervalMs = zStringTrimmed
+  .refine((value) => ms((value ?? '0') as StringValue) >= 0, 'Value must be greater than or equal to 0')
+  .refine(
+    (value) => ms(value as StringValue) <= MAX_SAFE_TIMEOUT_MS,
+    `Value must be less than or equal to ${MAX_SAFE_TIMEOUT_MS}ms`,
+  );
 
 const discordEmbed = z
   .union([
@@ -227,6 +229,7 @@ export default typedPlugin(
                 'Number of threads must be less than or equal to the number of CPUs: ' + cpus().length,
               ),
             featuresThumbnailsFormat: z.enum(['jpg', 'png', 'webp']),
+            featuresThumbnailsInstantaneous: z.boolean(),
 
             featuresMetricsEnabled: z.boolean(),
             featuresMetricsAdminOnly: z.boolean(),
