@@ -170,14 +170,11 @@ export default function Discord({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
-
-      <Title order={2}>Discord Webhook</Title>
 
       <form onSubmit={formMain.onSubmit(onSubmitMain)}>
         <TextInput
-          mt='md'
           label='Webhook URL'
           description='The Discord webhook URL to send notifications to'
           placeholder='https://discord.com/api/webhooks/...'
@@ -399,6 +396,6 @@ export default function Discord({
           </form>
         </Paper>
       </SimpleGrid>
-    </Paper>
+    </>
   );
 }

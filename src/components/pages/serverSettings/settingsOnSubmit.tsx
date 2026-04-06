@@ -42,7 +42,7 @@ export function settingsOnSubmit(navigate: NavigateFunction, form: ReturnType<ty
       mutate('/api/server/settings', data);
       mutate('/api/server/settings/web');
       mutate('/api/server/public');
-      navigate('/dashboard/admin/settings', { replace: true });
+      navigate(window.location.pathname, { replace: true });
     }
   };
 }

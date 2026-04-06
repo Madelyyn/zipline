@@ -1,15 +1,5 @@
 import { Response } from '@/lib/api/response';
-import {
-  Button,
-  LoadingOverlay,
-  NumberInput,
-  Paper,
-  SimpleGrid,
-  Switch,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Button, LoadingOverlay, NumberInput, Stack, Switch, Text, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -78,17 +68,15 @@ export default function Ratelimit({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>Ratelimit</Title>
-
-      <Text c='dimmed' size='sm'>
+      <Text size='sm' c='dimmed' mb='md'>
         All options require a restart to take effect.
       </Text>
 
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
           <Switch
             label='Enable Ratelimit'
             description='Enable ratelimiting for the server.'
@@ -123,12 +111,12 @@ export default function Ratelimit({
             placeholder='192.168.1.1, 127.0.0.1, 0.0.0.0'
             {...form.getInputProps('ratelimitAllowList')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

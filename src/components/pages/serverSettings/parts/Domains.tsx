@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { ActionIcon, Group, LoadingOverlay, Paper, Table, Text, TextInput, Title } from '@mantine/core';
+import { ActionIcon, LoadingOverlay, Paper, Table, Text, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -39,7 +39,7 @@ export default function Domains({
     }
   }
 
-  const addDomain = async (e: React.FormEvent<HTMLFormElement>) => {
+  const addDomain = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const domain = form.values.domains.trim();
@@ -55,23 +55,20 @@ export default function Domains({
   };
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading || submitting} />
 
-      <Title order={2}>Domains</Title>
-
       <form onSubmit={addDomain}>
-        <Group mt='md' align='flex-end'>
-          <TextInput
-            description='Enter a domain name'
-            placeholder='example.com'
-            flex={1}
-            {...form.getInputProps('domains')}
-          />
-          <ActionIcon type='submit' color='blue' size='lg' variant='filled' disabled={submitting}>
-            <IconPlus size='1.25rem' />
-          </ActionIcon>
-        </Group>
+        <TextInput
+          description='Enter a domain name'
+          placeholder='example.com'
+          rightSection={
+            <ActionIcon type='submit' variant='transparent' disabled={submitting}>
+              <IconPlus size='1.25rem' />
+            </ActionIcon>
+          }
+          {...form.getInputProps('domains')}
+        />
       </form>
 
       {domains.length > 0 ? (
@@ -106,6 +103,6 @@ export default function Domains({
           No domains added yet.
         </Text>
       )}
-    </Paper>
+    </>
   );
 }

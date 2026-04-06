@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, LoadingOverlay, Paper, SimpleGrid, TextInput, Title } from '@mantine/core';
+import { Button, LoadingOverlay, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -47,13 +47,11 @@ export default function HttpWebhook({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>HTTP Webhooks</Title>
-
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
           <TextInput
             label='On Upload'
             description='The URL to send a POST request to when a file is uploaded.'
@@ -67,12 +65,12 @@ export default function HttpWebhook({
             placeholder='https://example.com/shorten'
             {...form.getInputProps('httpWebhookOnShorten')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

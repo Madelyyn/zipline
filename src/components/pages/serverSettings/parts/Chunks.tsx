@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, LoadingOverlay, Paper, SimpleGrid, Switch, TextInput, Title } from '@mantine/core';
+import { Button, LoadingOverlay, Stack, Switch, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -40,20 +40,17 @@ export default function Chunks({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
-      <LoadingOverlay visible={isLoading} />
-
-      <Title order={2}>Chunks</Title>
+    <>
+      <LoadingOverlay visible={isLoading} bdrs='md' />
 
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <Switch
-          mt='md'
-          label='Enable Chunks'
-          description='Enable chunked uploads.'
-          {...form.getInputProps('chunksEnabled', { type: 'checkbox' })}
-        />
+        <Stack gap='lg'>
+          <Switch
+            label='Enable Chunks'
+            description='Enable chunked uploads.'
+            {...form.getInputProps('chunksEnabled', { type: 'checkbox' })}
+          />
 
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
           <TextInput
             label='Max Chunk Size'
             description='Maximum size of an upload before it is split into chunks.'
@@ -69,12 +66,12 @@ export default function Chunks({
             disabled={!form.values.chunksEnabled}
             {...form.getInputProps('chunksSize')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

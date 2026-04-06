@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, LoadingOverlay, NumberInput, Paper, SimpleGrid, TextInput, Title } from '@mantine/core';
+import { Button, LoadingOverlay, NumberInput, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -35,13 +35,11 @@ export default function Urls({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>URL Shortener</Title>
-
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
           <TextInput
             label='Route'
             description='The route to use for short URLs. Requires a server restart.'
@@ -57,12 +55,12 @@ export default function Urls({
             max={64}
             {...form.getInputProps('urlsLength')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

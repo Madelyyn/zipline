@@ -1,16 +1,5 @@
 import { Response } from '@/lib/api/response';
-import {
-  Button,
-  ColorInput,
-  Group,
-  LoadingOverlay,
-  Paper,
-  SimpleGrid,
-  Switch,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Button, ColorInput, Group, LoadingOverlay, Stack, Switch, Text, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy, IconRefresh } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -73,24 +62,21 @@ export default function PWA({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative' h='100%'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>PWA</Title>
-
-      <Text size='sm' c='dimmed'>
+      <Text size='sm' c='dimmed' mb='md'>
         Refresh the page after enabling PWA to see any changes.
       </Text>
 
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <Switch
-          mt='md'
-          label='PWA Enabled'
-          description='Allow users to install the Zipline PWA on their devices.'
-          {...form.getInputProps('pwaEnabled', { type: 'checkbox' })}
-        />
+        <Stack gap='lg'>
+          <Switch
+            label='PWA Enabled'
+            description='Allow users to install the Zipline PWA on their devices.'
+            {...form.getInputProps('pwaEnabled', { type: 'checkbox' })}
+          />
 
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
           <TextInput
             label='Title'
             description='The title for the PWA'
@@ -125,8 +111,7 @@ export default function PWA({
             placeholder='#ffffff'
             {...form.getInputProps('pwaBackgroundColor')}
           />
-        </SimpleGrid>
-
+        </Stack>
         <Group mt='md'>
           <Button type='submit' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
             Save
@@ -136,6 +121,6 @@ export default function PWA({
           </Button>
         </Group>
       </form>
-    </Paper>
+    </>
   );
 }

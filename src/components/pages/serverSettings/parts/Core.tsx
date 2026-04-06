@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, LoadingOverlay, Paper, SimpleGrid, Switch, TextInput, Title } from '@mantine/core';
+import { Button, LoadingOverlay, Stack, Switch, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -52,13 +52,11 @@ export default function Core({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>Core</Title>
-
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
           <Switch
             mt='md'
             label='Return HTTPS URLs'
@@ -85,12 +83,12 @@ export default function Core({
             placeholder='/tmp/zipline'
             {...form.getInputProps('coreTempDirectory')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

@@ -5,13 +5,11 @@ import {
   Divider,
   LoadingOverlay,
   NumberInput,
-  Paper,
   Select,
   SimpleGrid,
   Stack,
   Switch,
   TextInput,
-  Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
@@ -74,13 +72,11 @@ export default function Features({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>Features</Title>
-
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <Stack gap='xs' mt='xs'>
+        <Stack gap='lg'>
           <Switch
             label='Image Compression'
             description='Allows the ability for users to compress images.'
@@ -202,6 +198,6 @@ export default function Features({
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

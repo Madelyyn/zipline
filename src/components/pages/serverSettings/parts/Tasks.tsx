@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, Code, LoadingOverlay, Paper, SimpleGrid, Text, TextInput, Title } from '@mantine/core';
+import { Button, Code, LoadingOverlay, Stack, Text, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -43,17 +43,15 @@ export default function Tasks({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>Tasks</Title>
-
-      <Text c='dimmed' size='sm'>
+      <Text size='sm' c='dimmed' mb='md'>
         All options require a restart to take effect. Setting a value of <Code>0</Code> will disable the task.
       </Text>
 
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
           <TextInput
             label='Delete Files Interval'
             description='How often to check and delete expired files.'
@@ -88,12 +86,12 @@ export default function Tasks({
             placeholder='1d'
             {...form.getInputProps('tasksCleanThumbnailsInterval')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

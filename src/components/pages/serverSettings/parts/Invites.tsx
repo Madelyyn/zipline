@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, LoadingOverlay, NumberInput, Paper, SimpleGrid, Switch, Title } from '@mantine/core';
+import { Button, LoadingOverlay, NumberInput, Stack, Switch } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -38,13 +38,11 @@ export default function Invites({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative' h='100%'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>Invites</Title>
-
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
           <Switch
             label='Enable Invites'
             description='Enable the use of invite links to register new users.'
@@ -59,12 +57,12 @@ export default function Invites({
             max={64}
             {...form.getInputProps('invitesLength')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

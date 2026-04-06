@@ -1,5 +1,5 @@
 import { Response } from '@/lib/api/response';
-import { Button, LoadingOverlay, Paper, SimpleGrid, Switch, TextInput, Title } from '@mantine/core';
+import { Button, Divider, LoadingOverlay, Stack, Switch, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -41,13 +41,11 @@ export default function Mfa({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>Multi-Factor Authentication</Title>
-
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
           <Switch
             label='Passkeys'
             description='Enable the use of passwordless login with the use of WebAuthn passkeys like your phone, security keys, etc.'
@@ -68,6 +66,8 @@ export default function Mfa({
             {...form.getInputProps('mfaPasskeysOrigin')}
           />
 
+          <Divider />
+
           <Switch
             label='Enable TOTP'
             description='Enable Time-based One-Time Passwords with the use of an authenticator app.'
@@ -79,12 +79,12 @@ export default function Mfa({
             placeholder='Zipline'
             {...form.getInputProps('mfaTotpIssuer')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

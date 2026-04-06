@@ -78,7 +78,7 @@ export const router = createBrowserRouter([
                     },
                     children: [
                       { path: 'admin/invites', lazy: () => import('./pages/dashboard/admin/invites') },
-                      { path: 'admin/settings', lazy: () => import('./pages/dashboard/admin/settings') },
+                      { path: 'admin/settings/*', lazy: () => import('./pages/dashboard/admin/settings') },
                       { path: 'admin/actions', lazy: () => import('./pages/dashboard/admin/actions') },
                       { path: 'admin/users', lazy: () => import('./pages/dashboard/admin/users') },
                       {

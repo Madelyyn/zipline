@@ -1,15 +1,5 @@
 import { Response } from '@/lib/api/response';
-import {
-  Button,
-  LoadingOverlay,
-  NumberInput,
-  Paper,
-  Select,
-  SimpleGrid,
-  Switch,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Button, LoadingOverlay, NumberInput, Select, Stack, Switch, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useEffect } from 'react';
@@ -117,13 +107,23 @@ export default function Files({
   }, [data]);
 
   return (
-    <Paper withBorder p='sm' pos='relative'>
+    <>
       <LoadingOverlay visible={isLoading} />
 
-      <Title order={2}>Files</Title>
-
       <form onSubmit={form.onSubmit(onSubmit)}>
-        <SimpleGrid mt='md' cols={{ base: 1, md: 2 }} spacing='lg'>
+        <Stack gap='lg'>
+          <Switch
+            label='Assume Mimetypes'
+            description='Assume the mimetype of a file for its extension.'
+            {...form.getInputProps('filesAssumeMimetypes', { type: 'checkbox' })}
+          />
+
+          <Switch
+            label='Remove GPS Metadata'
+            description='Remove GPS metadata from files.'
+            {...form.getInputProps('filesRemoveGpsMetadata', { type: 'checkbox' })}
+          />
+
           <TextInput
             label='Route'
             description='The route to use for file uploads. Requires a server restart.'
@@ -137,18 +137,6 @@ export default function Files({
             min={1}
             max={64}
             {...form.getInputProps('filesLength')}
-          />
-
-          <Switch
-            label='Assume Mimetypes'
-            description='Assume the mimetype of a file for its extension.'
-            {...form.getInputProps('filesAssumeMimetypes', { type: 'checkbox' })}
-          />
-
-          <Switch
-            label='Remove GPS Metadata'
-            description='Remove GPS metadata from files.'
-            {...form.getInputProps('filesRemoveGpsMetadata', { type: 'checkbox' })}
           />
 
           <Select
@@ -228,12 +216,12 @@ export default function Files({
             min={1}
             {...form.getInputProps('filesMaxFilesPerUpload')}
           />
-        </SimpleGrid>
+        </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
           Save
         </Button>
       </form>
-    </Paper>
+    </>
   );
 }

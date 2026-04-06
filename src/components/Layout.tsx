@@ -47,10 +47,11 @@ import {
   IconUsersGroup,
 } from '@tabler/icons-react';
 import { useState } from 'react';
-import { Link, Outlet, useLoaderData, useLocation } from 'react-router-dom';
+import { Link, NavigateFunction, Outlet, useLoaderData, useLocation, useNavigate } from 'react-router-dom';
 import { dashboardLoader } from '../client/routes';
 import ConfigProvider from './ConfigProvider';
 import VersionBadge from './VersionBadge';
+import { SETTINGS_EXTERNAL_LINKS } from './pages/serverSettings';
 
 type NavLinks = {
   label: string;
@@ -123,9 +124,15 @@ const navLinks: NavLinks[] = [
       {
         label: 'Settings',
         icon: <IconAdjustments size='1rem' />,
-        active: (path: string) => path === '/dashboard/admin/settings',
+        active: (path: string) => path.startsWith('/dashboard/admin/settings'),
         if: (user) => user?.role === 'SUPERADMIN',
         href: '/dashboard/admin/settings',
+        links: SETTINGS_EXTERNAL_LINKS.map(({ name, url, icon }) => ({
+          label: name,
+          icon,
+          active: (path: string) => path === url,
+          href: url,
+        })),
       },
       {
         label: 'Actions',
@@ -150,6 +157,66 @@ const navLinks: NavLinks[] = [
   },
 ];
 
+const renderLinks = (
+  links: NavLinks[],
+  pathname: string,
+  user: Response['/api/user']['user'],
+  config: SafeConfig,
+  navigate: NavigateFunction,
+) => {
+  const visible = (link: NavLinks) => !link.if || link.if(user as Response['/api/user']['user'], config);
+
+  const active = (link: NavLinks): boolean => {
+    if (!visible(link)) return false;
+    if (link.active(pathname)) return true;
+
+    return (link.links || []).some((child) => active(child));
+  };
+
+  return links.map((link) => {
+    if (visible(link)) {
+      const sublinks = link.links;
+      const isActive = link.active(pathname);
+
+      if (!sublinks) {
+        return (
+          <NavLink
+            key={link.label}
+            label={link.label}
+            leftSection={link.icon}
+            variant='light'
+            rightSection={<IconChevronRight size='0.7rem' />}
+            active={isActive}
+            component={Link}
+            to={link.href || ''}
+            prefetch='intent'
+          />
+        );
+      } else {
+        return (
+          <NavLink
+            key={link.label}
+            label={link.label}
+            leftSection={link.icon}
+            variant='light'
+            rightSection={<IconChevronRight size='0.7rem' />}
+            active={isActive && !sublinks.some((child) => active(child))}
+            defaultOpened={isActive || sublinks.some((child) => active(child))}
+            onClick={(event) => {
+              if (!link.href) return;
+              event.preventDefault();
+              navigate(link.href);
+            }}
+          >
+            {renderLinks(sublinks, pathname, user as Response['/api/user']['user'], config, navigate)}
+          </NavLink>
+        );
+      }
+    }
+    return null;
+  });
+};
+
 export default function Layout() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
@@ -158,6 +225,7 @@ export default function Layout() {
   const clipboard = useClipboard();
   const setUser = useUserStore((s) => s.setUser);
   const location = useLocation();
+  const navigate = useNavigate();
   const logout = useLogout();
 
   const loaderData = useLoaderData<typeof dashboardLoader>();
@@ -327,54 +395,9 @@ export default function Layout() {
         </Title>
         <Divider hiddenFrom='sm' />
 
-        {navLinks
-          .filter((link) => !link.if || link.if(user as Response['/api/user']['user'], config))
-          .map((link) => {
-            if (!link.links) {
-              return (
-                <NavLink
-                  key={link.label}
-                  label={link.label}
-                  leftSection={link.icon}
-                  variant='light'
-                  rightSection={<IconChevronRight size='0.7rem' />}
-                  active={location.pathname === link.href}
-                  component={Link}
-                  to={link.href || ''}
-                  prefetch='intent'
-                />
-              );
-            } else {
-              return (
-                <NavLink
-                  key={link.label}
-                  label={link.label}
-                  leftSection={link.icon}
-                  variant='light'
-                  rightSection={<IconChevronRight size='0.7rem' />}
-                  defaultOpened={link.active(location.pathname)}
-                >
-                  {link.links
-                    .filter(
-                      (sublink) => !sublink.if || sublink.if(user as Response['/api/user']['user'], config),
-                    )
-                    .map((sublink) => (
-                      <NavLink
-                        key={sublink.label}
-                        label={sublink.label}
-                        leftSection={sublink.icon}
-                        rightSection={<IconChevronRight size='0.7rem' />}
-                        variant='light'
-                        active={location.pathname === sublink.href}
-                        component={Link}
-                        to={sublink.href || ''}
-                        prefetch='intent'
-                      />
-                    ))}
-                </NavLink>
-              );
-            }
-          })}
+        <ScrollArea mah='calc(100vh - 200px)'>
+          {renderLinks(navLinks, location.pathname, user as Response['/api/user']['user'], config, navigate)}
+        </ScrollArea>
 
         <div style={{ marginTop: 'auto' }}>
           <VersionBadge />
