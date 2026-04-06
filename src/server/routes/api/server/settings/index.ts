@@ -474,7 +474,6 @@ export default typedPlugin(
               }
             }
           })
-
           .refine((data) => Object.keys(data).length > 0, {
             message: 'No settings provided to update',
           });

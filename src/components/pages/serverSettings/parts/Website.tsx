@@ -13,7 +13,7 @@ const defaultExternalLinks = [
   },
   {
     name: 'Documentation',
-    url: 'https://zipline.diced.tech',
+    url: 'https://zipline.diced.sh',
   },
 ];
 
@@ -119,7 +119,7 @@ export default function Website({
 
           <JsonInput
             label='External Links'
-            description='The external links to show in the footer. This must be valid JSON.'
+            description='The external links to show in the footer. This must be valid JSON in the format of an array of objects with "name" and "url" properties. For example: [{"name": "GitHub", "url": "https://github.com/diced/zipline"}]'
             formatOnBlur
             minRows={1}
             maxRows={7}

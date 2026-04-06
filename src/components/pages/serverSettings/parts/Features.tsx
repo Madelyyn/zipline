@@ -131,7 +131,7 @@ export default function Features({
             {...form.getInputProps('featuresMetricsShowUserSpecific', { type: 'checkbox' })}
           />
 
-          <Divider />
+          <Divider label='Thumbnails' />
 
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing='lg'>
             <Switch
@@ -166,7 +166,7 @@ export default function Features({
             {...form.getInputProps('featuresThumbnailsFormat')}
           />
 
-          <Divider />
+          <Divider label='Version Checking' />
 
           <Switch
             label='Version Checking'
@@ -179,7 +179,7 @@ export default function Features({
             description={
               <>
                 The URL of the version checking server. The default is{' '}
-                <Anchor size='xs' href='zipline-version.diced.sh' target='_blank'>
+                <Anchor size='xs' href='https://zipline-version.diced.sh' target='_blank'>
                   https://zipline-version.diced.sh
                 </Anchor>
                 . Visit the{' '}
