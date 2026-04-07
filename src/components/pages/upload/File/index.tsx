@@ -194,7 +194,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
         </Group>
       </Dropzone>
 
-      <Collapse in={progress.percent > 0 && progress.percent < 100}>
+      <Collapse expanded={progress.percent > 0 && progress.percent < 100}>
         {progress.percent > 0 && progress.percent < 100 && (
           <Progress.Root my='sm' size='xl'>
             <Progress.Section value={progress.percent} animated>
@@ -204,7 +204,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
         )}
       </Collapse>
 
-      <Collapse in={progress.speed > 0 && progress.remaining > 0}>
+      <Collapse expanded={progress.speed > 0 && progress.remaining > 0}>
         <Paper withBorder p='xs' radius='sm'>
           <Text ta='center' size='sm'>
             {bytes(progress.speed)}/s, {humanizeDuration(progress.remaining)} remaining
@@ -212,7 +212,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
         </Paper>
       </Collapse>
 
-      <Collapse in={progress.percent === 100}>
+      <Collapse expanded={progress.percent === 100}>
         <Paper withBorder p='xs' radius='sm'>
           <Text ta='center' size='sm' c='yellow' fw={500}>
             Finalizing upload(s)...

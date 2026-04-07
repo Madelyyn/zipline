@@ -139,7 +139,7 @@ export default function Export3Details({ export3 }: { export3: Export3 }) {
                 {envOpened ? 'Hide' : 'Show'} OS Details
               </Button>
 
-              <Collapse in={osOpened}>
+              <Collapse expanded={osOpened}>
                 <HighlightCode language='json' code={JSON.stringify(export3.request.os, null, 2)} />
               </Collapse>
 
@@ -147,7 +147,7 @@ export default function Export3Details({ export3 }: { export3: Export3 }) {
                 {envOpened ? 'Hide' : 'Show'} Environment
               </Button>
 
-              <Collapse in={envOpened}>
+              <Collapse expanded={envOpened}>
                 <Paper withBorder>
                   <Table>
                     <Table.Thead>

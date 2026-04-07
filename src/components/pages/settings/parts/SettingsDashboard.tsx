@@ -57,7 +57,7 @@ export default function SettingsDashboard() {
           label='Default Domain'
           description='Set the default domain used for copied links anywhere in the dashboard. Leave blank or select "Default domain" to use the current domain that serves the dashboard.'
           value={settings.domain}
-          onChange={(value) => update('domain', value ?? '')}
+          onChange={(value) => update('domain', (value as string) ?? '')}
         />
 
         <Select

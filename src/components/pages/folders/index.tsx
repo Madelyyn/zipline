@@ -236,7 +236,7 @@ export default function DashboardFolders() {
             {filesOpen ? '▼' : '▶'} {currentFolder.name}&#39;s files{' '}
             {currentFolder._count ? `(${currentFolder._count.files})` : ''}
           </Text>
-          <Collapse in={filesOpen}>
+          <Collapse expanded={filesOpen}>
             {view === 'grid' ? (
               <Paper withBorder p='sm'>
                 <FilesGridView folderId={currentFolderId} />

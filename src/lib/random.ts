@@ -4,10 +4,14 @@ const MAX = 256 - (256 % CHARSET_LENGTH);
 
 function getRandomValues(array: Uint8Array) {
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    return crypto.getRandomValues(array);
+    // TODO: remove any cast when the types are fixed...
+    return crypto.getRandomValues(<any>array);
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('crypto').webcrypto.getRandomValues(array);
+    console.error(
+      'No secure random number generator available. Please use node@22+ and a supported platform.',
+    );
+
+    process.exit(1);
   }
 }
 

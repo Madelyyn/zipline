@@ -101,7 +101,7 @@ export default defineConfig(
     },
 
     settings: {
-      react: { version: 'detect' },
+      react: { version: '19' },
     },
   },
 );

@@ -195,7 +195,7 @@ export default function Export3Details({ export4 }: { export4: Export4 }) {
                 {envOpened ? 'Hide' : 'Show'} OS Details
               </Button>
 
-              <Collapse in={osOpened}>
+              <Collapse expanded={osOpened}>
                 <Paper withBorder>
                   <Table>
                     <Table.Thead>
@@ -217,7 +217,7 @@ export default function Export3Details({ export4 }: { export4: Export4 }) {
                 {envOpened ? 'Hide' : 'Show'} Environment
               </Button>
 
-              <Collapse in={envOpened}>
+              <Collapse expanded={envOpened}>
                 <Paper withBorder>
                   <Table>
                     <Table.Thead>

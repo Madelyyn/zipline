@@ -114,7 +114,7 @@ export default function ViewFileId() {
         </Group>
       </Paper>
 
-      <Collapse in={detailsOpen}>
+      <Collapse expanded={detailsOpen}>
         <Paper m='md' p='md' withBorder>
           {user?.view!.content && (
             <Typography>

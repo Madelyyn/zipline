@@ -396,7 +396,7 @@ export default function FileTable({
       )}
 
       <Box>
-        <Collapse in={selectedFiles.length > 0}>
+        <Collapse expanded={selectedFiles.length > 0}>
           <Paper withBorder p='sm' my='sm'>
             <Text size='sm' c='dimmed' mb='xs'>
               Selections are saved across page changes
@@ -487,7 +487,7 @@ export default function FileTable({
         </Collapse>
 
         {modals && setModals && modals.idSearch && (
-          <Collapse in={modals.idSearch}>
+          <Collapse expanded={modals.idSearch}>
             <Paper withBorder p='sm' mt='sm'>
               <TextInput
                 placeholder='Search by ID'

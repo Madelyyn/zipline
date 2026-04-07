@@ -32,7 +32,7 @@ export default function Export4ImportSettings({
         {showSettings ? 'Hide' : 'Show'} Settings to be Imported
       </Button>
 
-      <Collapse in={showSettings}>
+      <Collapse expanded={showSettings}>
         <Paper withBorder>
           <Table>
             <Table.Thead>

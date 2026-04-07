@@ -380,7 +380,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
               </>
             }
             value={options.overrides_returnDomain ?? ''}
-            onChange={(value) => setOption('overrides_returnDomain', value || null)}
+            onChange={(value) => setOption('overrides_returnDomain', (value as string) || null)}
             comboboxProps={{
               withinPortal: true,
               portalProps: {

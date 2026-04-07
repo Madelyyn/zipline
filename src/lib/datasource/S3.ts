@@ -63,6 +63,8 @@ export class S3Datasource extends Datasource {
           keepAlive: true,
         }),
       }),
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
     });
 
     this.ensureReadWriteAccess();

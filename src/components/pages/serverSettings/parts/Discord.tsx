@@ -245,7 +245,7 @@ export default function Discord({
               {...formOnUpload.getInputProps('discordOnUploadEmbed', { type: 'checkbox' })}
             />
 
-            <Collapse in={formOnUpload.values.discordOnUploadEmbed}>
+            <Collapse expanded={formOnUpload.values.discordOnUploadEmbed}>
               <Paper withBorder p='sm' mt='md'>
                 <SimpleGrid cols={{ base: 1, md: 2 }} spacing='lg'>
                   <TextInput
@@ -348,7 +348,7 @@ export default function Discord({
               {...formOnShorten.getInputProps('discordOnShortenEmbed', { type: 'checkbox' })}
             />
 
-            <Collapse in={formOnShorten.values.discordOnShortenEmbed}>
+            <Collapse expanded={formOnShorten.values.discordOnShortenEmbed}>
               <Paper withBorder p='sm' mt='md'>
                 <SimpleGrid cols={{ base: 1, md: 2 }} spacing='lg'>
                   <TextInput

@@ -297,7 +297,7 @@ export default function DashboardServerSettings() {
       </Group>
 
       {(data?.tampered?.length ?? 0) > 0 && (
-        <Collapse in={opened} transitionDuration={180}>
+        <Collapse expanded={opened} transitionDuration={180}>
           <Alert
             color='red'
             title='Environment Variable Settings'

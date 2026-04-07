@@ -25,7 +25,7 @@ export default function ReloadPage() {
         Why am I seeing this?
       </Button>
 
-      <Collapse in={view}>
+      <Collapse expanded={view}>
         <GenericError
           title='Failed to fetch dynamically imported module'
           message='This error can occur when a new version of the app is deployed while you have the page open. Please reload the page to update to the latest version.'
