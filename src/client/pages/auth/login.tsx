@@ -33,7 +33,7 @@ import {
   IconCircleKeyFilled,
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import GenericError from '../../error/GenericError';
 import { eitherTrue } from '@/lib/primitive';
@@ -43,7 +43,11 @@ export default function Login() {
 
   const query = new URLSearchParams(location.search);
   const navigate = useNavigate();
-  const { user, mutate } = useLogin();
+  const { user, mutate } = useLogin({
+    swrConfig: {
+      shouldRetryOnError: false
+    },
+  });
 
   const isHttps = window.location.protocol === 'https:';
   const webClient = JSON.stringify(getWebClient());
@@ -212,6 +216,7 @@ export default function Login() {
               config.oauthEnabled.github,
               config.oauthEnabled.google,
               config.oauthEnabled.oidc,
+              config.features.userRegistration,
             ) && (
               <>
                 <Divider label='or' />
@@ -243,6 +248,15 @@ export default function Login() {
                     <ExternalAuthButton provider='OIDC' leftSection={<IconCircleKeyFilled size='1.1rem' />} />
                   )}
                 </Group>
+
+                {config.features.userRegistration && (
+                  <Text ta='center' mt='md'>
+                    Don't have an account?{' '}
+                    <Anchor component={Link} to='/auth/register' c='blue' fw={500}>
+                      Register
+                    </Anchor>
+                  </Text>
+                )}
               </>
             )}
           </Stack>

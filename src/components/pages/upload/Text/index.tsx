@@ -125,6 +125,7 @@ export default function UploadText() {
                 disabled={loading}
                 className={styles.textarea}
                 my='sm'
+                resize='vertical'
               />
 
               <Group style={{ position: 'absolute', bottom: 10, right: 10 }} gap='xs'>

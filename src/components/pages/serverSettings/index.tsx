@@ -299,10 +299,11 @@ export default function DashboardServerSettings() {
       {(data?.tampered?.length ?? 0) > 0 && (
         <Collapse expanded={opened} transitionDuration={180}>
           <Alert
+            my='md'
             color='red'
             title='Environment Variable Settings'
-            mb='md'
             icon={<IconExclamationMark size='1rem' />}
+            variant='outline'
           >
             <Text size='sm' mb='xs'>
               These settings are controlled by environment variables:

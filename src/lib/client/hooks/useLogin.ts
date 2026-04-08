@@ -2,13 +2,19 @@ import type { Response } from '@/lib/api/response';
 import { isAdministrator } from '@/lib/role';
 import { useEffect } from 'react';
 import { redirect } from 'react-router-dom';
-import useSWR from 'swr';
+import useSWR, { SWRConfiguration } from 'swr';
 import { useShallow } from 'zustand/shallow';
 import { useUserStore } from '../store/user';
 
-export default function useLogin(administratorOnly: boolean = false) {
+export default function useLogin(
+  { admin, swrConfig: swrOptions }: { admin?: boolean; swrConfig?: SWRConfiguration } = {
+    admin: false,
+    swrConfig: {},
+  },
+) {
   const { data, error, isLoading, mutate } = useSWR<Response['/api/user']>('/api/user', {
     fallbackData: { user: undefined },
+    ...swrOptions,
   });
 
   const [user, setUser] = useUserStore(useShallow((state) => [state.user, state.setUser]));
@@ -22,7 +28,7 @@ export default function useLogin(administratorOnly: boolean = false) {
   }, [data, error]);
 
   useEffect(() => {
-    if (user && administratorOnly && !isAdministrator(user.role)) {
+    if (user && admin && !isAdministrator(user.role)) {
       redirect('/dashboard');
     }
   }, [user]);
