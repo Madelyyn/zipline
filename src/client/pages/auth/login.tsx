@@ -45,7 +45,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { user, mutate } = useLogin({
     swrConfig: {
-      shouldRetryOnError: false
+      shouldRetryOnError: false,
     },
   });
 
@@ -251,7 +251,7 @@ export default function Login() {
 
                 {config.features.userRegistration && (
                   <Text ta='center' mt='md'>
-                    Don't have an account?{' '}
+                    Don&apos;t have an account?{' '}
                     <Anchor component={Link} to='/auth/register' c='blue' fw={500}>
                       Register
                     </Anchor>
