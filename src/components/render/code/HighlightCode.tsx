@@ -75,7 +75,7 @@ export default function HighlightCode({ language, code }: { language: string; co
           <ActionIcon
             onClick={copy}
             variant='outline'
-            color={copied ? 'green' : 'gray'}
+            color={copied ? 'green' : undefined}
             size='md'
             style={{ zIndex: 10, position: 'absolute', top: '0.5rem', right: '0.5rem' }}
           >
@@ -88,7 +88,7 @@ export default function HighlightCode({ language, code }: { language: string; co
         )}
       </CopyButton>
 
-      <div style={{ height: noClamp ? 'auto' : estimatedHeight }}>
+      <div style={{ height: noClamp ? 'auto' : estimatedHeight, overflowX: 'auto' }}>
         <Virtuoso
           useWindowScroll={noClamp}
           style={{ height: '100%' }}

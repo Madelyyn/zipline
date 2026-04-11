@@ -1,10 +1,10 @@
-import { RenderMode } from './renderMode';
-import { Alert, Button } from '@mantine/core';
+import { Alert, Button, Flex, Text } from '@mantine/core';
 import { IconEyeFilled } from '@tabler/icons-react';
 import { useState } from 'react';
 import KaTeX from './KaTeX';
 import Markdown from './Markdown';
 import HighlightCode from './code/HighlightCode';
+import { RenderMode } from './renderMode';
 
 export function RenderAlert({
   renderer,
@@ -22,17 +22,17 @@ export function RenderAlert({
       mb='sm'
       styles={{ message: { marginTop: 0 } }}
     >
-      {!state ? `This file is rendered through ${renderer}` : `This file can be rendered through ${renderer}`}
-      <Button
-        mx='sm'
-        variant='outline'
-        size='compact-sm'
-        onClick={() => change(!state)}
-        pos='absolute'
-        right={0}
-      >
-        {state ? 'Show' : 'Hide'} rendered version
-      </Button>
+      <Flex align='center' justify='space-between' wrap='wrap' gap='md'>
+        <Text style={{ flex: 1, minWidth: '200px' }}>
+          {!state
+            ? `This file is rendered through ${renderer}`
+            : `This file can be rendered through ${renderer}`}
+        </Text>
+
+        <Button size='compact-sm' onClick={() => change(!state)} w={{ base: '100%', xs: 'auto' }}>
+          {state ? 'Show' : 'Hide'} rendered version
+        </Button>
+      </Flex>
     </Alert>
   );
 }

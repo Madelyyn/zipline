@@ -1,31 +1,25 @@
-import { Code, Image, Paper } from '@mantine/core';
-import ReactMarkdown from 'react-markdown';
+import { Paper, Typography } from '@mantine/core';
+import Marked from 'marked-react';
 import HighlightCode from './code/HighlightCode';
-import remarkGfm from 'remark-gfm';
+import { sanitize } from 'isomorphic-dompurify';
+
+const components = {
+  code(value: string, language?: string) {
+    return <HighlightCode code={value} language={language ?? 'text'} />;
+  },
+};
 
 export default function Markdown({ md }: { md: string }) {
+  const cleanedMd = sanitize(md, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'code', 'pre', 'span'],
+    ALLOWED_ATTR: ['href', 'title', 'class'],
+  });
+
   return (
     <Paper withBorder p='md'>
-      <ReactMarkdown
-        components={{
-          code({ node: _, className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || '');
-            return match ? (
-              <HighlightCode language={match[1]} code={String(children).replace(/\n$/, '')} />
-            ) : (
-              <Code className={className} {...props}>
-                {children}
-              </Code>
-            );
-          },
-          img({ node: _, ...props }) {
-            return <Image {...props} />;
-          },
-        }}
-        remarkPlugins={[remarkGfm]}
-      >
-        {md}
-      </ReactMarkdown>
+      <Typography>
+        <Marked value={cleanedMd} gfm renderer={components} />
+      </Typography>
     </Paper>
   );
 }
