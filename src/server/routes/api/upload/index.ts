@@ -85,7 +85,6 @@ export default typedPlugin(
       },
       async (req, res) => {
         const options = parseHeaders(req.headers, config.files);
-        if (options.header) throw new ApiError(1001, `bad options: ${options.message}`);
 
         if (options.partial) throw new ApiError(1001, 'bad options, receieved: partial upload');
 

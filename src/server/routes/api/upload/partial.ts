@@ -74,7 +74,7 @@ export default typedPlugin(
       },
       async (req, res) => {
         const options = parseHeaders(req.headers, config.files);
-        if (options.header) throw new ApiError(1001, 'bad options, receieved: ' + JSON.stringify(options));
+
         if (!options.partial) throw new ApiError(1004);
         if (!options.partial.range || options.partial.range.length !== 3) throw new ApiError(1002);
 

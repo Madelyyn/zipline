@@ -3,6 +3,7 @@ import { checkOutput, COMPRESS_TYPES, CompressType } from '../compress';
 import { config } from '../config';
 import { Config } from '../config/validate';
 import { sanitizeExtension } from '../fs';
+import { ApiError } from '../api/errors';
 
 // from ms@3.0.0-canary.1
 type Unit =
@@ -90,10 +91,6 @@ export type UploadOptions = {
 
   folder?: string;
 
-  // error
-  header?: string;
-  message?: string;
-
   // partials
   partial?: {
     filename: string;
@@ -140,20 +137,17 @@ export function parseExpiry(header: string): Date | null {
   return human;
 }
 
-function parsePercent(header: keyof UploadHeaders, percent: string) {
-  const num = Number(percent);
-  if (isNaN(num)) return headerError(header, 'Invalid percent (NaN)');
-
-  if (num < 0 || num > 100) return headerError(header, 'Invalid percent (must be between 0 and 100)');
-
-  return num;
+function throwHeaderError(header: keyof UploadHeaders, message: string): never {
+  throw new ApiError(1001, `bad options[${header}]: ${message}`);
 }
 
-function headerError(header: keyof UploadHeaders, message: string) {
-  return {
-    header,
-    message: `[${header}]: ${message}`,
-  };
+function parsePercent(header: keyof UploadHeaders, percent: string) {
+  const num = Number(percent);
+  if (isNaN(num)) throwHeaderError(header, 'Invalid percent (NaN)');
+
+  if (num < 0 || num > 100) throwHeaderError(header, 'Invalid percent (must be between 0 and 100)');
+
+  return num;
 }
 
 const FORMATS = ['random', 'uuid', 'date', 'name', 'gfycat', 'random-words'];
@@ -166,14 +160,14 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
       response.deletesAt = 'never' as any;
     } else {
       const expiresAt = parseExpiry(headers['x-zipline-deletes-at']);
-      if (!expiresAt) return headerError('x-zipline-deletes-at', 'Invalid expiry date');
+      if (!expiresAt) throwHeaderError('x-zipline-deletes-at', 'Invalid expiry date');
 
       if (fileConfig.maxExpiration) {
         const maxExpiryTime = ms(fileConfig.maxExpiration as StringValue);
         const requestedExpiryTime = expiresAt.getTime() - Date.now();
 
         if (requestedExpiryTime > maxExpiryTime) {
-          return headerError(
+          throwHeaderError(
             'x-zipline-deletes-at',
             `Expiry exceeds maximum allowed expiration of ${fileConfig.maxExpiration}`,
           );
@@ -191,7 +185,7 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
 
   const format = headers['x-zipline-format'];
   if (format) {
-    if (!FORMATS.includes(format)) return headerError('x-zipline-format', 'Invalid format');
+    if (!FORMATS.includes(format)) throwHeaderError('x-zipline-format', 'Invalid format');
 
     response.format = format;
   } else {
@@ -203,13 +197,13 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
 
   if (imageCompressionType) {
     if (!COMPRESS_TYPES.includes(imageCompressionType))
-      return headerError(
+      throwHeaderError(
         'x-zipline-image-compression-type',
         `Invalid compression type (must be one of: ${COMPRESS_TYPES.join(', ')})`,
       );
 
     if (!checkOutput(imageCompressionType))
-      return headerError(
+      throwHeaderError(
         'x-zipline-image-compression-type',
         `Compression type "${imageCompressionType}" is not supported on the system.`,
       );
@@ -239,7 +233,7 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
   const maxViews = headers['x-zipline-max-views'];
   if (maxViews) {
     const num = Number(maxViews);
-    if (isNaN(num)) return headerError('x-zipline-max-views', 'Invalid max views (NaN)');
+    if (isNaN(num)) throwHeaderError('x-zipline-max-views', 'Invalid max views (NaN)');
 
     response.maxViews = num;
   }
@@ -265,7 +259,7 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
   const extension = headers['x-zipline-file-extension'];
   if (extension) {
     const ext = sanitizeExtension(extension);
-    if (!ext) return headerError('x-zipline-file-extension', 'Invalid file extension');
+    if (!ext) throwHeaderError('x-zipline-file-extension', 'Invalid file extension');
 
     response.overrides.extension = ext;
   }
@@ -284,7 +278,7 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
       .map((x) => Number(x));
 
     if (isNaN(start) || isNaN(end) || isNaN(total))
-      return headerError('content-range', 'Invalid content-range');
+      throwHeaderError('content-range', 'Invalid content-range');
 
     response.partial = {
       filename: headers['x-zipline-p-filename']!,
