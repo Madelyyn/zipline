@@ -2,14 +2,16 @@ import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import TagPill from '@/components/pages/files/tags/TagPill';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
+import { useFolders } from '@/lib/client/hooks/useFolders';
+import { useFileNavStore } from '@/lib/client/store/fileNav';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import { File } from '@/lib/db/models/file';
 import { Tag } from '@/lib/db/models/tag';
 import { fetchApi } from '@/lib/fetchApi';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
-import { useFolders } from '@/lib/client/hooks/useFolders';
-import { useSettingsStore } from '@/lib/client/store/settings';
 import {
   ActionIcon,
+  ActionIconProps,
   Box,
   Button,
   Checkbox,
@@ -31,6 +33,8 @@ import { showNotification } from '@mantine/notifications';
 import {
   Icon,
   IconBombFilled,
+  IconChevronLeft,
+  IconChevronRight,
   IconClipboardTypography,
   IconCopy,
   IconDeviceSdCard,
@@ -52,6 +56,7 @@ import {
 } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 import useSWR, { mutate } from 'swr';
+import { useShallow } from 'zustand/shallow';
 
 import DashboardFileType from '../DashboardFileType';
 import {
@@ -73,15 +78,16 @@ function ActionButton({
   onClick,
   tooltip,
   color,
+  ...props
 }: {
   Icon: Icon;
   onClick: () => void;
   tooltip: string;
   color?: string;
-}) {
+} & ActionIconProps) {
   return (
     <Tooltip label={tooltip}>
-      <ActionIcon variant='filled' color={color ?? 'gray'} onClick={onClick}>
+      <ActionIcon variant='filled' color={color ?? 'gray'} onClick={onClick} {...props}>
         <Icon size='1rem' />
       </ActionIcon>
     </Tooltip>
@@ -94,15 +100,18 @@ export default function FileModal({
   file,
   reduce,
   user,
+  sequenced,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
   file?: File | null;
   reduce?: boolean;
   user?: string;
+  sequenced?: boolean;
 }) {
   const clipboard = useClipboard();
   const warnDeletion = useSettingsStore((state) => state.settings.warnDeletion);
+  const fileNavButtons = useSettingsStore((state) => state.settings.fileNavButtons);
 
   const [editFileOpen, setEditFileOpen] = useState(false);
 
@@ -180,6 +189,17 @@ export default function FileModal({
   };
 
   const values = value.map((tag) => <TagPill key={tag} tag={tags?.find((t) => t.id === tag) || null} />);
+
+  const [goPrev, goNext, hasPrev, hasNext] = useFileNavStore(
+    useShallow((state) => {
+      if (!state.current) {
+        return [state.goPrev, state.goNext, false, false];
+      }
+
+      const idx = state.ids.indexOf(state.current);
+      return [state.goPrev, state.goNext, idx > 0, idx >= 0 && idx < state.ids.length - 1];
+    }),
+  );
 
   return (
     <>
@@ -431,6 +451,70 @@ export default function FileModal({
           <></>
         )}
       </Modal>
+
+      {open && sequenced && fileNavButtons && (
+        <>
+          <ActionButton
+            Icon={IconChevronLeft}
+            tooltip='Previous file'
+            onClick={() => goPrev()}
+            disabled={!hasPrev}
+            hiddenFrom='sm'
+            style={{
+              position: 'fixed',
+              left: '0.75rem',
+              top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
+              zIndex: 1000,
+            }}
+            size='md'
+          />
+
+          <ActionButton
+            Icon={IconChevronRight}
+            tooltip='Next file'
+            onClick={() => goNext()}
+            disabled={!hasNext}
+            hiddenFrom='sm'
+            style={{
+              position: 'fixed',
+              right: '0.75rem',
+              top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
+              zIndex: 1000,
+            }}
+            size='md'
+          />
+
+          <ActionButton
+            Icon={IconChevronLeft}
+            tooltip='Previous file'
+            onClick={() => goPrev()}
+            disabled={!hasPrev}
+            visibleFrom='sm'
+            style={{
+              position: 'fixed',
+              left: '1rem',
+              top: '50%',
+              zIndex: 1000,
+            }}
+            size='lg'
+          />
+
+          <ActionButton
+            Icon={IconChevronRight}
+            tooltip='Next file'
+            onClick={() => goNext()}
+            disabled={!hasNext}
+            visibleFrom='sm'
+            style={{
+              position: 'fixed',
+              right: '1rem',
+              top: '50%',
+              zIndex: 1000,
+            }}
+            size='lg'
+          />
+        </>
+      )}
     </>
   );
 }

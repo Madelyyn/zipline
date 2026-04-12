@@ -34,14 +34,14 @@ export default function SettingsDashboard() {
     <Paper withBorder p='sm' h='100%'>
       <Title order={2}>Dashboard Settings</Title>
       <Text size='sm' c='dimmed' mt={3}>
-        These settings are saved in your browser.
+        These settings are saved automatically in your <b>browser.</b>
       </Text>
 
       <Stack gap='sm' my='xs'>
-        <Group grow>
+        <Stack>
           <Switch
             label='Disable Media Preview'
-            description='Disable previews of files in the dashboard. This is useful to save data as Zipline, by default, will load previews of files.'
+            description='Disable previews of files in the dashboard. This may help to save data and speed up the dashboard if you have a lot of media files, but it will also disable the file viewer and show a generic file icon instead of a preview for supported files.'
             checked={settings.disableMediaPreview}
             onChange={(event) => update('disableMediaPreview', event.currentTarget.checked)}
           />
@@ -51,7 +51,13 @@ export default function SettingsDashboard() {
             checked={settings.warnDeletion}
             onChange={(event) => update('warnDeletion', event.currentTarget.checked)}
           />
-        </Group>
+          <Switch
+            label='File navigation buttons'
+            description='Show previous/next on the right and left of the file viewer to easily navigate between files.'
+            checked={settings.fileNavButtons}
+            onChange={(event) => update('fileNavButtons', event.currentTarget.checked)}
+          />
+        </Stack>
 
         <DomainSelect
           label='Default Domain'

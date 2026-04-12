@@ -1,6 +1,7 @@
 import { type Response } from '@/lib/api/response';
 import { useQueryState } from '@/lib/client/hooks/useQueryState';
 import { useTitle } from '@/lib/client/hooks/useTitle';
+import { useFileNavStore } from '@/lib/client/store/fileNav';
 import { Folder } from '@/lib/db/models/folder';
 import { FolderBreadcrumb } from '@/lib/folderHierarchy';
 import {
@@ -19,10 +20,12 @@ import {
   Title,
 } from '@mantine/core';
 import { IconFolder, IconUpload } from '@tabler/icons-react';
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, Params, useLoaderData, useNavigate } from 'react-router-dom';
+import { useShallow } from 'zustand/shallow';
 
 const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
+const FileModal = lazy(() => import('@/components/file/DashboardFile/FileModal'));
 
 export async function loader({ params }: { params: Params<string> }) {
   const res = await fetch(`/api/server/folder/${params.id}`);
@@ -101,9 +104,27 @@ export function Component() {
     return folder.files.slice(start, start + perpage);
   }, [folder.files, page, perpage]);
 
+  const [current, setCurrent, setFiles] = useFileNavStore(
+    useShallow((state) => [state.current, state.setCurrent, state.setFiles]),
+  );
+  const currentFile = current ? (visible.find((file) => file.id === current) ?? null) : null;
+  const ids = useMemo(() => visible.map((file) => file.id), [visible]);
+
+  useEffect(() => {
+    setFiles(ids);
+  }, [ids]);
+
   return (
     <>
       <Container my='lg'>
+        <FileModal
+          open={!!currentFile}
+          setOpen={(open) => setCurrent(open ? (currentFile?.id ?? null) : null)}
+          file={currentFile}
+          reduce
+          sequenced
+        />
+
         {breadcrumbs.length > 1 && (
           <Breadcrumbs mb='md'>
             {breadcrumbs.map((item, index) => (
@@ -167,7 +188,7 @@ export function Component() {
             >
               {visible.map((file: any) => (
                 <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
-                  <DashboardFile file={file} reduce />
+                  <DashboardFile file={file} reduce onOpen={(fileId) => setCurrent(fileId)} />
                 </Suspense>
               ))}
             </SimpleGrid>

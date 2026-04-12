@@ -5,6 +5,7 @@ export type SettingsStore = {
   settings: {
     disableMediaPreview: boolean;
     warnDeletion: boolean;
+    fileNavButtons: boolean;
     theme: string;
     themeDark: string;
     themeLight: string;
@@ -17,6 +18,7 @@ export type SettingsStore = {
 const defaultSettings: SettingsStore['settings'] = {
   disableMediaPreview: false,
   warnDeletion: true,
+  fileNavButtons: true,
   theme: 'builtin:dark_blue',
   themeDark: 'builtin:dark_blue',
   themeLight: 'builtin:light_blue',

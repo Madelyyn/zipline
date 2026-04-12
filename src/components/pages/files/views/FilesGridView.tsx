@@ -1,4 +1,5 @@
 import { useQueryState } from '@/lib/client/hooks/useQueryState';
+import { useFileNavStore } from '@/lib/client/store/fileNav';
 import {
   Button,
   Center,
@@ -13,11 +14,14 @@ import {
   Title,
 } from '@mantine/core';
 import { IconFilesOff, IconFileUpload } from '@tabler/icons-react';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useShallow } from 'zustand/shallow';
+
+import DashboardFile from '@/components/file/DashboardFile';
 import { useApiPagination } from '../useApiPagination';
 
-const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
+const FileModal = lazy(() => import('@/components/file/DashboardFile/FileModal'));
 
 const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45];
 
@@ -37,8 +41,28 @@ export default function Files({ id, folderId }: { id?: string; folderId?: string
   const totalRecords = data?.total ?? 0;
   const cachedPages = data?.pages ?? 1;
 
+  const [current, setCurrent, setFiles] = useFileNavStore(
+    useShallow((state) => [state.current, state.setCurrent, state.setFiles]),
+  );
+  const currentFile = current ? (data?.page.find((file) => file.id === current) ?? null) : null;
+  const ids = useMemo(() => (data?.page ?? []).map((file) => file.id), [data?.page]);
+
+  useEffect(() => {
+    setFiles(ids);
+  }, [ids]);
+
   return (
     <>
+      <FileModal
+        open={!!currentFile}
+        setOpen={(open) => {
+          if (!open) setCurrent(null);
+        }}
+        file={currentFile}
+        user={id}
+        sequenced
+      />
+
       <SimpleGrid
         my='sm'
         cols={{
@@ -54,7 +78,7 @@ export default function Files({ id, folderId }: { id?: string; folderId?: string
         ) : (data?.page?.length ?? 0 > 0) ? (
           data?.page.map((file) => (
             <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
-              <DashboardFile file={file} id={id} />
+              <DashboardFile file={file} id={id} onOpen={(fileId) => setCurrent(fileId)} />
             </Suspense>
           ))
         ) : (

@@ -5,6 +5,7 @@ import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
 import { useFolders } from '@/lib/client/hooks/useFolders';
 import { useQueryState } from '@/lib/client/hooks/useQueryState';
+import { useFileNavStore } from '@/lib/client/store/fileNav';
 import { NAMES, useFileTableSettingsStore } from '@/lib/client/store/fileTableSettings';
 import { useSettingsStore } from '@/lib/client/store/settings';
 import { type File } from '@/lib/db/models/file';
@@ -30,7 +31,7 @@ import {
   Tooltip,
   useCombobox,
 } from '@mantine/core';
-import { useClipboard } from '@mantine/hooks';
+import { useClipboard, useDebouncedValue } from '@mantine/hooks';
 import {
   IconCopy,
   IconDownload,
@@ -43,6 +44,7 @@ import { DataTable } from 'mantine-datatable';
 import { lazy, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useSWR from 'swr';
+import { useShallow } from 'zustand/shallow';
 
 import { UpdateFn } from '@/lib/client/hooks/useObjectState';
 import { DashboardFilesModals } from '..';
@@ -231,7 +233,7 @@ export default function FileTable({
     }),
     { name: '', originalName: '', type: '', tags: '', id: '' },
   );
-  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -266,10 +268,15 @@ export default function FileTable({
     }),
   });
 
-  const [selectedFileId, setSelectedFile] = useState<string | null>(null);
-  const selectedFile = selectedFileId
-    ? (data?.page.find((file) => file.id === selectedFileId) ?? null)
-    : null;
+  const [current, setCurrent, setFiles] = useFileNavStore(
+    useShallow((state) => [state.current, state.setCurrent, state.setFiles]),
+  );
+  const selectedFile = current ? (data?.page.find((file) => file.id === current) ?? null) : null;
+  const ids = useMemo(() => (data?.page ?? []).map((file) => file.id), [data?.page]);
+
+  useEffect(() => {
+    setFiles(ids);
+  }, [ids]);
 
   const FIELDS = [
     {
@@ -374,21 +381,16 @@ export default function FileTable({
 
   const unfavoriteAll = selectedFiles.every((file) => file.favorite);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedQuery(searchQuery), 300);
-
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
-
   return (
     <>
       <FileModal
         open={!!selectedFile}
         setOpen={(open) => {
-          if (!open) setSelectedFile(null);
+          if (!open) setCurrent(null);
         }}
         file={selectedFile}
         user={id}
+        sequenced
       />
 
       {modals && setModals && (
@@ -587,7 +589,7 @@ export default function FileTable({
             setSort(data.columnAccessor as any);
             setOrder(data.direction);
           }}
-          onCellClick={({ record }) => setSelectedFile(record.id)}
+          onCellClick={({ record }) => setCurrent(record.id)}
           selectedRecords={selectedFiles}
           onSelectedRecordsChange={setSelectedFiles}
           paginationText={({ from, to, totalRecords }) => `${from} - ${to} / ${totalRecords} files`}
