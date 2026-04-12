@@ -30,7 +30,7 @@ import {
   validatorCompiler,
   ZodTypeProvider,
 } from 'fastify-type-provider-zod';
-import { appendFile, mkdir, writeFile } from 'fs/promises';
+import { appendFile, lstat, mkdir, unlink, writeFile } from 'fs/promises';
 import ms, { StringValue } from 'ms';
 import { version } from '../../package.json';
 import { checkRateLimit } from './plugins/checkRateLimit';
@@ -282,12 +282,35 @@ async function main() {
     });
   }
 
-  await server.listen({
-    port: config.core.port,
-    host: config.core.hostname,
-  });
+  if (config.core.hostname.startsWith('/')) {
+    try {
+      const stat = await lstat(config.core.hostname);
 
-  logger.info('server started', { hostname: config.core.hostname, port: config.core.port });
+      if (!stat.isSocket()) 
+        logger.warn('existing file at unix socket path, removing', { path: config.core.hostname });
+
+      await unlink(config.core.hostname);
+      logger.warn('removed existing unix socket before listen', { path: config.core.hostname });
+    } catch (error) {
+      logger.error('error removing existing unix socket', { error });
+      process.exit(1);
+    }
+
+    await server.listen({
+      path: config.core.hostname,
+    });
+
+    logger.info('server started with unix socket', {
+      path: config.core.hostname,
+    });
+  } else {
+    await server.listen({
+      port: config.core.port,
+      host: config.core.hostname,
+    });
+
+    logger.info('server started', { hostname: config.core.hostname, port: config.core.port });
+  }
 
   // Tasks
   tasks.interval('deletefiles', ms(config.tasks.deleteInterval as StringValue), deleteFiles(prisma));
