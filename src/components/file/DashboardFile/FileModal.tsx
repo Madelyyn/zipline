@@ -54,7 +54,7 @@ import {
   IconUpload,
   IconUserQuestion,
 } from '@tabler/icons-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR, { mutate } from 'swr';
 import { useShallow } from 'zustand/shallow';
 
@@ -200,6 +200,23 @@ export default function FileModal({
       return [state.goPrev, state.goNext, idx > 0, idx >= 0 && idx < state.ids.length - 1];
     }),
   );
+
+  useEffect(() => {
+    if (!open || !sequenced) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft' && hasPrev) {
+        goPrev();
+      } else if (event.key === 'ArrowRight' && hasNext) {
+        goNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, sequenced, hasPrev, hasNext, goPrev, goNext]);
 
   return (
     <>
