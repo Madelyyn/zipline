@@ -2,7 +2,7 @@ import type { File } from '@/lib/db/models/file';
 import { Card } from '@mantine/core';
 import { useState } from 'react';
 import DashboardFileType from '../DashboardFileType';
-import FileModal from './FileModal';
+import DashboardFileModal from './DashboardFileModal';
 
 import styles from './index.module.css';
 
@@ -21,7 +21,7 @@ export default function DashboardFile({
 
   return (
     <>
-      {!onOpen && <FileModal open={open} setOpen={setOpen} file={file} reduce={reduce} user={id} />}
+      {!onOpen && <DashboardFileModal open={open} setOpen={setOpen} file={file} reduce={reduce} user={id} />}
 
       <Card
         shadow='md'

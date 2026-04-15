@@ -120,7 +120,7 @@ export default function EditFileDetailsModal({
   };
 
   return (
-    <Modal zIndex={300} title={`Editing "${file.name}"`} onClose={onClose} opened={open}>
+    <Modal zIndex={400} title={`Editing "${file.name}"`} onClose={onClose} opened={open}>
       <Stack gap='xs' my='sm'>
         <TextInput
           label='Name'

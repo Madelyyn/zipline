@@ -59,6 +59,17 @@ export default function SettingsDashboard() {
           />
         </Stack>
 
+        <Select
+          label='File viewer'
+          description='Choose which file viewer opens when you click a file.'
+          data={[
+            { value: 'fullscreen', label: 'Fullscreen (beta)' },
+            { value: 'default', label: 'Default (modal)' },
+          ]}
+          value={settings.fileViewer}
+          onChange={(value) => update('fileViewer', (value as 'default' | 'fullscreen') ?? 'fullscreen')}
+        />
+
         <DomainSelect
           label='Default Domain'
           description='Set the default domain used for copied links anywhere in the dashboard. Leave blank or select "Default domain" to use the current domain that serves the dashboard.'

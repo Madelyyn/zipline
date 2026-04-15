@@ -25,7 +25,7 @@ import { Link, Params, useLoaderData, useNavigate } from 'react-router-dom';
 import { useShallow } from 'zustand/shallow';
 
 const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
-const FileModal = lazy(() => import('@/components/file/DashboardFile/FileModal'));
+const DashboardFileModal = lazy(() => import('@/components/file/DashboardFile/DashboardFileModal'));
 
 export async function loader({ params }: { params: Params<string> }) {
   const res = await fetch(`/api/server/folder/${params.id}`);
@@ -117,7 +117,14 @@ export function Component() {
   return (
     <>
       <Container my='lg'>
-        <FileModal
+        {/* <FileModal
+          open={!!currentFile}
+          setOpen={(open) => setCurrent(open ? (currentFile?.id ?? null) : null)}
+          file={currentFile}
+          reduce
+          sequenced
+        /> */}
+        <DashboardFileModal
           open={!!currentFile}
           setOpen={(open) => setCurrent(open ? (currentFile?.id ?? null) : null)}
           file={currentFile}

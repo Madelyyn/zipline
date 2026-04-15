@@ -53,7 +53,7 @@ import { bulkDelete, bulkFavorite } from '../bulk';
 import TagPill from '../tags/TagPill';
 import { useApiPagination } from '../useApiPagination';
 
-const FileModal = lazy(() => import('@/components/file/DashboardFile/FileModal'));
+const DashboardFileModal = lazy(() => import('@/components/file/DashboardFile/DashboardFileModal'));
 
 type ReducerQuery = {
   state: { name: string; originalName: string; type: string; tags: string; id: string };
@@ -383,7 +383,7 @@ export default function FileTable({
 
   return (
     <>
-      <FileModal
+      <DashboardFileModal
         open={!!selectedFile}
         setOpen={(open) => {
           if (!open) setCurrent(null);

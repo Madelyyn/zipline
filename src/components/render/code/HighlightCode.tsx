@@ -9,7 +9,7 @@ import './HighlightCode.theme.scss';
 
 export default function HighlightCode({ language, code }: { language: string; code: string }) {
   const { pathname } = useLocation();
-  const noClamp = pathname.startsWith('/view/');
+  const noClamp = pathname.startsWith('/view/') || pathname.startsWith('/dashboard/files');
 
   const theme = useMantineTheme();
   const [expanded, setExpanded] = useState(false);

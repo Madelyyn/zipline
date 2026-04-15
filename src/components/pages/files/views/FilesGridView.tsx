@@ -21,7 +21,7 @@ import { useShallow } from 'zustand/shallow';
 import DashboardFile from '@/components/file/DashboardFile';
 import { useApiPagination } from '../useApiPagination';
 
-const FileModal = lazy(() => import('@/components/file/DashboardFile/FileModal'));
+const DashboardFileModal = lazy(() => import('@/components/file/DashboardFile/DashboardFileModal'));
 
 const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45];
 
@@ -53,7 +53,7 @@ export default function Files({ id, folderId }: { id?: string; folderId?: string
 
   return (
     <>
-      <FileModal
+      <DashboardFileModal
         open={!!currentFile}
         setOpen={(open) => {
           if (!open) setCurrent(null);

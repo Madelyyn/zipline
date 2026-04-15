@@ -84,12 +84,14 @@ export default function DashboardFileType({
   password,
   code,
   allowZoom,
+  fullscreen,
 }: {
   file: DbFile | File;
   show?: boolean;
   password?: string | null;
   code?: boolean;
   allowZoom?: boolean;
+  fullscreen?: boolean;
 }) {
   const user = useUserStore((state) => state.user);
   const disableMediaPreview = useSettingsStore((state) => state.settings.disableMediaPreview);
@@ -198,6 +200,15 @@ export default function DashboardFileType({
 
   const isAsciicast = file.type === 'application/x-asciicast' || file.name.endsWith('.cast');
 
+  const mediaFullscreenStyle = fullscreen
+    ? {
+        maxWidth: 'min(96vw, calc(100vw - 3rem))',
+        maxHeight: 'calc(100vh - 7.5rem)',
+        width: 'auto',
+        height: 'auto',
+      }
+    : undefined;
+
   switch (true) {
     case type === 'video':
       if (!fileUrl) return <Loader />;
@@ -208,7 +219,10 @@ export default function DashboardFileType({
           muted
           controls
           src={fileUrl}
-          style={{ cursor: 'pointer', maxWidth: '85vw', maxHeight: '85vh' }}
+          style={{
+            cursor: 'pointer',
+            ...(fullscreen ? mediaFullscreenStyle : { maxWidth: '85vw', maxHeight: '85vh' }),
+          }}
         />
       ) : thumbnailRoute ? (
         <Box pos='relative'>
@@ -243,8 +257,8 @@ export default function DashboardFileType({
             alt={file.name || 'Image'}
             style={{
               cursor: allowZoom ? 'zoom-in' : 'default',
-              maxWidth: '70vw',
-              maxHeight: '70vw',
+              objectFit: 'contain',
+              ...(fullscreen ? mediaFullscreenStyle : { maxWidth: '70vw', maxHeight: '70vw' }),
             }}
             onClick={() => allowZoom && setOpen(true)}
           />
@@ -294,6 +308,16 @@ export default function DashboardFileType({
               ),
             }}
           />
+        ) : fullscreen ? (
+          <Box
+            style={{
+              maxHeight: 'calc(100vh - 7.5rem)',
+              overflow: 'auto',
+              width: 'min(96vw, calc(100vw - 3rem))',
+            }}
+          >
+            <Render mode={renderIn} language={extension} code={fileContent} />
+          </Box>
         ) : (
           <Render mode={renderIn} language={extension} code={fileContent} />
         )
@@ -304,7 +328,19 @@ export default function DashboardFileType({
     case isAsciicast === true:
       if (!fileUrl) return <Loader />;
       return show ? (
-        <Asciinema src={fileUrl} />
+        fullscreen ? (
+          <Box
+            style={{
+              maxHeight: 'calc(100vh - 7.5rem)',
+              overflow: 'auto',
+              width: 'min(96vw, calc(100vw - 3rem))',
+            }}
+          >
+            <Asciinema src={fileUrl} />
+          </Box>
+        ) : (
+          <Asciinema src={fileUrl} />
+        )
       ) : (
         <Placeholder
           text={`Click to download asciinema cast ${file.name}`}
@@ -315,7 +351,18 @@ export default function DashboardFileType({
     case file.type === 'application/pdf':
       if (!fileUrl) return <Loader />;
       return show ? (
-        <Pdf src={fileUrl} />
+        fullscreen ? (
+          <Box
+            style={{
+              height: 'calc(100vh - 7.5rem)',
+              width: 'min(96vw, calc(100vw - 3rem))',
+            }}
+          >
+            <Pdf src={fileUrl} />
+          </Box>
+        ) : (
+          <Pdf src={fileUrl} />
+        )
       ) : (
         <Placeholder text={`Click to view PDF ${file.name}`} Icon={fileIcon(file.type)} />
       );
