@@ -2,20 +2,41 @@ import { bytes } from '@/lib/bytes';
 import { useFileNavStore } from '@/lib/client/store/fileNav';
 import { useSettingsStore } from '@/lib/client/store/settings';
 import { File } from '@/lib/db/models/file';
-import { ActionIcon, ActionIconProps, Box, Group, Paper, Text, Tooltip } from '@mantine/core';
+import {
+  ActionIcon,
+  ActionIconProps,
+  Box,
+  Drawer,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+} from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import {
   Icon,
+  IconBombFilled,
   IconChevronLeft,
   IconChevronRight,
   IconClipboardTypography,
   IconCopy,
+  IconDeviceSdCard,
   IconDownload,
   IconExternalLink,
+  IconEyeFilled,
+  IconFileInfo,
+  IconInfoCircle,
   IconPencil,
+  IconRefresh,
   IconStar,
   IconStarFilled,
+  IconTextRecognition,
   IconTrashFilled,
+  IconUpload,
+  IconUserQuestion,
   IconX,
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
@@ -24,6 +45,7 @@ import { useShallow } from 'zustand/shallow';
 import DashboardFileType from '../DashboardFileType';
 import { copyFile, deleteFile, downloadFile, favoriteFile, viewFile } from '../actions';
 import EditFileDetailsModal from './EditFileDetailsModal';
+import FileStat from './FileStat';
 import classes from './FileViewer.module.css';
 
 function ActionButton({
@@ -74,6 +96,7 @@ export default function FileViewer({
   const fileNavButtons = useSettingsStore((state) => state.settings.fileNavButtons);
 
   const [editFileOpen, setEditFileOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const [goPrev, goNext, hasPrev, hasNext] = useFileNavStore(
     useShallow((state) => {
@@ -106,11 +129,58 @@ export default function FileViewer({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, sequenced, hasPrev, hasNext, goPrev, goNext, setOpen]);
 
+  useEffect(() => {
+    if (!open) setInfoOpen(false);
+  }, [open]);
+
   return (
     <>
       {file && (
         <EditFileDetailsModal open={editFileOpen} onClose={() => setEditFileOpen(false)} file={file} />
       )}
+
+      <Drawer
+        opened={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        position='right'
+        title={<Title order={2}>Details</Title>}
+        radius='md'
+        offset={20}
+        overlayProps={{ blur: 6 }}
+      >
+        {file && (
+          <Stack gap='md'>
+            <FileStat Icon={IconFileInfo} title='Type' value={file.type} />
+            <FileStat Icon={IconDeviceSdCard} title='Size' value={bytes(file.size)} />
+            <FileStat
+              Icon={IconUpload}
+              title='Created at'
+              value={new Date(file.createdAt).toLocaleString()}
+            />
+            <FileStat
+              Icon={IconRefresh}
+              title='Updated at'
+              value={new Date(file.updatedAt).toLocaleString()}
+            />
+            {file.deletesAt && !reduce && (
+              <FileStat
+                Icon={IconBombFilled}
+                title='Deletes at'
+                value={new Date(file.deletesAt).toLocaleString()}
+              />
+            )}
+            <FileStat
+              Icon={IconEyeFilled}
+              title='Views'
+              value={file.maxViews ? `${file.views} / ${file.maxViews}` : file.views}
+            />
+            {file.originalName && (
+              <FileStat Icon={IconTextRecognition} title='Original Name' value={file.originalName} />
+            )}
+            {file.anonymous && <FileStat Icon={IconUserQuestion} title='Anonymous' value='Yes' />}
+          </Stack>
+        )}
+      </Drawer>
 
       <Box className={classes.overlay} data-open={open ? 'true' : 'false'} onClick={() => setOpen(false)}>
         <Paper m={0} p={0} withBorder bdrs={0} style={{ borderTop: 0, borderLeft: 0, borderRight: 0 }}>
@@ -160,6 +230,12 @@ export default function FileViewer({
               )}
               {file && (
                 <>
+                  <ActionButton
+                    Icon={IconInfoCircle}
+                    onClick={() => setInfoOpen((v) => !v)}
+                    tooltip={infoOpen ? 'Hide details' : 'Show details'}
+                    color={infoOpen ? 'cyan' : 'gray'}
+                  />
                   <ActionButton
                     Icon={IconExternalLink}
                     onClick={() => viewFile(file)}
