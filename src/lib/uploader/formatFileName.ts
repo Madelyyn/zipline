@@ -1,9 +1,10 @@
+import { randomUUID } from 'crypto';
 import dayjs from 'dayjs';
+import { parse } from 'path';
 import { config } from '../config';
 import { Config } from '../config/validate';
+import { sanitizeFilename } from '../fs';
 import { randomCharacters } from '../random';
-import { randomUUID } from 'crypto';
-import { parse } from 'path';
 import { randomWords } from './randomWords';
 
 export function formatFileName(nameFormat: Config['files']['defaultFormat'], originalName?: string) {
@@ -15,11 +16,12 @@ export function formatFileName(nameFormat: Config['files']['defaultFormat'], ori
     case 'uuid':
       return randomUUID({ disableEntropyCache: true });
     case 'name':
-      const sanitized = originalName ? parse(originalName).name : null;
+      if (!originalName) return null;
+
+      const sanitized = sanitizeFilename(originalName);
       if (!sanitized) return null;
 
-      const { name } = parse(sanitized);
-      return name;
+      return parse(sanitized).name;
     case 'random-words':
     case 'gfycat':
       return randomWords(config.files.randomWordsNumAdjectives, config.files.randomWordsSeparator);
