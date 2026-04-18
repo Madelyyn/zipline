@@ -3,7 +3,6 @@ import { IconCheck, IconChevronDown, IconChevronUp, IconClipboardCopy } from '@t
 import type { HLJSApi } from 'highlight.js';
 import * as sanitize from 'isomorphic-dompurify';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { Virtuoso } from 'react-virtuoso';
 import './HighlightCode.theme.scss';
 
@@ -18,8 +17,6 @@ export default function HighlightCode({
   code: string;
   scrollParent?: HTMLElement | null;
 }) {
-  const { pathname } = useLocation();
-
   const theme = useMantineTheme();
   const [expanded, setExpanded] = useState(false);
   const [hljs, setHljs] = useState<HLJSApi | null>(null);

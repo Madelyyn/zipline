@@ -12,7 +12,7 @@ import {
   Stack,
   Text,
   Title,
-  Tooltip
+  Tooltip,
 } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import {
