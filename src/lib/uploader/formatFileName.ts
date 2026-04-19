@@ -7,12 +7,16 @@ import { sanitizeFilename } from '../fs';
 import { randomCharacters } from '../random';
 import { randomWords } from './randomWords';
 
-export function formatFileName(nameFormat: Config['files']['defaultFormat'], originalName?: string) {
+export function formatFileName(
+  nameFormat: Config['files']['defaultFormat'],
+  originalName?: string,
+  dateIncrement?: number,
+) {
   switch (nameFormat) {
     case 'random':
       return randomCharacters(config.files.length);
     case 'date':
-      return dayjs().format(config.files.defaultDateFormat);
+      return dayjs().format(config.files.defaultDateFormat) + (dateIncrement ? `-${dateIncrement}` : '');
     case 'uuid':
       return randomUUID({ disableEntropyCache: true });
     case 'name':

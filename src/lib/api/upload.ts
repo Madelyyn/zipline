@@ -94,8 +94,10 @@ export async function getFilename(
       return { error: 'file with the same name already exists' };
     }
 
-    while (existing && format === 'random') {
-      fileName = formatFileName(format, originalName);
+    let dateIncrement = 1;
+
+    while (existing && (format === 'random' || format === 'date')) {
+      fileName = formatFileName(format, originalName, dateIncrement++);
       if (!fileName) return { error: 'invalid file name' };
 
       fullFileName = `${fileName}${extension}`;
