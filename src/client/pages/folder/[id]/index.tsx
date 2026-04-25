@@ -1,3 +1,4 @@
+import { useApiPagination } from '@/components/pages/files/useApiPagination';
 import { type Response } from '@/lib/api/response';
 import { useQueryState } from '@/lib/client/hooks/useQueryState';
 import { useTitle } from '@/lib/client/hooks/useTitle';
@@ -20,20 +21,26 @@ import {
   Title,
 } from '@mantine/core';
 import { IconFolder, IconUpload } from '@tabler/icons-react';
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Link, Params, useLoaderData, useNavigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { Link, Params, useLoaderData, useNavigate, useSearchParams } from 'react-router-dom';
 import { useShallow } from 'zustand/shallow';
 
 const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
 const DashboardFileModal = lazy(() => import('@/components/file/DashboardFile/DashboardFileModal'));
 
-export async function loader({ params }: { params: Params<string> }) {
-  const res = await fetch(`/api/server/folder/${params.id}`);
+export async function loader({ params, request }: { params: Params<string>; request: Request }) {
+  const url = new URL(request.url);
+  const page = url.searchParams.get('page') ?? '1';
+  const perpage = url.searchParams.get('perpage') ?? '15';
+
+  const res = await fetch(
+    `/api/server/folder/${params.id}?page=${encodeURIComponent(page)}&perpage=${encodeURIComponent(perpage)}`,
+  );
   if (!res.ok) {
     throw new Response('Folder not found', { status: 404 });
   }
   return {
-    folder: (await res.json()) as Response['/api/server/folder/[id]'],
+    initial: (await res.json()) as Response['/api/server/folder/[id]'],
   };
 }
 
@@ -67,10 +74,30 @@ function PublicFolderCard({ folder }: { folder: Partial<Folder> }) {
 const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45];
 
 export function Component() {
-  const { folder } = useLoaderData<typeof loader>();
+  const { initial } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
 
-  useTitle(folder.name);
+  const [, setSearchParams] = useSearchParams();
+  const [page, setPage] = useQueryState('page', 1);
+  const [perpage] = useQueryState('perpage', 15);
+
+  const { data, isLoading } = useApiPagination<Response['/api/server/folder/[id]']>(
+    {
+      route: `/api/server/folder/${initial.folder.id}`,
+      page,
+      perpage,
+      sort: 'createdAt',
+      order: 'desc',
+    },
+    { fallbackData: initial, keepPreviousData: true, revalidateOnFocus: false },
+  );
+
+  const folder = data?.folder ?? initial.folder;
+  const files = data?.page ?? [];
+  const totalRecords = data?.total ?? 0;
+  const cachedPages = data?.pages ?? 0;
+
+  useTitle(folder.name ?? 'Folder');
 
   const buildBreadcrumbs = () => {
     const items: FolderBreadcrumb[] = [];
@@ -88,27 +115,14 @@ export function Component() {
 
   const breadcrumbs = buildBreadcrumbs();
   const children = (folder.children ?? []) as Partial<Folder>[];
-
-  const [perpage, setPerpage] = useState(15);
-  const [page, setPage] = useQueryState('page', 1);
-
-  const from = (page - 1) * perpage + 1;
-  const to = Math.min(page * perpage, folder.files?.length ?? 0);
-  const totalRecords = folder.files?.length ?? 0;
-  const cachedPages = Math.ceil(totalRecords / perpage);
-
-  const visible = useMemo(() => {
-    if (!folder.files) return [];
-
-    const start = (page - 1) * perpage;
-    return folder.files.slice(start, start + perpage);
-  }, [folder.files, page, perpage]);
+  const from = totalRecords === 0 ? 0 : (page - 1) * perpage + 1;
+  const to = Math.min(page * perpage, totalRecords);
 
   const [current, setCurrent, setFiles] = useFileNavStore(
     useShallow((state) => [state.current, state.setCurrent, state.setFiles]),
   );
-  const currentFile = current ? (visible.find((file) => file.id === current) ?? null) : null;
-  const ids = useMemo(() => visible.map((file) => file.id), [visible]);
+  const currentFile = current ? (files.find((file) => file.id === current) ?? null) : null;
+  const ids = useMemo(() => files.map((file) => file.id), [files]);
 
   useEffect(() => {
     setFiles(ids);
@@ -173,7 +187,7 @@ export function Component() {
           </>
         )}
 
-        {(visible.length ?? 0) > 0 && (
+        {(files.length ?? 0) > 0 && (
           <>
             <Title order={3} mt='md' mb='sm'>
               Files
@@ -186,7 +200,7 @@ export function Component() {
               }}
               spacing='md'
             >
-              {visible.map((file: any) => (
+              {files.map((file: any) => (
                 <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
                   <DashboardFile file={file} reduce onOpen={(fileId) => setCurrent(fileId)} />
                 </Suspense>
@@ -195,7 +209,7 @@ export function Component() {
           </>
         )}
 
-        {children.length === 0 && (folder.files?.length ?? 0) === 0 && (
+        {children.length === 0 && totalRecords === 0 && (
           <Text c='dimmed' mt='md'>
             This folder is empty.
           </Text>
@@ -209,12 +223,16 @@ export function Component() {
               value={perpage.toString()}
               data={PER_PAGE_OPTIONS.map((val) => ({ value: val.toString(), label: `${val}` }))}
               onChange={(value) => {
-                setPerpage(Number(value));
-                setPage(1);
+                setSearchParams((prev) => {
+                  prev.set('perpage', value ?? '15');
+                  prev.set('page', '1');
+                  return prev;
+                });
               }}
               w={80}
               size='xs'
               variant='filled'
+              disabled={isLoading}
             />
 
             <Pagination
@@ -224,6 +242,7 @@ export function Component() {
               size='sm'
               withControls
               withEdges
+              disabled={isLoading}
             />
           </Group>
         </Group>

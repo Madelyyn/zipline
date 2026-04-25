@@ -1,7 +1,8 @@
-import { Response } from '@/lib/api/response';
+import type { Response } from '@/lib/api/response';
 import useSWR from 'swr';
 
 type ApiPaginationOptions = {
+  route?: string;
   page?: number;
   filter?: string;
   perpage?: number;
@@ -26,14 +27,15 @@ type ApiPaginationOptions = {
   };
 };
 
-const fetcher = async (
+const fetcher = async <T,>(
   { options }: { options: ApiPaginationOptions; key: string } = {
     options: {
       page: 1,
     },
     key: '/api/user/files',
   },
-): Promise<Response['/api/user/files']> => {
+): Promise<T> => {
+  const route = options.route ?? '/api/user/files';
   const searchParams = new URLSearchParams();
   if (options.page) searchParams.append('page', options.page.toString());
   if (options.filter) searchParams.append('filter', options.filter);
@@ -48,7 +50,7 @@ const fetcher = async (
   }
   if (options.folderId) searchParams.append('folder', options.folderId);
 
-  const res = await fetch(`/api/user/files${searchParams.toString() ? `?${searchParams.toString()}` : ''}`);
+  const res = await fetch(`${route}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`);
 
   if (!res.ok) {
     const json = await res.json();
@@ -59,14 +61,18 @@ const fetcher = async (
   return res.json();
 };
 
-export function useApiPagination(
+export function useApiPagination<T = Response['/api/user/files']>(
   options: ApiPaginationOptions = {
     page: 1,
   },
+  swrConfig?: Parameters<typeof useSWR<T>>[2],
 ) {
-  const { data, error, isLoading, mutate } = useSWR<Response['/api/user/files']>(
-    { key: '/api/user/files', options },
-    { fetcher },
+  const { data, error, isLoading, mutate } = useSWR<T>(
+    { key: options.route ?? '/api/user/files', options },
+    {
+      fetcher: (k) => fetcher<T>(k),
+      ...swrConfig,
+    },
   );
 
   return {
@@ -76,3 +82,4 @@ export function useApiPagination(
     mutate,
   };
 }
+
