@@ -50,17 +50,18 @@ export default function DropzoneFile({
           </Center>
         </Paper>
       </HoverCard.Target>
-      <HoverCard.Dropdown>
-        <Group maw={400}>
-          <ScrollArea>
-            <Box mah={250} maw={400}>
+      <HoverCard.Dropdown p='md' maw={480}>
+        <Stack gap='sm'>
+          <ScrollArea h={240} offsetScrollbars type='auto'>
+            <Box w='100%' miw={280} style={{ maxWidth: 'min(92vw, 26rem)' }}>
               <DashboardFileType file={file} show />
             </Box>
           </ScrollArea>
 
-          <Stack justify='xs'>
+          <Stack gap='xs'>
             <Text size='sm' c='dimmed'>
-              <b>{file.name}</b> {file.type || file.type === '' ? `(${file.type})` : ''}
+              <b>{file.name}</b>
+              {file.type ? ` (${file.type})` : ''}
             </Text>
             <Text size='sm' c='dimmed'>
               {bytes(file.size)}
@@ -76,7 +77,7 @@ export default function DropzoneFile({
               Remove
             </Button>
           </Stack>
-        </Group>
+        </Stack>
       </HoverCard.Dropdown>
     </HoverCard>
   );
