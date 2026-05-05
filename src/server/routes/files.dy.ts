@@ -7,7 +7,7 @@ type Params = {
 };
 
 type Query = {
-  pw?: string;
+  token?: string;
   download?: string;
 };
 

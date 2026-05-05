@@ -1,11 +1,9 @@
+import { verifyAccessToken } from '@/lib/accessToken';
 import { config as zConfig } from '@/lib/config';
 import { Config } from '@/lib/config/validate';
-import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { getPasswordCookie } from '@/lib/passwordCookie';
 import { renderHtml } from '@/lib/ssr/renderHtml';
 import { ZiplineTheme } from '@/lib/theme';
-import * as cookie from 'cookie';
 import { FastifyRequest } from 'fastify';
 import { createRoutes } from './routes';
 
@@ -17,13 +15,11 @@ export async function render(
   }: {
     themes: ZiplineTheme[];
     defaultTheme: Config['website']['theme'];
-    req: FastifyRequest;
+    req: FastifyRequest<{ Params: { id: string }; Querystring: { token?: string } }>;
   },
   url: string,
 ) {
-  const routes = createRoutes(themes, defaultTheme);
-
-  const id = url.split('/').pop();
+  const id = req.params?.id ?? null;
   if (!id) return { html: 'Not Found', meta: '', status: 404 };
 
   const { config: libConfig, reloadSettings } = await import('@/lib/config');
@@ -52,30 +48,26 @@ export async function render(
     return { html: 'Gone', meta: '', status: 410 };
   }
 
-  const cookies = cookie.parse(req.headers.cookie || '');
-  const pw = getPasswordCookie(cookies, 'url', urlEntry.id);
+  const token = req.query.token;
+  const valid = token && urlEntry.password ? verifyAccessToken(token, 'url', urlEntry.id) : false;
   const hasPassword = !!urlEntry.password;
 
   const data = {
     url: { ...urlEntry },
     password: hasPassword,
+    token: valid ? token : null,
   };
 
+  delete (data.url as any).password;
+
+  const routes = createRoutes(themes, defaultTheme);
+
   if (hasPassword) {
-    delete (data.url as any).password;
-    if (pw) {
-      const verified = await verifyPassword(pw, urlEntry.password!);
-      if (!verified) {
-        delete (data.url as any).destination;
-        return renderHtml(routes, { url, data, status: 403 });
-      }
-    } else {
+    if (!valid) {
       delete (data.url as any).destination;
       return renderHtml(routes, { url, data, status: 403 });
     }
   }
-
-  delete (data.url as any).password;
 
   await prisma.url.update({
     where: { id: urlEntry.id },

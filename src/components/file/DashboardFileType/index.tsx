@@ -39,7 +39,7 @@ export function Placeholder({ text, Icon, ...props }: { text: string; Icon: Icon
 export default function DashboardFileType({
   file,
   show,
-  password,
+  token,
   code,
   allowZoom,
   fullscreen,
@@ -47,14 +47,14 @@ export default function DashboardFileType({
 }: {
   file: DbFile | File;
   show?: boolean;
-  password?: string | null;
+  token?: string | null;
   code?: boolean;
   allowZoom?: boolean;
   fullscreen?: boolean;
   scrollParent?: HTMLElement | null;
 }) {
   const disableMediaPreview = useSettingsStore((state) => state.settings.disableMediaPreview);
-  const { fileUrl, thumbnailUrl, viewUrl } = useFileUrls({ file, password });
+  const { fileUrl, thumbnailUrl, viewUrl } = useFileUrls({ file, token });
   const db = isDbFile(file) ? file : null;
 
   const extension = file.name.split('.').pop() || '';

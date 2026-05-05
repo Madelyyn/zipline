@@ -1,10 +1,10 @@
 import { ApiError } from '@/lib/api/errors';
+import { createAccessToken } from '@/lib/accessToken';
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { zStringTrimmed } from '@/lib/validation';
-import { setPasswordCookie } from '@/lib/passwordCookie';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
@@ -21,7 +21,8 @@ export default typedPlugin(
       PATH,
       {
         schema: {
-          description: 'Verify the password for a password-protected file by ID or name.',
+          description:
+            'Verify the password for a password-protected file by ID or name and receive an access token if the password is correct',
           body: z.object({
             password: zStringTrimmed,
           }),
@@ -31,6 +32,7 @@ export default typedPlugin(
           response: {
             200: z.object({
               success: z.boolean(),
+              token: z.string(),
             }),
           },
         },
@@ -60,11 +62,12 @@ export default typedPlugin(
 
           throw new ApiError(3005);
         }
-        logger.info(`${file.name} was accessed with the correct password`, { ua: req.headers['user-agent'] });
+        logger.info(`${file.name} was accessed with the correct password, a new access token was created`, {
+          ua: req.headers['user-agent'],
+        });
 
-        setPasswordCookie(res, 'file', file.id, req.body.password);
-
-        return res.send({ success: true });
+        const token = createAccessToken({ type: 'file', id: file.id });
+        return res.send({ success: true, token });
       },
     );
   },

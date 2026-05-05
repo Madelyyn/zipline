@@ -1,7 +1,7 @@
+import { verifyAccessToken } from '@/lib/accessToken';
 import { ApiError } from '@/lib/api/errors';
 import { parseRange } from '@/lib/api/range';
 import { config } from '@/lib/config';
-import { verifyPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { sanitizeFilename } from '@/lib/fs';
@@ -27,7 +27,7 @@ export default typedPlugin(
             id: z.string(),
           }),
           querystring: z.object({
-            pw: z.string().optional(),
+            token: z.string().optional(),
             download: zQsBoolean.optional(),
           }),
           tags: ['auth'],
@@ -35,7 +35,7 @@ export default typedPlugin(
         preHandler: [userMiddleware],
       },
       async (req, res) => {
-        const { pw, download } = req.query;
+        const { token, download } = req.query;
 
         const id = sanitizeFilename(req.params.id);
         if (!id) throw new ApiError(9002);
@@ -114,9 +114,8 @@ export default typedPlugin(
         }
 
         if (file?.password) {
-          if (!pw) throw new ApiError(3004);
-          const verified = await verifyPassword(pw, file.password!);
-          if (!verified) throw new ApiError(3005);
+          const valid = verifyAccessToken(token, 'file', file.id);
+          if (!valid) throw new ApiError(3018);
         }
 
         const size = file?.size || (await datasource.size(file?.name ?? id));

@@ -5,21 +5,19 @@ import '@mantine/dropzone/styles.css';
 import '@mantine/notifications/styles.css';
 import 'mantine-datatable/styles.css';
 
+import { verifyAccessToken } from '@/lib/accessToken';
 import { isCode } from '@/lib/code';
 import { config as zConfig } from '@/lib/config';
 import type { Config } from '@/lib/config/validate';
-import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { File, fileSelect } from '@/lib/db/models/file';
 import { User, userSelect } from '@/lib/db/models/user';
 import { parseString } from '@/lib/parser';
 import { parserMetrics } from '@/lib/parser/metrics';
-import { getPasswordCookie } from '@/lib/passwordCookie';
 import { createZiplineSsr } from '@/lib/ssr/createZiplineSsr';
 import { stripHtml } from '@/lib/stripHtml';
 import type { ZiplineTheme } from '@/lib/theme';
 import { readThemes } from '@/lib/theme/file';
-import * as cookie from 'cookie';
 import { FastifyRequest } from 'fastify';
 import { renderToString } from 'react-dom/server';
 import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router-dom';
@@ -45,11 +43,11 @@ export async function render(
   }: {
     themes: ZiplineTheme[];
     defaultTheme: Config['website']['theme'];
-    req: FastifyRequest;
+    req: FastifyRequest<{ Params: { id: string }; Querystring: { token?: string } }>;
   },
   url: string,
 ) {
-  const id = url.split('/').pop();
+  const id = req.params?.id ?? null;
   if (!id) return { html: 'Not Found', meta: '', status: 404 };
 
   const { config: libConfig, reloadSettings } = await import('@/lib/config');
@@ -95,17 +93,15 @@ export async function render(
   const metrics = await parserMetrics(user.id);
   const config = { website: { theme: zConfig.website.theme } };
 
-  const cookies = cookie.parse(req.headers.cookie || '');
-  const pw = getPasswordCookie(cookies, 'file', file.id);
+  const token = req.query.token;
+  const valid = token && file.password ? verifyAccessToken(token, 'file', file.id) : false;
   const hasPassword = !!file.password;
 
+  delete (file as any).password;
+
   if (hasPassword) {
-    if (pw) {
-      const verified = await verifyPassword(pw, file.password!);
-      if (!verified) return { html: 'Forbidden', meta: '', status: 403 };
-      delete (file as any).password;
-    } else {
-      delete (file as any).password;
+    console.log('File is password protected');
+    if (!valid) {
       const data = {
         file: { id: file.id, name: file.name, type: file.type },
         password: true,
@@ -142,7 +138,7 @@ export async function render(
   const data = {
     file,
     password: hasPassword,
-    pw: pw || null,
+    token: valid ? token : null,
     code,
     user,
     host,

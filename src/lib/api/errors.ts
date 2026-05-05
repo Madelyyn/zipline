@@ -90,6 +90,7 @@ export const API_ERRORS = {
   3015: 'Not super admin',
   3016: 'OAuth registration is disabled',
   3017: 'OAuth login is not allowed for this account',
+  3018: 'Invalid access token provided.',
 
   // 4xxx, not founds
   4000: 'File not found',

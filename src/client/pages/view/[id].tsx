@@ -1,5 +1,6 @@
 import DashboardFileType from '@/components/file/DashboardFileType';
 import TagPill from '@/components/pages/files/tags/TagPill';
+import { useSsrData } from '@/components/ZiplineSSRProvider';
 import { useTitle } from '@/lib/client/hooks/useTitle';
 import { File } from '@/lib/db/models/file';
 import { User } from '@/lib/db/models/user';
@@ -24,7 +25,6 @@ import { IconDownload, IconExternalLink, IconInfoCircleFilled } from '@tabler/ic
 import * as sanitize from 'isomorphic-dompurify';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useSsrData } from '../../../components/ZiplineSSRProvider';
 import { getFile } from '../../ssr-view/server';
 
 type SsrData = {
@@ -33,7 +33,7 @@ type SsrData = {
   code: boolean;
   user?: Partial<User>;
   host: string;
-  pw?: string | null;
+  token?: string | null;
   metrics?: Awaited<ReturnType<typeof parserMetrics>>;
   filesRoute?: string;
 };
@@ -42,7 +42,7 @@ export default function ViewFileId() {
   const data = useSsrData<SsrData>();
   if (!data) return null;
 
-  const { file, password, code, user, host, metrics, filesRoute, pw } = data;
+  const { file, password, code, user, host, metrics, filesRoute, token } = data;
 
   const [passwordValue, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
@@ -50,7 +50,7 @@ export default function ViewFileId() {
 
   useTitle(file.originalName ?? file.name ?? 'View File');
 
-  return password && !pw ? (
+  return password && !token ? (
     <Modal onClose={() => {}} opened={true} withCloseButton={false} centered title='Password required'>
       <form
         onSubmit={async (e) => {
@@ -63,7 +63,8 @@ export default function ViewFileId() {
           });
 
           if (res.ok) {
-            window.location.reload();
+            const json = (await res.json()) as { token: string };
+            window.location.replace(`/view/${file.name}?token=${encodeURIComponent(json.token)}`);
           } else {
             setPasswordError('Invalid password');
           }
@@ -104,7 +105,7 @@ export default function ViewFileId() {
               size='md'
               variant='outline'
               component={Link}
-              to={`/raw/${file.name}?download=true${pw ? `&pw=${encodeURIComponent(pw)}` : ''}`}
+              to={`/raw/${file.name}?download=true${token ? `&token=${encodeURIComponent(token)}` : ''}`}
               target='_blank'
             >
               <IconDownload size='1rem' />
@@ -143,7 +144,7 @@ export default function ViewFileId() {
       </Collapse>
 
       <Center m='sm'>
-        <DashboardFileType file={file as unknown as File} password={pw} show code={code} fullscreen />
+        <DashboardFileType file={file as unknown as File} token={token} show code={code} fullscreen />
       </Center>
     </>
   ) : (
@@ -194,7 +195,7 @@ export default function ViewFileId() {
                   size='md'
                   variant='outline'
                   component={Link}
-                  to={`/raw/${file.name}${pw ? `?pw=${encodeURIComponent(pw)}` : ''}`}
+                  to={`/raw/${file.name}${token ? `?token=${encodeURIComponent(token)}` : ''}`}
                   target='_blank'
                 >
                   <IconExternalLink size='1rem' />
@@ -205,7 +206,7 @@ export default function ViewFileId() {
                   size='md'
                   variant='outline'
                   component={Link}
-                  to={`/raw/${file.name}?download=true${pw ? `&pw=${encodeURIComponent(pw)}` : ''}`}
+                  to={`/raw/${file.name}?download=true${token ? `&token=${encodeURIComponent(token)}` : ''}`}
                   target='_blank'
                 >
                   <IconDownload size='1rem' />
@@ -214,7 +215,7 @@ export default function ViewFileId() {
             </ActionIcon.Group>
           </Group>
 
-          <DashboardFileType allowZoom file={file as unknown as File} password={pw} show />
+          <DashboardFileType allowZoom file={file as unknown as File} token={token} show />
 
           {user?.view!.content && (
             <Typography>

@@ -1,7 +1,7 @@
+import { verifyAccessToken } from '@/lib/accessToken';
 import { ApiError } from '@/lib/api/errors';
 import { parseRange } from '@/lib/api/range';
 import { config } from '@/lib/config';
-import { verifyPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
@@ -18,7 +18,7 @@ type Params = {
 };
 
 type Querystring = {
-  pw?: string;
+  token?: string;
   download?: string;
 };
 
@@ -32,7 +32,7 @@ export const rawFileHandler = async (
   res: FastifyReply,
 ) => {
   const { id } = req.params;
-  const { pw, download } = req.query;
+  const { token, download } = req.query;
 
   if (id.startsWith('.thumbnail')) {
     const thumbnail = await prisma.thumbnail.findFirst({
@@ -80,10 +80,8 @@ export const rawFileHandler = async (
   }
 
   if (file?.password) {
-    if (!pw) throw new ApiError(3004);
-    const verified = await verifyPassword(pw, file.password!);
-
-    if (!verified) throw new ApiError(3005);
+    const valid = verifyAccessToken(token, 'file', file.id);
+    if (!valid) throw new ApiError(3018);
   }
 
   const size = file?.size || (await datasource.size(file?.name ?? id));

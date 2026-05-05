@@ -1,5 +1,5 @@
+import { verifyAccessToken } from '@/lib/accessToken';
 import { config } from '@/lib/config';
-import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { FastifyReply, FastifyRequest } from 'fastify';
@@ -9,7 +9,7 @@ type Params = {
 };
 
 type Query = {
-  pw?: string;
+  token?: string;
 };
 
 const logger = log('server').c('urls');
@@ -19,7 +19,7 @@ export async function urlsRoute(
   res: FastifyReply,
 ) {
   const { id } = req.params;
-  const { pw } = req.query;
+  const { token } = req.query;
 
   const url = await prisma.url.findFirst({
     where: {
@@ -48,10 +48,8 @@ export async function urlsRoute(
   }
 
   if (url.password) {
-    if (!pw) return res.redirect(`/view/url/${url.id}`);
-    const verified = await verifyPassword(pw as string, url.password);
-
-    if (!verified) return res.redirect(`/view/url/${url.id}`);
+    const valid = verifyAccessToken(token, 'url', url.id);
+    if (!valid) return res.redirect(`/view/url/${url.id}`);
   }
 
   await prisma.url.update({

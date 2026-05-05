@@ -1,15 +1,16 @@
 import { ApiError } from '@/lib/api/errors';
+import { createAccessToken } from '@/lib/accessToken';
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { zStringTrimmed } from '@/lib/validation';
-import { setPasswordCookie } from '@/lib/passwordCookie';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
 export type ApiUserUrlsIdPasswordResponse = {
   success: boolean;
+  token: string;
 };
 
 const logger = log('api').c('user').c('urls').c('[id]').c('password');
@@ -28,6 +29,12 @@ export default typedPlugin(
           body: z.object({
             password: zStringTrimmed,
           }),
+          response: {
+            200: z.object({
+              success: z.boolean(),
+              token: z.string(),
+            }),
+          },
         },
         ...secondlyRatelimit(2),
       },
@@ -59,9 +66,8 @@ export default typedPlugin(
           ua: req.headers['user-agent'],
         });
 
-        setPasswordCookie(res, 'url', url.id, req.body.password);
-
-        return res.send({ success: true });
+        const token = createAccessToken({ type: 'url', id: url.id });
+        return res.send({ success: true, token });
       },
     );
   },

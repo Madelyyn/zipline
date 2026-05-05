@@ -6,10 +6,11 @@ export default function ViewUrlId() {
   const data = useSsrData<{
     url: { id: string; destination?: string };
     password?: boolean;
+    token?: string | null;
   }>();
   if (!data) return null;
 
-  const { url, password } = data;
+  const { url, password, token } = data;
 
   const [passwordValue, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
@@ -18,7 +19,7 @@ export default function ViewUrlId() {
     if (!password && url.destination) window.location.href = url.destination;
   }, []);
 
-  return password ? (
+  return password && !token ? (
     <Modal onClose={() => {}} opened={true} withCloseButton={false} centered title='Password required'>
       <form
         onSubmit={async (e) => {
@@ -31,7 +32,8 @@ export default function ViewUrlId() {
           });
 
           if (res.ok) {
-            window.location.reload();
+            const json = (await res.json()) as { token: string };
+            window.location.replace(`/view/url/${url.id}?token=${encodeURIComponent(json.token)}`);
           } else {
             setPasswordError('Invalid password');
           }
