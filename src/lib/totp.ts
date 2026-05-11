@@ -1,4 +1,4 @@
-import { generateSecret, generateURI, verifySync } from 'otplib';
+import { generateSecret, generateURI, verify } from 'otplib';
 import { toDataURL } from 'qrcode';
 
 export function generateKey() {
@@ -7,10 +7,11 @@ export function generateKey() {
   });
 }
 
-export function verifyTotpCode(code: string, secret: string) {
-  return verifySync({
+export async function verifyTotpCode(code: string, secret: string) {
+  return verify({
     secret,
     token: code,
+    epochTolerance: 30,
   });
 }
 
