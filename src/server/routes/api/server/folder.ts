@@ -31,7 +31,7 @@ export default typedPlugin(
               sortBy: true,
               order: true,
             })
-            .partial(),
+            .partial({ page: true }),
           response: {
             200: z.object({
               folder: folderSchema.partial(),
@@ -69,7 +69,8 @@ export default typedPlugin(
         if (!folder) throw new ApiError(9002);
         if (!folder.public && !folder.allowUploads) throw new ApiError(9002);
 
-        if (folder.allowUploads) {
+        const { page, perpage, sortBy, order } = req.query;
+        if (!page && folder.allowUploads) {
           return res.send({
             folder: {
               id: folder.id,
@@ -81,11 +82,6 @@ export default typedPlugin(
             total: 0,
             pages: 0,
           });
-        }
-
-        const { page, perpage, sortBy, order } = req.query;
-        if (!page || !perpage || !sortBy || !order) {
-          throw new ApiError(1001, 'Missing pagination or sorting parameters');
         }
 
         const where = { folderId: folder.id };
