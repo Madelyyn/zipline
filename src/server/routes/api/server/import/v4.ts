@@ -560,4 +560,3 @@ export default typedPlugin(
   },
   { name: PATH },
 );
-

@@ -126,4 +126,3 @@ export class LocalDatasource extends Datasource {
     return files.filter((f) => f.isFile() && f.name.startsWith(options.prefix || '')).map((f) => f.name);
   }
 }
-
