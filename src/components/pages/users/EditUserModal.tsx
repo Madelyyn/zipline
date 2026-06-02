@@ -268,13 +268,7 @@ export default function EditUserModal({
             />
             <Divider />
 
-            <Button
-              type='submit'
-              variant='outline'
-              color='blue'
-              radius='sm'
-              leftSection={<IconUserEdit size='1rem' />}
-            >
+            <Button type='submit' variant='outline' color='blue' leftSection={<IconUserEdit size='1rem' />}>
               Update user
             </Button>
           </Stack>

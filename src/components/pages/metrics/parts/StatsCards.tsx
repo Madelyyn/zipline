@@ -35,7 +35,7 @@ function StatCard({
   }[color];
 
   return (
-    <Paper radius='sm' withBorder p='sm'>
+    <Paper radius='md' withBorder p='sm'>
       <Group justify='space-between'>
         <Text size='xl' fw={900}>
           {title}
@@ -54,7 +54,6 @@ function StatCard({
           py={2}
           pl={5}
           pr={8}
-          radius='sm'
           display='flex'
           bg={rgba(`var(--mantine-color-${color}-6)`, 0.25)}
         >

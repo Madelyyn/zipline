@@ -18,7 +18,7 @@ export default function StorageGraph({ points }: { points: MetricsPoint[] }) {
   );
 
   return (
-    <Paper radius='sm' withBorder p='sm' mt='md'>
+    <Paper radius='md' withBorder p='sm' mt='md'>
       <Title order={3} mb='sm'>
         Storage Used
       </Title>

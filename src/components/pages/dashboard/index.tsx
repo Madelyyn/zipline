@@ -119,12 +119,7 @@ export default function DashboardHome() {
               <Skeleton key={i} height={105} />
             ))}
           </SimpleGrid>
-
-          <Title order={3} mt='lg' mb='xs'>
-            File types
-          </Title>
-
-          <Paper radius='sm' withBorder>
+          <Paper withBorder my='md'>
             <ScrollArea.Autosize mah={400} type='auto'>
               <Table highlightOnHover>
                 <Table.Thead>
@@ -169,10 +164,7 @@ export default function DashboardHome() {
 
           {Object.keys(stats!.sortTypeCount).length !== 0 && (
             <>
-              <Title order={3} mt='lg' mb='xs'>
-                File types
-              </Title>
-              <Paper radius='sm' withBorder>
+              <Paper withBorder my='md'>
                 <ScrollArea.Autosize mah={400} type='auto'>
                   <Table highlightOnHover>
                     <Table.Thead>

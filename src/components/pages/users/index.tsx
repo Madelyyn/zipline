@@ -144,7 +144,7 @@ export default function DashboardUsers() {
               {...form.getInputProps('role')}
             />
 
-            <Button type='submit' variant='outline' radius='sm' leftSection={<IconUserPlus size='1rem' />}>
+            <Button type='submit' variant='outline' leftSection={<IconUserPlus size='1rem' />}>
               Create
             </Button>
           </Stack>

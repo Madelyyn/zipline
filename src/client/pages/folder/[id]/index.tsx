@@ -47,7 +47,7 @@ export async function loader({ params, request }: { params: Params<string>; requ
 function PublicFolderCard({ folder }: { folder: Partial<Folder> }) {
   return (
     <Link to={`/folder/${folder.id}`} style={{ textDecoration: 'none' }}>
-      <Card withBorder shadow='sm' radius='sm' style={{ cursor: 'pointer' }}>
+      <Card withBorder shadow='sm' style={{ cursor: 'pointer' }}>
         <Card.Section withBorder inheritPadding py='xs'>
           <Group gap='xs'>
             <IconFolder size='1.2rem' />

@@ -9,3 +9,7 @@
 .mantine-Table-th {
   font-weight: 800;
 }
+
+.mantine-datatable {
+  border-radius: var(--mantine-radius-default);
+}

@@ -18,7 +18,7 @@ export default function ViewsGraph({ points }: { points: MetricsPoint[] }) {
   );
 
   return (
-    <Paper radius='sm' withBorder p='sm'>
+    <Paper radius='md' withBorder p='sm'>
       <Title order={3}>Views</Title>
       <LineChart
         data={data}

@@ -508,7 +508,6 @@ export default function FileTable({
         {/*@ts-ignore*/}
         <DataTable
           mt='xs'
-          borderRadius='sm'
           withTableBorder
           minHeight={200}
           records={data?.page ?? []}

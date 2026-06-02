@@ -17,7 +17,7 @@ export function StatsTablesSkeleton() {
   return (
     <>
       <SimpleGrid cols={{ base: 1, md: 2 }}>
-        <Paper radius='sm' withBorder>
+        <Paper radius='md' withBorder>
           <ScrollArea.Autosize mah={500} type='auto'>
             <Table highlightOnHover stickyHeader>
               <Table.Thead>
@@ -42,7 +42,7 @@ export function StatsTablesSkeleton() {
           </ScrollArea.Autosize>
         </Paper>
 
-        <Paper radius='sm' withBorder mah={500}>
+        <Paper withBorder mah={500} radius='md'>
           <ScrollArea.Autosize mah={500} type='auto'>
             <Table highlightOnHover stickyHeader>
               <Table.Thead>
@@ -65,7 +65,7 @@ export function StatsTablesSkeleton() {
           </ScrollArea.Autosize>
         </Paper>
 
-        <Paper radius='sm' withBorder>
+        <Paper withBorder radius='md'>
           <ScrollArea.Autosize mah={500} type='auto'>
             <Table highlightOnHover stickyHeader>
               <Table.Thead>
@@ -86,7 +86,7 @@ export function StatsTablesSkeleton() {
           </ScrollArea.Autosize>
         </Paper>
 
-        <Paper radius='sm' withBorder p='sm'>
+        <Paper withBorder p='sm'>
           <Skeleton height={500} />
         </Paper>
       </SimpleGrid>
@@ -104,8 +104,8 @@ export default function StatsTables({ latest }: { latest: Metric | null }) {
   return (
     <>
       <SimpleGrid cols={{ base: 1, md: 2 }}>
-        <Paper radius='sm' withBorder>
-          <ScrollArea.Autosize mah={500} type='auto'>
+        <Paper radius='md' withBorder>
+          <ScrollArea.Autosize mah={500} type='auto' bdrs='md'>
             <Table highlightOnHover stickyHeader>
               <Table.Thead>
                 <Table.Tr>
@@ -131,8 +131,8 @@ export default function StatsTables({ latest }: { latest: Metric | null }) {
           </ScrollArea.Autosize>
         </Paper>
 
-        <Paper radius='sm' withBorder mah={500}>
-          <ScrollArea.Autosize mah={500} type='auto'>
+        <Paper radius='md' withBorder mah={500}>
+          <ScrollArea.Autosize mah={500} type='auto' bdrs='md'>
             <Table highlightOnHover stickyHeader>
               <Table.Thead>
                 <Table.Tr>
@@ -156,8 +156,8 @@ export default function StatsTables({ latest }: { latest: Metric | null }) {
           </ScrollArea.Autosize>
         </Paper>
 
-        <Paper radius='sm' withBorder>
-          <ScrollArea.Autosize mah={500} type='auto'>
+        <Paper radius='md' withBorder>
+          <ScrollArea.Autosize mah={500} type='auto' bdrs='md'>
             <Table highlightOnHover stickyHeader>
               <Table.Thead>
                 <Table.Tr>
@@ -179,7 +179,7 @@ export default function StatsTables({ latest }: { latest: Metric | null }) {
           </ScrollArea.Autosize>
         </Paper>
 
-        <Paper radius='sm' withBorder p='sm'>
+        <Paper radius='md' withBorder p='sm'>
           <TypesPieChart metric={recent} />
         </Paper>
       </SimpleGrid>
