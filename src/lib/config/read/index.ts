@@ -172,7 +172,7 @@ export async function read() {
     }
   }
 
-  logger.debug("overridden db settings from env vars", { overridden: global.__tamperedConfig__ });
+  logger.debug('overridden db settings from env vars', { overridden: global.__tamperedConfig__ });
 
   const raw = structuredClone(rawConfig);
 
