@@ -14,6 +14,16 @@ export const userSelect = {
   sessions: true,
 };
 
+export const limitedUserSelect = {
+  id: true,
+  username: true,
+  createdAt: true,
+  updatedAt: true,
+  role: true,
+  view: true,
+  quota: true,
+};
+
 export const userViewSchema = z
   .object({
     enabled: z.boolean().nullish(),
@@ -106,3 +116,14 @@ export const userSchema = z.object({
 });
 
 export type User = z.infer<typeof userSchema>;
+
+export const limitedUserSchema = userSchema.omit({
+  oauthProviders: true,
+  totpSecret: true,
+  passkeys: true,
+  sessions: true,
+  password: true,
+  token: true,
+});
+
+export type LimitedUser = z.infer<typeof limitedUserSchema>;
