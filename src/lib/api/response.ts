@@ -14,6 +14,7 @@ import { ApiServerImportV3 } from '@/server/routes/api/server/import/v3';
 import { ApiServerImportV4 } from '@/server/routes/api/server/import/v4';
 import { ApiServerPublicResponse } from '@/server/routes/api/server/public';
 import { ApiServerRequerySizeResponse } from '@/server/routes/api/server/requery_size';
+import { ApiServerStatusResponse } from '@/server/routes/api/server/status';
 import { ApiServerSettingsResponse, ApiServerSettingsWebResponse } from '@/server/routes/api/server/settings';
 import { ApiServerThemesResponse } from '@/server/routes/api/server/themes';
 import { ApiServerThumbnailsResponse } from '@/server/routes/api/server/thumbnails';
@@ -80,6 +81,7 @@ export type Response = {
   '/api/server/clear_temp': ApiServerClearTempResponse;
   '/api/server/clear_zeros': ApiServerClearZerosResponse;
   '/api/server/requery_size': ApiServerRequerySizeResponse;
+  '/api/server/status': ApiServerStatusResponse;
   '/api/server/settings': ApiServerSettingsResponse;
   '/api/server/settings/web': ApiServerSettingsWebResponse;
   '/api/server/public': ApiServerPublicResponse;
