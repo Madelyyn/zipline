@@ -3,6 +3,7 @@ import { ApiError } from '@/lib/api/errors';
 import { parseRange } from '@/lib/api/range';
 import { config } from '@/lib/config';
 import { datasource } from '@/lib/datasource';
+import { findFileByName } from '@/lib/db/models/file';
 import { prisma } from '@/lib/db';
 import { sanitizeFilename } from '@/lib/fs';
 import { log } from '@/lib/logger';
@@ -65,11 +66,9 @@ export const rawFileHandler = async (
       .send(buf);
   }
 
-  const file = await prisma.file.findFirst({
-    where: {
-      name: decodeURIComponent(id),
-    },
-  });
+  const file = await findFileByName(idSanitized, (where, orderBy) =>
+    prisma.file.findFirst({ where, ...(orderBy && { orderBy }) }),
+  );
   if (!file) return res.callNotFound();
 
   if (file?.deletesAt && file.deletesAt <= new Date()) {

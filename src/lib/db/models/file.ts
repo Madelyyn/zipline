@@ -1,5 +1,7 @@
 import { config } from '@/lib/config';
+import { sanitizeFilename } from '@/lib/fs';
 import { formatRootUrl } from '@/lib/url';
+import type { Prisma } from '@/prisma/client';
 import { z } from 'zod';
 import { tagSchema, tagSelectNoFiles } from './tag';
 
@@ -26,6 +28,20 @@ export const fileSelect = {
     select: tagSelectNoFiles,
   },
 };
+
+export async function findFileByName<TResult>(
+  id: string,
+  query: (
+    where: Prisma.FileWhereInput,
+    orderBy?: Prisma.FileOrderByWithRelationInput,
+  ) => Promise<TResult | null>,
+) {
+  const name = sanitizeFilename(id);
+  if (!name) return null;
+  const file = await query({ name });
+  if (file || !config.files.extensionlessUrls || name.includes('.')) return file;
+  return query({ name: { startsWith: `${name}.` } }, { createdAt: 'desc' });
+}
 
 export function cleanFile(file: File) {
   file.password = !!file.password;
