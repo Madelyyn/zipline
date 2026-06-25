@@ -6,7 +6,7 @@ import { buildParentChain, Folder, cleanFolder, folderSchema } from '@/lib/db/mo
 import { User } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
-import { zStringTrimmed } from '@/lib/validation';
+import { zQsBoolean, zStringTrimmed } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import { FastifyRequest } from 'fastify';
@@ -29,6 +29,11 @@ const logger = log('api').c('user').c('folders').c('[id]');
 const paramsSchema = z.object({
   id: z.string(),
 });
+
+const folderMutationInclude = {
+  _count: { select: { children: true, files: true } },
+  parent: { select: { id: true, name: true, parentId: true } },
+} as const;
 
 const folderExistsAndEditable = async (req: FastifyRequest) => {
   const { id } = req.params as z.infer<typeof paramsSchema>;
@@ -53,8 +58,12 @@ export default typedPlugin(
       PATH,
       {
         schema: {
-          description: 'Fetch a specific folder by ID, including files, children, and its parent chain.',
+          description:
+            'Fetch a specific folder by ID, optionally including files, children, and its parent chain.',
           params: paramsSchema,
+          querystring: z.object({
+            noincl: zQsBoolean.optional(),
+          }),
           response: {
             200: folderSchema.partial(),
           },
@@ -64,18 +73,21 @@ export default typedPlugin(
       },
       async (req, res) => {
         const { id } = req.params;
+        const { noincl } = req.query;
 
         const folder = await prisma.folder.findUnique({
           where: {
             id,
           },
           include: {
-            files: {
-              select: {
-                ...fileSelect,
-                password: true,
+            ...(!noincl && {
+              files: {
+                select: {
+                  ...fileSelect,
+                  password: true,
+                },
               },
-            },
+            }),
             User: true,
             children: {
               orderBy: { createdAt: 'desc' },
@@ -99,7 +111,7 @@ export default typedPlugin(
           (folder as any).parent = await buildParentChain(folder.parentId);
         }
 
-        return res.send(cleanFolder(folder));
+        return res.send(cleanFolder(folder as unknown as Partial<Folder>));
       },
     );
 
@@ -150,15 +162,7 @@ export default typedPlugin(
             data: {
               files: { connect: { id } },
             },
-            include: {
-              files: {
-                select: {
-                  ...fileSelect,
-                  password: true,
-                },
-              },
-              User: true,
-            },
+            include: folderMutationInclude,
           });
 
           logger.info('file added to folder', { folder: folderId, file: id });
@@ -228,20 +232,7 @@ export default typedPlugin(
               ...(allowUploads !== undefined && { allowUploads }),
               ...(parentId !== undefined && { parentId }),
             },
-            include: {
-              files: {
-                select: {
-                  ...fileSelect,
-                  password: true,
-                },
-              },
-              _count: {
-                select: { children: true, files: true },
-              },
-              parent: {
-                select: { id: true, name: true, parentId: true },
-              },
-            },
+            include: folderMutationInclude,
           });
 
           logger.info('folder updated', {
@@ -398,14 +389,7 @@ export default typedPlugin(
               data: {
                 files: { disconnect: { id } },
               },
-              include: {
-                files: {
-                  select: {
-                    ...fileSelect,
-                    password: true,
-                  },
-                },
-              },
+              include: folderMutationInclude,
             });
 
             logger.info('file removed from folder', { folder: nFolder.id, file: id });
