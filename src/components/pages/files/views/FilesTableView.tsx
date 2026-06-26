@@ -47,7 +47,7 @@ import useSWR from 'swr';
 import { useShallow } from 'zustand/shallow';
 import { DashboardFilesModals, DashboardFilesModalsUpdate } from '..';
 import TableEditModal from '../TableEditModal';
-import { bulkDelete, bulkFavorite } from '../bulk';
+import { bulkCopyLinks, bulkDelete, bulkFavorite } from '../bulk';
 import TagPill from '../tags/TagPill';
 import { useApiPagination } from '../useApiPagination';
 
@@ -399,7 +399,8 @@ export default function FileTable({
         <Collapse expanded={selectedFiles.length > 0}>
           <Paper withBorder p='sm' my='sm'>
             <Text size='sm' c='dimmed' mb='xs'>
-              Selections are saved across page changes
+              Selections are saved across page changes. Currently selected <b>{selectedFiles.length}</b> file
+              {selectedFiles.length > 1 ? 's' : ''}.
             </Text>
 
             <Group>
@@ -415,7 +416,7 @@ export default function FileTable({
                     )
                   }
                 >
-                  Delete {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''}
+                  Delete files
                 </Button>
 
                 <Button
@@ -429,8 +430,15 @@ export default function FileTable({
                     )
                   }
                 >
-                  {unfavoriteAll ? 'Unfavorite' : 'Favorite'} {selectedFiles.length} file
-                  {selectedFiles.length > 1 ? 's' : ''}
+                  {unfavoriteAll ? 'Unfavorite' : 'Favorite'} files
+                </Button>
+
+                <Button
+                  variant='outline'
+                  leftSection={<IconCopy size='1rem' />}
+                  onClick={() => bulkCopyLinks(selectedFiles.map((x) => x.url))}
+                >
+                  Copy file links
                 </Button>
 
                 {!id && (

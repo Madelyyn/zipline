@@ -1,10 +1,16 @@
 import { mutateFiles } from '@/components/file/actions';
 import { Response } from '@/lib/api/response';
-import { File } from '@/lib/db/models/file';
+import { getDomain } from '@/lib/client/webDomain';
 import { fetchApi } from '@/lib/fetchApi';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { IconFilesOff, IconStarsFilled, IconStarsOff, IconTrashFilled } from '@tabler/icons-react';
+import {
+  IconClipboardListFilled,
+  IconFilesOff,
+  IconStarsFilled,
+  IconStarsOff,
+  IconTrashFilled,
+} from '@tabler/icons-react';
 
 export async function bulkDelete(ids: string[], setSelectedFiles: (files: File[]) => void) {
   modals.openConfirmModal({
@@ -128,5 +134,19 @@ export async function bulkFavorite(ids: string[], favorite: boolean) {
       mutateFiles();
     },
     onCancel: modals.closeAll,
+  });
+}
+
+export async function bulkCopyLinks(urls: string[]) {
+  const links = urls.map((url) => getDomain(url)).join('\n');
+
+  await navigator.clipboard.writeText(links);
+
+  notifications.show({
+    title: 'Copied links to clipboard',
+    message: `Copied ${urls.length} link${urls.length === 1 ? '' : 's'} to clipboard`,
+    color: 'green',
+    icon: <IconClipboardListFilled size='1rem' />,
+    autoClose: true,
   });
 }

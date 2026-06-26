@@ -33,7 +33,7 @@ export function copyFile(file: File, clipboard: ReturnType<typeof useClipboard>,
   const url = raw
     ? getDomain(`/raw/${file.name}`)
     : file.url
-      ? getDomain(`${file.url}`)
+      ? getDomain(file.url)
       : getDomain(`/view/${file.name}`);
 
   clipboard.copy(url);
