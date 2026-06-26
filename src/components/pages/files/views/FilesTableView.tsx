@@ -436,7 +436,7 @@ export default function FileTable({
                 <Button
                   variant='outline'
                   leftSection={<IconCopy size='1rem' />}
-                  onClick={() => bulkCopyLinks(selectedFiles.map((x) => x.url))}
+                  onClick={() => bulkCopyLinks(selectedFiles.map((x) => x.url!))}
                 >
                   Copy file links
                 </Button>

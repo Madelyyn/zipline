@@ -1,6 +1,7 @@
 import { mutateFiles } from '@/components/file/actions';
 import { Response } from '@/lib/api/response';
 import { getDomain } from '@/lib/client/webDomain';
+import type { File } from '@/lib/db/models/file';
 import { fetchApi } from '@/lib/fetchApi';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
